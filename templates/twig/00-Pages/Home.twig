@@ -1,0 +1,77 @@
+
+{% extends "partials/_page.twig" %}
+
+{% block content %}
+
+{% include '01-Modules/modal.twig' %}
+
+<main id="main-content">
+
+       <section class="how-do-i">
+        <div class="usa-grid">
+          <div>
+            <h1>{{home_howdoi_assets[0].title}}</h1>
+          </div>
+        </div>
+      </section>
+
+      <section class="usa-hero">
+        <div class="usa-grid">
+        	<div class="floating-box-1">
+        	{{home_howdoi_assets[0].body}}
+            </div>
+        <div class="floating-box-2 usa-width-one-third">{{home_howdoi_assets[1].body}}</div>
+      </section>
+
+      <div class="usa-grid usa-footer-return-to-top">
+      </div>
+
+       <section>
+        <div class="usa-grid">
+          <div>
+            <h1>
+            {{ language == "English" ? "What's New ..." : "Cómo puedo ..."}}
+            </h1>
+          </div>
+        </div>
+      </section>
+
+      <section class="usa-grid usa-section feature-hvr">
+      	<a href="{{home_whats_new_asset[0].friendly_url}}">
+      		<ul id="features-landing">
+      			<li>
+              <img src="{{home_whats_new_asset[0].related_multimedia_two.file_media.uri}}" class="rel-img" alt="">
+      				<header>
+      					<h2>{{home_whats_new_asset[0].title}}</h2>
+      				</header>
+              {{home_whats_new_asset[0].description}}
+            </li>
+      		</ul>
+      	</a>
+      </section>
+      <section class="usa-grid usa-section feature-hvr">
+      	<a href="{{home_whats_new_asset[1].friendly_url}}">
+      		<ul id="features-landing">
+      			<li>
+              <img src="{{home_whats_new_asset[1].related_multimedia_two.file_media.uri}}" class="rel-img" alt="">
+      				<header>
+      					<h2>{{home_whats_new_asset[1].title}}</h2>
+      				</header>{{home_whats_new_asset[1].description}}
+            </li>
+      		</ul>
+      	</a>
+      </section>
+
+      <div class="usa-grid usa-whats-new">
+        <p><a href="/features">
+          {{ language == "English" ? "View More Featured Articles" : "Ver más novedades"}}
+        </a></p>
+    </div>
+
+	   <div class="usa-grid usa-footer-return-to-top">
+        <a href="#"><span class="icon-backtotopHP">{{ language == 'English' ? 'Back to Top' : 'Volver al inicio' }}</span></a>
+      </div>
+
+    </main>
+
+{% endblock content %}

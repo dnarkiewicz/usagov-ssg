@@ -1,0 +1,119 @@
+
+{% extends "partials/_page.twig" %}
+
+{% block content %}
+
+<main id="content" role="main">
+	<div class="container clearfix">
+		<div class="term-listing-heading">
+
+		{% if lang == 'en' %}
+		{% set left_nav = {
+			"parent": {
+				"name": "For Media and Partners",
+				"friendly_url": "/media"
+			},
+			"items": [
+				{
+					"name": "Features",
+					"friendly_url": "/features"
+				},
+				{
+					"name": "Partner with Us",
+					"friendly_url": "/partner-with-us"
+				},
+			]
+			} %}
+			{% endif %}
+			{% if lang == 'es' %}
+			{% set left_nav = {
+				"parent": {
+					"name": "Medios y colaboradores",
+					"friendly_url": "/medios"
+				},
+				"items": [
+					{
+						"name": "Colabore con nosotros",
+						"friendly_url": "/colabore-con-nosotros"
+					},
+					{
+						"name": "Novedades",
+						"friendly_url": "/novedades"
+					},
+				]
+				} %}
+				{% endif %}
+			{% include '01-Modules/left-nav.twig' %}
+
+			<!---right container-->
+			<div class="col-md-9 col-sm-12 rightnav">
+			{# begin feature text asset #}
+
+			<header>
+            <h1>{{ page_title }}</h1>
+      </header>
+
+			<p> {{ real_meta_description }} </p>
+
+			<ul id="features-landing">
+
+			{% for item in asset_order_content %}
+			{% set entity = entities[item.uuid] %}
+	    {% set content_type = entity.type %}
+			{% set feature_text_template %}
+			{% set feature_content_type = entity.type %}
+			{% if feature_content_type == "text_content_type" %}
+
+
+				<li>
+				{% if entity.related_multimedia_two %}
+
+					{% set entity_related_multimedia = entity.related_multimedia_two.uuid %}
+					{% set entity_related_multimedia = entities[entity_related_multimedia] %}
+
+						<img src="{{ entity_related_multimedia.file_media.uri }}" alt="{{ entity_related_multimedia.file_media.alt }}" class="rel-img">
+
+
+				{% endif %}
+
+					<header>
+						<h2 id="{{ entity.nid }}">{{ entity.title }}</h2>
+					</header>
+
+					<p class="rel-txt"> {{ entity.description }} </p>
+				</li>
+
+		{% endif %}
+			{% endset %}
+
+			{{ feature_text_template }}
+
+			{% endfor %}
+
+			</ul>
+
+			{# end feature text asset #}
+
+					<h2 class="element-invisible">Pages</h2>
+				<div class="item-list">
+					<ul class="pagination">
+						<li class="previous"><a title="Go to previous page" href="#">previous</a></li>
+						<li class="pager-dscrpt">Page 5 of 45</li>
+						<li class="pager-item"><a title="Go to page 1" href="#">1</a></li>
+						<li class="current">2</li>
+						<li class="pager-item"><a title="Go to page 3"  href="#">3</a></li>
+						<li class="pager-item"><a title="Go to page 4" href="#">4</a></li>
+						<li class="pager-item"><a title="Go to page 5"  href="#">5</a></li>
+						<li class="pager-ellipsis">&nbsp;&hellip;</li>
+						<li class="next"><a href="#">next</a></li>
+					</ul>
+				</div>
+				<p class="volver clearfix"></p>
+				{% include 'partials/_smshare.twig' %}
+				<p class="volver clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">{{ lang == 'en' ? 'Back to Top' : 'Volver al inicio' }}</span></a></p>
+			</div>
+		</div>
+	</div>
+</main>
+
+{% endblock content %}

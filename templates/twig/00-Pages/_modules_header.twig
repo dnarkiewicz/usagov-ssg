@@ -1,0 +1,174 @@
+
+
+<noscript>JavaScript must be enabled in your browser in order to use some functions.</noscript>
+
+
+{#-
+Skipnav
+
+A link to the skip target so users of Assistive Technologies
+do not have to tab through all nav items
+#}
+<a class="usa-skipnav" href="#skiptarget" onclick="document.getElementById('#skiptarget').focus();">
+	{{ language == 'English' ? 'Skip to main content' : 'Saltar al contenido principal' }}
+</a>
+
+
+<header class="usa-header usa-header-extended" role="banner">
+
+	<div class="usa-banner">
+      <div class="usa-accordion">
+        <header class="usa-banner-header">
+          <div class="usa-grid usa-banner-inner">
+          <img src="/images/favicon-57.png" alt="U.S. flag">
+          <p>
+	          {{ language == 'English' ? 'An official website of the United States government' : 'Un sitio oficial del Gobierno de Estados Unidos' }}
+	      </p>
+          <button class="usa-accordion-button usa-banner-button"
+            aria-expanded="false" aria-controls="gov-banner">
+            <span class="usa-banner-button-text">
+            	
+            	{{ language == 'English' ? "Here's how you know" : 'Así es como usted puede verificarlo' }}
+            </span>
+          </button>
+          </div>
+        </header>
+        {% set usa_banner_copy = {
+        	
+        } %}
+        <div class="usa-banner-content usa-grid usa-accordion-content" id="gov-banner">
+          <div class="usa-banner-guidance-gov usa-width-one-half">
+            <img class="usa-banner-icon usa-media_block-img" src="/images/icon-dot-gov.svg" alt="Dot gov">
+            <div class="usa-media_block-body">
+              <p>
+                <strong>The .gov means it’s official.</strong>
+                <br>
+                Federal government websites often end in .gov or .mil. Before sharing sensitive information, make sure you're on a federal government site.
+              </p>
+            </div>
+          </div>
+          <div class="usa-banner-guidance-ssl usa-width-one-half">
+            <img class="usa-banner-icon usa-media_block-img" src="/images/icon-https.svg" alt="SSL">
+            <div class="usa-media_block-body">
+              <p>
+								<strong>This site is secure.</strong>
+                <br>
+                The <strong>https://</strong> ensures that you are connecting to the official website and that any information you provide is encrypted and transmitted securely.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+	<div class="usa-navbar">
+		{# TODO: Move all assets to assets/sites/all/themes/usa/... #}
+		{{ sitePage.page_intro|raw  }}
+		<button class="usa-menu-btn">Menu</button>
+	</div>
+	<nav role="navigation" class="usa-nav">
+		<div class="usa-nav-inner">
+
+			{#
+			USA Nav Secondary
+
+			The secondary nav content from the Web Design Standards
+			We moved this above the USA Nav Primary to preserve the tab order of the
+			search box and contact links
+			#}
+			{{ sitePage.head_html|raw }}
+			
+
+			{#
+			USA Nav Primary
+
+			The primary nav content from the Web Design Standards
+			We moved this below the USA Nav Secondary
+			#}
+			{% set nav = sitePage.menu %}
+
+			<ul class="usa-nav-primary usa-accordion">
+				<li>
+					<a class="usa-nav-link" href="/topics">
+						<span>All Topics and Services</span>
+					</a>
+				</li>
+				{#- loop through top level nav items -#}
+				{%- for topLevelItem in nav -%}
+				{%- set topLevelItemID = loop.index %}
+				{% if topLevelItem.css_class %}
+				{% if topLevelItem.sub %}
+				<li>
+					<button class="usa-accordion-button usa-nav-link" aria-expanded="false" aria-controls="megamenu-{{topLevelItemID}}">
+						<span>{{ topLevelItem.name }}</span>
+					</button>
+
+					{#- loop through sub levitems -#}
+					{%- for subitem in topLevelItem.sub -%}
+					{#- start the list of lists before the first subitem -#}
+					{%- if loop.first -%}
+					<ul class="usa-nav-submenu usa-megamenu usa-grid-full" id="megamenu-{{topLevelItemID}}">
+						<li class="usa-megamenu-col">
+							<ul>
+					{%- endif -%}
+								{#- list the current subitem -#}
+								<li><a href="{{subitem.friendly_url}}">{{subitem.name}}</a></li>
+							{#- start a new list every 3 subitems -#}
+							{%- if not loop.last and loop.index % 3 == 0 -%}
+							</ul>
+						</li>
+						<li class="usa-megamenu-col">
+							<ul>
+					{%- endif -%}
+					{#- end the list of lists after the final subitem -#}
+					{%- if loop.last %}
+							</ul>
+						</li>
+						<li class="topic-link topic-nav-{{ topLevelItem.css_class }}">
+							<a class="usa-button" href="#">{{ topLevelItem.name }}</a>
+						</li>
+					</ul>
+				{% endif -%}
+
+				{%- endfor %}
+				</li>
+			{% else %}
+			{# There are no subitems. This navitem is a link. #}
+			<li>
+				<a class="usa-nav-link" href="{{ topLevelItem.friendly_url }}" >
+					<span>{{ topLevelItem.name }}</span>
+				</a>
+			</li>
+			{% endif %}
+			{% endif %}
+			{%- endfor %}
+
+			</ul>
+		</div>
+	</nav>
+</header>
+
+{#
+USA Overlay
+
+This is used by the Web Design Standards when the mobile menu is open.
+It darkens the content behind the menu.
+#}
+<div class="usa-overlay"></div>
+
+
+{#
+Skiptarget
+
+Skipnav links here
+Back to Top links here
+TODO:
+tabindex="-1" might not be needed
+Not sure why it is an anchor or why it is in a paragraph
+ #}
+<div class="clearfix">
+	<p id="skiptargetholder"> <a id="skiptarget" class="skip" tabindex="-1"></a> </p>
+</div>
+
+{% include '_modules_language-toggle.twig' %}
+

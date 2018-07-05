@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+
+<html  lang="en" xml:lang="en"  >
+
+<head>
+	{% include 'partials/_head.twig' %}
+	
+	{% block pageStyles %}
+	{% endblock pageStyles %}
+	
+</head>
+
+<body>
+	
+	{% block content %}
+	
+		{{yield}}
+		
+	{% endblock content %}
+	
+	{% include 'partials/_bodyscripts.twig' %}
+	
+	{% block pageScripts %}
+	{% endblock pageScripts %}
+	
+</body>
+</html>

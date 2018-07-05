@@ -1,0 +1,26 @@
+<!-- social media feature begin-->
+
+{# Share This Page #}
+
+
+<div id="sm-share"><span>{{ lang == 'en' ? 'Share This Page:' : 'Comparta esta página:' }}</span>
+
+{% set fb = 'http://www.facebook.com/sharer/sharer.php?u=' %}
+{% set twitter = 'http://twitter.com/intent/tweet?source=webclient&text=' %}
+{% set fb_icon = '/images/Icon_Connect_Facebook.png' %}
+{% set twitter_icon = '/images/Icon_Connect_Twitter.png' %}
+{% set email_icon = '/images/Icon_Connect_Email.png' %}
+{% set email %}
+  <a href="mailto:?subject=Email {{ page_title }}&body={{ lang == 'en' ? 'https://www.usa.gov' : 'https://gobierno.usa.gov' }}%2F{{ page_title }}"><img src="{{ email_icon }}" alt="Email"/></a>
+{% endset %}
+
+ <a href="{{ fb }}
+{{ lang == 'en' ? 'https://www.usa.gov' : 'https://gobierno.usa.gov' }}{{ friendly_url }}&v=3"><img src="{{fb_icon}}" alt="Facebook"/></a>
+
+<a href="{{ twitter }}{{page_title}} {{ lang == 'en' ? 'https://www.usa.gov' : 'https://gobierno.usa.gov' }} {{friendly_url}}"><img src="{{ twitter_icon }}" alt="Twitter"/></a>
+
+{{ email }}
+
+</div>
+
+<!-- social media feature ends -->

@@ -1,0 +1,132 @@
+
+{% extends "partials/_page.twig" %}
+
+{% block content %}
+
+{% set hasLeftNav = true %}
+
+{% if type_of_page_to_generate == "a-z-page" %}
+	{% set AZItems = directoryRecordGroups[siteName]["all"]["Federal Agencies"] %}
+{% endif %}
+{% if type_of_page_to_generate == "forms" %}
+	{% set AZItems = directoryRecordGroups[siteName]["forms"]["Federal Agencies"] %}
+{% endif %}
+{% if type_of_page_to_generate == "site-index" %}
+	{% set AZItems = siteIndexAZ %}
+	{% set hasLeftNav = false %}
+{% endif %}
+
+<main id="content" class="az-page" role="main">
+	{% if hasLeftNav %}
+	<div class="container usa-grid clearfix">
+		
+	
+	{% set left_nav = {
+		"parent": {
+			"name": "Government Agencies and Elected Officials",
+			"friendly_url": "/agencies"
+		},
+		"items": [
+			{
+				"name": "A-Z Index of U.S. Government Agencies",
+				"friendly_url": "/federal-agencies/a"
+			},
+			{
+				"name": "Branches of Government",
+				"friendly_url": "/branches-of-government"
+			},
+			{
+				"name": "Contact Government by Topic",
+				"friendly_url": "/contact-by-topic"
+			},
+			{
+				"name": "Elected Officials",
+				"friendly_url": "/elected-officials"
+			},
+			{
+				"name": "Government Forms, by Agency",
+				"friendly_url": "/forms/a"
+			},
+			{
+				"name": "State, Local, and Tribal Governments",
+				"friendly_url": "/state-tribal-governments"
+			}
+		]
+	} %}
+	{% include '01-Modules/left-nav.twig' %}
+	
+	<div class="col-md-9 col-sm-12 rightnav">
+		{% else %}
+
+	<div class="container clearfix">
+		{% endif %}
+		
+	<header>
+		<h1 id="">{{name}}</h1>
+	</header>
+
+	<ul class="az-list group">
+		{% for letter in "A".."Z" %}
+			{% if letter == currentAZLetter %}
+				<li class="current">{{letter}}</li>
+			{% else %}
+				{% if AZItems[ letter ]|length == 0 %}
+					<li>{{letter}}</li>
+				{% else %}
+					<li><a href="/directory/federal/{{letter}}.shtml">{{letter}}</a></li>
+				{% endif %}
+			{% endif %}
+		{% endfor %}
+	</ul>
+
+	<header>
+		<h2 id="">{{currentAZLetter}}</h2>
+	</header>
+	
+	<ul class="one_column_bullet">
+		{% for item in AZItems[ currentAZLetter ] %}
+		{% set record = entities[ item.uuid ] %}
+		<li>
+			{% set path = "" %}
+			{% if record.friendly_url %}
+				{% set path = record.friendly_url %}
+			{% endif %}
+
+			{% if record.directory_type == "State Government Agencies" %}
+				{% set path = "/state-governmentl/" ~ record.title|friendly_url %}
+			{% endif %}
+
+			{% if record.directory_type == "Federal Agencies" %}
+				{% set path = "/directory/federal/" ~ record.title|friendly_url %}
+			{% endif %}
+
+			<a class="url" href="{{ path }}.shtml">
+				{{ item.title }}
+			</a>
+
+		</li>
+		{% endfor %}
+	</ul>
+
+	{% if AZItems[ currentAZLetter ]|length > 10 %}
+	<ul class="az-list group">
+	{% for letter in "A".."Z" %}
+		{% if letter == currentAZLetter %}
+			<li class="current">{{letter}}</li>
+		{% else %}
+			{% if AZItems[ letter ]|length == 0 %}
+				<li>{{letter}}</li>
+			{% else %}
+				<li><a href="/directory/federal/{{letter}}.shtml">{{letter}}</a></li>
+			{% endif %}
+		{% endif %}
+	{% endfor %}
+	</ul>
+	{% endif %}
+	{% include 'partials/_smshare.twig' %}
+	<p class="volver clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">Back to Top</span></a></p>
+	</div>
+	</div>
+</main>
+
+{% endblock content %}

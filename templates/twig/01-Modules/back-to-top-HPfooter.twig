@@ -1,0 +1,28 @@
+{# This is the back to top for the English homepage footer #}
+
+{#
+{% if lang == 'lang="en"' %}
+<p class="volver clearfix">
+  <a href="#skiptarget">
+    <span class="icon-backtotop-dwnlvl">Back to Top</span>
+  </a>
+</p>
+{% endif %}
+
+{% if lang != 'lang="en"' %}
+<p class="volver clearfix">
+  <a href="#skiptarget">
+    <span class="icon-backtotop-dwnlvl">Volver al inicio</span>
+  </a>
+</p>
+{% endif %}
+#}
+
+
+{% if lang == 'lang="en"' %}
+  Back to Top
+{% endif %}
+
+{% if lang != 'lang="es"' %}
+  Volver al inicio
+{% endif %}

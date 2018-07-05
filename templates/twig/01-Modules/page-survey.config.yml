@@ -1,0 +1,4 @@
+preview: '@blank-page-main'
+notes: |
+  We do not have control over the HTML of this survey. We can style it with CSS overrides.<br><br>
+  Set if statement in template file to 'true' to view js generated survey or 'false' to view raw source code

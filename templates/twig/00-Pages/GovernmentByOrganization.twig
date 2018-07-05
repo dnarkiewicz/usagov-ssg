@@ -1,0 +1,72 @@
+
+{% extends "partials/_page.twig" %}
+
+{% block content %}
+
+<main id="content" class="az-page" role="main">
+	<div class="container usa-grid clearfix">
+	
+	{% set left_nav = {
+		"parent": {
+			"name": "Branches of the U.S. Government",
+			"friendly_url": "/branches-of-government"
+		},
+		"items": [
+			{
+				"name": "A-Z Index of U.S. Government Agencies",
+				"friendly_url": "/federal-agencies/a"
+			}
+		]
+	} %}
+	{% include '01-Modules/left-nav.twig' %}
+	
+	<div class="col-md-9 col-sm-12 rightnav">
+	<header>
+		<h1 id="">{{name}}</h1>
+	</header>
+	<p>
+		{{page_intro}}
+	</p>
+	<div class="view view-federal-government-by-organization view-id-federal_government_by_organization view-display-id-block view-dom-id-01680869fabdf429aae1336961771830">
+        
+  
+  
+      <div class="view-content">
+      <div class="item-list">    
+      	<ul>
+	{% for item in directoryRecordGroups[siteName]['all']['Federal Agencies'][government_branch] %}
+		
+
+          <li class="views-row views-row-2 views-row-even">
+          	<div class="views-field views-field-php">
+          		<span class="field-content">
+          			<a href="{{entities[item.uuid].friendly_url}}">{{item.title}}</a>
+          		</span>  
+          	</div>
+          </li>
+  	{% endfor %}
+
+      </ul>
+  </div>
+  </div>
+</div>
+
+
+
+	{% include 'partials/_smshare.twig' %}
+
+		<p class="volver clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">Back to Top</span></a></p>
+</article>
+
+	{% include '01-Modules/contact-box.twig' %}
+
+	<p class="statebacktotop clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">Back to Top</span></a></p>
+	</div>
+	</div>
+
+</main>
+
+{% endblock content %}
+
+
+

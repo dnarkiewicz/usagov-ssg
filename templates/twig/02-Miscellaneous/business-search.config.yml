@@ -1,0 +1,17 @@
+title: Business Search Box
+name: Business Search Box
+status: wip
+notes: Example page - https://www.usa.gov/business-search
+context:
+  leftnav:
+    breadcrumb: Small Business
+    items:
+      - Business Keyword Search
+      - Business Tax Information
+      - Finance Your Business
+      - Importing and Exporting
+      - Introduction to Federal Government Contracting
+      - Start Your Own Business
+      - Starting a Nonprofit Organization
+      - State Business Resources
+    selected: 1

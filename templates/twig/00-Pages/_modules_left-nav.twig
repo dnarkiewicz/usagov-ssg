@@ -1,0 +1,61 @@
+<nav aria-label="Topic" class="col-md-3 leftnav">
+	<section>
+		<div class="mrtp clearfix">
+			<button id="leftnav-toggle" type="button">
+				<div class="bttn">
+					<header>
+						<h2 id="">More Topics in this Section</h2>
+					</header>
+				</div>
+				<div class="mrtpc"></div>
+			</button>
+		</div>
+
+		<div class="shade dwn" aria-expanded="false">
+
+			<header>
+				<h2 id="" itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb">
+					<span {#class="arrowLft"#} itemprop="title">
+						<a href="{{ left_nav.parent.friendly_url }}" itemprop="url" class="url" onmousedown="_sendEvent('Outbound','{{ left_nav.parent.friendly_url }}','/',0);">
+							{{ left_nav.parent.name }}
+						</a>
+					</span>
+				</h2>
+			</header>
+
+			<ul>
+			{%- for item in left_nav.items -%}
+
+				{% set selected = false %}
+				{% if left_nav.highlighted_url %}
+					{% if item.friendly_url == left_nav.highlighted_url %}
+						{# highlighted_url exists and matches this item's friendly_url #}
+						{% set selected = true %} 
+					{% endif %}
+				{% else %}
+					{% if item.friendly_url == friendly_url %}
+						{# highlighted_url doesnt exist and this item's friendly_url matches the page's friendly_url #}
+						{% set selected = true %} 
+					{% endif %}
+				{% endif %}
+
+				{% if selected %}
+				<li class="slctd">
+					<a href="{{ item.friendly_url }}" class="url" onmousedown="_sendEvent('Outbound','{{ item.friendly_url }}','/',0);">
+						<span itemprop="title">{{ item.name }}</span>
+					</a>
+				</li>
+				{% else %}
+				<li>
+					<a href="{{ item.friendly_url }}" class="url" onmousedown="_sendEvent('Outbound','{{ item.friendly_url }}','/',0);">
+						{{ item.name }}
+					</a>
+				</li>
+				{% endif %}
+
+			{%- endfor -%}
+			</ul>
+
+		</div>
+	</section>
+</nav>

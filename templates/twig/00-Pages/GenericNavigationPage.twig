@@ -1,0 +1,11 @@
+
+{#
+	generic-navigation-page is used for both
+	how-do-i and downlevel-left-nav-page
+#}
+
+{% if css_class %}
+	{% include 'how-do-i.twig' %}
+{% else %}
+	{% include 'downlevel-left-nav-page.twig' %}
+{% endif %}

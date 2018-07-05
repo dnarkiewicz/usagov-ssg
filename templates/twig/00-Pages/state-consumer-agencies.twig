@@ -1,0 +1,333 @@
+
+{% extends "partials/_page.twig" %}
+
+{% set state_data = directoryRecordGroups[site][state] %}
+{% set regions = [
+	{
+		"name": "State Banking Authorities",
+		"title": "Banking Authorities",
+		"abbr": "sba",
+		"summary": "The officials listed in this section regulate and supervise state-chartered banks. Many of them handle or refer problems and complaints about other types of financial institutions as well. Some also answer general questions about banking and consumer credit. If you are dealing with a federally chartered bank, check Federal Agencies."
+	},
+	{
+		"name": "State Insurance Regulators",
+		"title": "Insurance Regulators",
+		"abbr": "sir",
+		"summary": "Each state has its own laws and regulations for each type of insurance. The officials listed in this section enforce these laws. Many of these offices can also provide you with information to help you make informed insurance buying decisions."
+	},
+	{
+		"name": "State Securities Administrators",
+		"title": "Securities Administrators",
+		"abbr": "ssa",
+		"summary": "Each state has its own laws and regulations for securities brokers and securities - including stocks, mutual funds, commodities, real estate, etc. The officials and agencies listed in this section enforce these laws and regulations. Many of these offices can also provide information to help you make informed investment decisions."
+	},
+	{
+		"name": "State Utility Commissions",
+		"title": "Utility Commissions",
+		"abbr": "suc",
+		"summary": "State Utility Commissions regulate services and rates for gas, electricity and telephones within your state. In some states, the utility commissions regulate other services such as water, transportation, and the moving of household goods. Many utility commissions handle consumer complaints. Sometimes, if a number of complaints are received about the same utility matter, they will conduct investigations."
+	}
+] %}
+
+{% block content %}
+<main id="content" role="main">
+	<div class="container clearfix">
+		
+		{% set left_nav = {
+	    	"parent": {
+	    		"name": "State and Tribal Governments",
+	    		"friendly_url": "state-tribal-governments"
+	  		},
+	    	"items": [
+	    		{
+		    		"name": "Indian Tribes and Resources for American Indians",
+		    		"friendly_url": "/tribes"
+		  		},
+	    		{
+		    		"name": "State and Local Consumer Agencies",
+		    		"friendly_url": "/state-consumer"
+		  		},
+	    		{
+		    		"name": "State Governments",
+		    		"friendly_url": "/states-and-territories"
+		  		},
+	    		{
+		    		"name": "State Governors",
+		    		"friendly_url": "/state-governor"
+		  		}
+	    	],
+	    	"highlighted_url": "/state-consumer"
+	    } %}
+		{% include '01-Modules/left-nav.twig' %}
+
+		<!---right container-->
+		<div class="col-md-9 rightnav clearfix">
+
+			<header>
+				<h1>State and Local Consumer Agencies in California</h1>
+				<p>Get advice, help with complaints, and more.</p>
+			</header>
+
+			{% set whats_on_this_page = [] %}
+			{% if state_data["Government Consumer Protection Offices"]["all"]|length > 0 %}
+				{% set whats_on_this_page = whats_on_this_page|merge(
+					[
+						{
+							"name": "Government Consumer Protection Offices",
+							"id": "es-1-off-hop"
+						}
+					]
+				) %}
+			{% endif %}
+			{% for region in ["State", "County", "City"] %}
+				{% if state_data["Government Consumer Protection Offices"][region]|length > 0 %}
+					{% set whats_on_this_page = whats_on_this_page|merge(
+						[
+							{
+								"name": region ~ " Consumer Protection Offices",
+								"id": "gcpo-" ~ region|lower
+							}
+						]
+					) %}
+				{% endif %}
+			{% endfor %}
+			{% for region in regions %}
+				{% if state_data[region.name]["all"]|length > 0 %}
+					{% set whats_on_this_page = whats_on_this_page|merge(
+						[
+							{
+								"name": region.title,
+								"id": region.abbr
+							}
+						]
+					) %}
+				{% endif %}
+			{% endfor %}
+		    {% include '01-Modules/whats-on-this-page.twig' %}
+
+
+			<article>
+				
+				{% if state_data["Government Consumer Protection Offices"].all|length > 0 %}
+				<header>
+					<h2 id="es-1-off-hop">Consumer Protection Offices</h2>
+					<p>City, county, regional, and state consumer offices offer a variety of important services. They might mediate complaints, conduct investigations, prosecute offenders of consumer laws, license and regulate professional service providers, provide
+						educational materials and advocate for consumer rights. To save time, call before sending a written complaint. Ask if the office handles the type of complaint you have and if complaint forms are provided.</p>
+				</header>
+
+				{% for region in ["State", "County", "City"] %}
+
+					{% if state_data["Government Consumer Protection Offices"][region]|length > 0 %}
+					<header>
+						<h2 id="gcpo-{{region|lower}}">{{region}} Consumer Protection Offices</h2>
+					</header>
+
+					{% for record in state_data["Government Consumer Protection Offices"][region] %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="otlnhdr">
+						<header>
+							<h3>{{record.title}}</h3>
+						</header>
+					</section>
+
+					{% set item = entities[record.uuid] %}
+					{%- set odd_row = true %}
+
+					{% if item.website_links %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 class="org">Website:</h3>
+						</header>
+						{{item.website_links}}
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.email %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 class="org">Email:</h3>
+						</header>
+						<p>
+							<a href="mailto:{{item.email}}" target="_top">{{item.email}}</a>
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.phone_number %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 itemprop="name">Phone Number:</h3>
+						</header>
+						<p>
+							{# If there are multiple phone numbers, display the first one. #}
+							{% if item.phone_number is iterable %}
+							<a href="tel:{{item.phone_number[0].value}}">{{item.phone_number[0].value}}</a>
+							{% else %}
+							<a href="tel:{{item.phone_number}}">{{item.phone_number}}</a>
+							{% endif %}
+							{# TODO: replace special chars in tel links #}
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.toll_free_number %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 class="org">Toll Free:</h3>
+						</header>
+						<p>
+							{% if item.toll_free_number is iterable %}
+							<a href="tel:{{item.toll_free_number[0].value}}">{{item.toll_free_number[0].value}}</a>
+							{% else %}
+							<a href="tel:{{item.toll_free_number}}">{{item.toll_free_number}}</a>
+							{% endif %}
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.tty_number %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 itemprop="name">TTY:</h3>
+						</header>
+						<p>
+							{% if item.tty_number is iterable %}
+							<a href="tel:{{item.tty_number[0].value}}">{{item.tty_number[0].value}}</a>
+							{% else %}
+							<a href="tel:{{item.tty_number}}">{{item.tty_number}}</a>
+							{% endif %}
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+
+					{% endfor %}
+
+					<p class="volver clearfix">
+						<a href="#skiptarget">
+							<span class="icon-backtotop-dwnlvl">Back to Top</span></a>
+					</p>
+					{% endif %}
+				{% endfor %}
+				{% endif %}
+
+				
+
+				{% for region in regions %}
+
+					{% if state_data[region.name]["all"]|length > 0 %}
+					<header>
+						<h2 id="{{region.abbr}}">{{region.title}}</h2>
+					</header>
+					<p>{{region.summary}}</p>
+
+					{% for record in state_data[region.name]["all"] %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="otlnhdr">
+						<header>
+							<h3>{{record.title}}</h3>
+						</header>
+					</section>
+
+					{% set item = entities[record.uuid] %}
+					{%- set odd_row = true %}
+
+					{% if item.website_links %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 class="org">Website:</h3>
+						</header>
+						{{item.website_links}}
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.email %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 class="org">Email:</h3>
+						</header>
+						<p>
+							<a href="mailto:{{item.email}}" target="_top">{{item.email}}</a>
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.phone_number %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 itemprop="name">Phone Number:</h3>
+						</header>
+						<p>
+							{# If there are multiple phone numbers, display the first one. #}
+							{% if item.phone_number is iterable %}
+							<a href="tel:{{item.phone_number[0].value}}">{{item.phone_number[0].value}}</a>
+							{% else %}
+							<a href="tel:{{item.phone_number}}">{{item.phone_number}}</a>
+							{% endif %}
+							{# TODO: replace special chars in tel links #}
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.toll_free_number %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 class="org">Toll Free:</h3>
+						</header>
+						<p>
+							{% if item.toll_free_number is iterable %}
+							<a href="tel:{{item.toll_free_number[0].value}}">{{item.toll_free_number[0].value}}</a>
+							{% else %}
+							<a href="tel:{{item.toll_free_number}}">{{item.toll_free_number}}</a>
+							{% endif %}
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% if item.tty_number %}
+					<section itemscope="" itemtype="http://microformats.org/wiki/hCard" class="{{odd_row ? 'otln' : 'otlnrw'}}">
+						<header>
+							<h3 itemprop="name">TTY:</h3>
+						</header>
+						<p>
+							{% if item.tty_number is iterable %}
+							<a href="tel:{{item.tty_number[0].value}}">{{item.tty_number[0].value}}</a>
+							{% else %}
+							<a href="tel:{{item.tty_number}}">{{item.tty_number}}</a>
+							{% endif %}
+						</p>
+					</section>
+					{%- set odd_row = not odd_row %}
+					{% endif %}
+
+					{% endfor %}
+
+					<p class="volver clearfix">
+						<a href="#skiptarget">
+							<span class="icon-backtotop-dwnlvl">Back to Top</span></a>
+					</p>
+				
+					{% endif %}
+				{% endfor %}
+				
+				
+				{% include 'partials/_smshare.twig' %}
+				
+				{% include '01-Modules/page-survey.twig' %}
+
+			</article>
+
+			<p class="last">Last Updated: November 12, 2017</p>
+
+		</div>
+
+	</div>
+</main>
+{% endblock content %}

@@ -1,0 +1,46 @@
+
+{% extends "partials/_page.twig" %}
+
+{% block content %}
+
+<main id="content" class="az-page" role="main">
+	<div class="container usa-grid clearfix">
+
+	{% include '01-Modules/left-nav.twig' %}
+	
+  <!---right container-->
+  <div class="col-md-9 col-sm-12 rightnav">
+	<header>
+		<h1 id="">{{ page_title }}</h1>
+    	<p>{{ page_intro }}</p>
+    </header>
+	<ul id="statelist" class="one_column_bullet">
+		{% for item in stateDetails[siteName] %}
+			<li>
+				<a class="url" href="
+				{% if usa_gov_50_state_category == "autogenerate" %}
+					{{ usa_gov_50_state_prefix }}/{{ item.state_canonical_name|friendly_url }}
+				{% else %}
+					{{ entities[item.uuid][usa_gov_50_state_category]["url"] }}
+				{% endif %}
+				">
+					{{ item.state_canonical_name|title }}
+				</a>
+			</li>
+		{% endfor %}
+	</ul>
+
+	{% include 'partials/_smshare.twig' %}
+
+		<p class="volver clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">Back to Top</span></a></p>
+</article>
+
+	{% include '01-Modules/contact-box.twig' %}
+
+	<p class="statebacktotop clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">Back to Top</span></a></p>
+	</div>
+	</div>
+
+</main>
+
+{% endblock content %}

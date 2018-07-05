@@ -1,0 +1,15 @@
+<ul class="usa-nav-primary usa-accordion">
+{% for menuTerm in sitePage.menu %}
+    <li><button class="usa-accordion-button usa-nav-link" aria-expanded="false" aria-controls="megamenu-{{ loop.index }}"><span>{{ menuTerm.name }}</span></button>
+        <ul class="usa-nav-submenu usa-megamenu usa-grid-full" id="megamenu-{{ loop.index }}">
+        {% for subSet in menuTerm.menu %}
+            <li class="usa-megamenu-col"><ul>
+            {% for item in subSet %}
+                <li><a href="{{ item.url }}">{{ item.name }}</a></li>
+            {% endfor %}
+            </ul></li>
+        {% endfor %}
+        </ul>
+    </li>
+{% endfor %}
+</ul>

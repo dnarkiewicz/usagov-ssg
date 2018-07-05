@@ -1,0 +1,149 @@
+
+{% extends "partials/_page.twig" %}
+
+{% block content %}
+
+  <main id="content" role="main">
+    <div class="container clearfix">
+          <div class="term-listing-heading">
+
+    {% include '01-Modules/left-nav.twig' %}
+    
+    <!---right container-->
+    <div class="col-md-9 col-sm-12 rightnav">
+        <header>
+            <h1>Email USA.gov to Find Government Information and Services</h1>        </header>
+        <!-- begin WOTP -->
+
+
+        
+  
+     <article>
+ 
+        
+            
+
+
+
+
+
+
+    
+        
+        <p>Email us your questions about the U.S. government or your comments about our website, USA.gov. We will respond to your questions in English or Spanish.</p>
+
+<p><strong>Do you want to send a message to an elected official, such as the President?</strong> We can't forward emails to elected officials, so please contact them directly:</p>
+		<ul class="emailqstn">
+			<li><a href="http://www.whitehouse.gov/contact/submit-questions-and-comments">President of the United States</a></li>
+			<li><a href="/elected-officials">Members of the U.S. Congress and more</a></li>	
+		</ul>		
+	
+	<p>If we can't answer your question directly, our response will:</p>
+		<ul class="emailqstn">
+			<li>Refer you to the government agency that can help.</li>
+			<li>Help you locate the information you need. Additional research on your part may be required to get your exact answer.</li>
+		</ul>
+					 			
+	<p>If your question is very complex or specific, we may be able to provide you with more personalized service if you call us at 1-844-USA-GOV1 (1-844-872-4681).
+	    We're available Monday to Friday 8 AM to 8 PM Eastern Time.</p>
+
+	<p>To help us serve you better, please include:</p>			
+		<ul class="emailqstn">
+			<li>Any resources you have already tried.</li>
+			<li>The program or agency you are asking about, if you know.</li>
+		</ul>
+	
+	<p>For your protection, do not include personal information like telephone or Social Security numbers.</p> 
+<div id="emlfnd">
+<form action="https://www.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8" class="validate" id="myform" method="post" name="myform">
+              <input type=hidden name='captcha_settings' value='{"keyname":"Recaptcha_FCIC","fallback":"true","orgId":"00DU0000000Leux","ts":""}'>
+              <input name="orgid" type="hidden" value="00DU0000000Leux">
+              <input name="retURL" type="hidden" value="http://usa.gov/thank-you-email">
+             <input id="recordType" name="recordType" type="hidden" value="012U00000001eYv">
+              <input name="Sender_IP__c" type="hidden" value="192.168.1.1">
+              <input name="Site_Version__c" type="hidden" value="New">
+              <div class="usa-alert usa-alert-info">
+                <div class="usa-alert-body">
+                  <p class="usa-alert-heading">All fields marked with an asterisk (*) are required fields. </p>
+                  <p class="usa-alert-text">If you have any issues with the reCAPTCHA, please call 1-844-USA-GOV1.</p>
+                </div>
+              </div>
+              <p class="required">
+                <label for="00NU0000004z90C">* First Name:</label>
+                <input aria-required="true" data-error="Please enter your first name" data-name="First Name" id="00NU0000004z90C" maxlength="255" name="00NU0000004z90C" size="40" type="text">
+              </p>
+              <p class="required">
+                <label for="email">* Email Address:</label>
+                <input aria-required="true" data-error="Please enter a valid e-mail address" data-name="Email Address" id="email" maxlength="80" name="email" size="40" type="email">
+              </p>
+              <p>
+                <label for="00NU0000004z91C">ZIP Code:</label>
+                <input id="00NU0000004z91C" maxlength="10" name="00NU0000004z91C" size="20" type="text">
+
+              </p>
+
+              <p class="required">
+
+                <label for="description" class="dscrptn">* Enter Question Here:<br>
+
+                  Please limit your question to 1000 characters.</label>
+
+              <textarea aria-required="true" type="text" id="description" cols="40" rows="10" maxlength="1000" name="description" data-name="Description" data-error="Please enter a comment"></textarea></p>
+
+
+                <div style="visibility: hidden; z-index: 2;" class="_e725ae-textarea_btn _e725ae-anonymous _e725ae-not_focused" data-grammarly-reactid=".0">
+
+                  <div class="_e725ae-transform_wrap" data-grammarly-reactid=".0.0">
+
+                    <div title="Protected by Grammarly" class="_e725ae-status" data-grammarly-reactid=".0.0.0">&nbsp;</div>
+
+                  </div>
+
+                  <span class="_e725ae-btn_text" data-grammarly-reactid=".0.1">Not signed in</span></div>
+
+
+              <input type="hidden" id="external" name="external" value="1">
+
+
+              <div class="g-recaptcha" title="reCAPCHA" data-sitekey="6LdFORIUAAAAAIgJPQBlcE7hEMMuRf8T6Vlfp_xb"></div>
+
+              <p style="display: none;visibility:hidden" class="extrainfo">
+
+                <label for="00Nt0000000FsTK">Please ignore this box.</label>
+
+                <input id="00Nt0000000FsTK" maxlength="255" name="00Nt0000000FsTK" size="20" type="text">
+
+              </p>
+
+              <p>
+
+                <input type="submit" name="submit" value="Submit" onclick="return submitPressed();">
+
+              </p>
+</form>	</div>		
+<p class="clearfix"></p>
+    
+
+{% include 'partials/_smshare.twig' %}
+
+<p class="volver clearfix"><a href="#skiptarget"><span class="icon-backtotop-dwnlvl">Back to Top</span></a></p>
+    </article>
+        
+        {% include '01-Modules/page-survey.twig' %}
+        
+    </div>
+
+
+
+
+
+
+
+
+</div>
+    </div>
+  </main>
+
+
+{% endblock content %}
+

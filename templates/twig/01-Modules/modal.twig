@@ -1,0 +1,23 @@
+{% if modal %}
+<div id="{{modal.id}}" class="modal {{modal.status}}" data-id="201705040949">
+{#
+  Each emergency popup should get a unique data-id.
+  This value is stored into a cookie when a user closes the popup.
+  When the cookie matches the data-id, the popup will not display on page load.
+#}
+  <div class="usa-grid">
+    <div>
+      <button class="close top">
+        Close
+      </button>
+      <div class="icon"></div>
+      <h2>{{modal.heading}}</h2>
+      <p>{{modal.text}}</p>
+      <button class="close">
+        Close
+      </button>
+      <div class="logo"></div>
+    </div>
+  </div>
+</div>
+{% endif %}

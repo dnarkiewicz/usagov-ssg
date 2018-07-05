@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+{% set lang = "en" %}
+<html  lang="{{lang}}" xml:lang="{{lang}}"  >
+
+<head>
+	{% include '_partials_head.twig' %}
+
+	{{ head_html }}
+
+	{% block pageStyles %}
+
+	{% endblock pageStyles %}
+
+</head>
+
+<body>
+	<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KV4BZFD"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+	{% include '_modules_header.twig' %}
+
+	<main id="main-content">
+	  <div class="usa-grid">
+	    <div class="usa-width-one-whole">{% block content %}{% endblock content %}</div>
+	  </div>
+	</main>
+	
+	{# Footer #}
+	{{ sitePage.end_html|raw }}
+
+	{% include '_partials_bodyscripts.twig' %}
+
+	{% block pageScripts %}
+	{% endblock pageScripts %}
+
+</body>
+</html>

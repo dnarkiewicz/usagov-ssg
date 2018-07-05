@@ -1,0 +1,9 @@
+
+cache/*
+composer.lock
+vendor/*
+sites/*
+exampledata/*
+config/*.config.php
+templates_compiled/*
+templates/sync

@@ -1,0 +1,88 @@
+{% if voc %}
+<div id="srvyinvt">
+  <style type="text/css">
+  #vocModalOverlay {
+      width:100%;
+      height:100%;
+      z-index:9999; /* places the modal overlay between the main page and the modal dialog*/
+      background-color:#000;
+      opacity:0.5;
+      position:fixed;
+      top:0;
+      left:0;
+      display:none;
+      margin:0;
+      padding:0;
+  }
+
+  #vocModal {
+      width:50%;
+      margin-left:auto;
+      margin-right:auto;
+      padding: 25px;
+      background-color:#fff;
+      z-index:10000; /* places the modal dialog on top of everything else */
+      position:fixed;
+      top:25%;
+      left:25%;
+      display:none;
+  }
+  #vocModal h1 {
+      text-align:center;
+  }
+
+  #vocEnter {
+    cursor: pointer;
+  }
+
+  #vocModal .vocCancelButton {
+    cursor: pointer;
+  }
+
+  #vocModal .banner {
+    padding-bottom: 10px;
+    border-bottom: 1px solid black;
+  }
+
+  #vocModal .modalCloseButton {
+      float:right;
+      position:absolute;
+      top:10px;
+      left:95%;
+  }
+  #vocModal .modalCloseButton img {
+      border:0;
+  }
+
+  #vocModal .screen-reader-offscreen {
+      position:absolute;
+      left:-999px;
+      width:1px;
+      height:1px;
+      top:auto;
+  }
+
+  </style>
+  <iframe src="//voc-prod-2.gsa.ctacdev.com/surveys/291/invitation" height="0" width="0" tabindex="-1" title="empty" style="display: none;"></iframe>
+  <div id="vocModal" aria-hidden="false" aria-labelledby="modalTitle" aria-describedby="modalDescription" role="dialog" tabindex="-1" style="display: block;">
+    <div id="modalTitle" class="screen-reader-offscreen">
+      Survey Invitation Form
+    </div>
+    <div id="modalDescription" class="screen-reader-offscreen">
+      Beginning of dialog window.  Survey invitation form.  Escape will cancel and close the window.
+      Accepting the invitation will load the survey form.  Declining the invitation will cancel and
+      close the window.
+    </div>
+    <div id="modalContents">
+      <input class="vocCancelButton top-right" id="cancel" type="submit" value="Close">
+      <p class="firstpara">Please help us improve USA.gov after your visit!</p>
+      <p>Your answers to a 2 to 3 minute survey about your experience will give us the feedback we need to make our site better.</p>
+      <p>Use the "Yes, I'll help" button and a new window will open with your survey.  It will wait until you are ready.  Thank you!</p>
+      <br>
+      <input type="button" name="vocEnter" id="vocEnter" value="Yes, I'll help">
+      <input type="button" name="vocCancelButton" class="vocCancelButton" value="No thanks">
+    </div>
+  </div>
+  <div id="vocModalOverlay" style="display: block;"></div>
+</div>
+{% endif %}
