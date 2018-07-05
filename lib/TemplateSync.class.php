@@ -30,10 +30,10 @@ class TemplateSync
         $this->dest_site_dir        = './sites/'.trim(strtolower($this->ssg->siteName));
     }
 
-    public function sync()
+    public function sync( $force_fresh_pull=null )
     {
         $prepare = $this->prepare();
-        $pull    = $this->pull();
+        $pull    = $this->pull($force_fresh_pull);
         $assets  = $this->mergeAssets();
     }
 
@@ -177,7 +177,7 @@ class TemplateSync
         echo "Templates: merging template files ... ";
  
         // we want the template directories somewhere we can use them
-        $this->copy_recurse($this->source_template_base,$this->dest_template_base);
+        $this->ssg->copy_recurse($this->source_template_base,$this->dest_template_base);
         // `cp -r {$this->source_template_base} {$this->dest_template_base}`;
 
         echo "done\n";
@@ -189,7 +189,7 @@ class TemplateSync
 
         if ( !is_writable($this->dest_site_dir) )
         {
-            $this->chmod_recurse($this->dest_site_dir,0744);
+            $this->ssg->chmod_recurse($this->dest_site_dir,0744);
         }
         // we want these /asset directories moved to root
         $asset_dirs = [ 'js', 'css', 'fonts', 'images' ];
@@ -205,66 +205,14 @@ class TemplateSync
             }
             if ( !is_writable($dest_asset_dir) )
             {
-                $this->chmod_recurse($dest_asset_dir,0744);
+                $this->ssg->chmod_recurse($dest_asset_dir,0744);
                 //`chmod -r 0744 $dest_asset_dir`;
             }
-            $this->copy_recurse($source_asset_dir,$dest_asset_dir);
+            $this->ssg->copy_recurse($source_asset_dir,$dest_asset_dir);
             // `cp -r {$source_asset_dir} {$dest_asset_dir}`;
         }
 
         echo "done\n";
     }
 
-    public function copy_recurse($src, $dst, $perm=null)
-    {
-        if ( empty($src) ) { 
-            return;
-        } else if (is_link($src)) {
-            symlink(readlink($src), $dst);
-        } elseif (is_dir($src)) {
-            if ( !is_dir($dst) ) {
-                mkdir($dst,0744,true);
-            }
-            if ( $perm ) { 
-                chmod($dst,$perm); 
-            }
-            foreach (scandir($src) as $file) {
-                if ($file != '.' && $file != '..') {
-                    $this->copy_recurse("$src/$file", "$dst/$file");
-                }
-            }
-        } elseif ( is_file($src) ) {
-            if ( !is_file($dst) ) {
-                if ( !is_dir(dirname($dst)) ) {
-                    mkdir(dirname($dst),0744,true);
-                }
-                touch($dst);
-            }
-            copy($src, $dst);
-            if ( $perm ) { 
-                chmod($dst,$perm); 
-            }
-        } else {
-            echo "WARNING: Cannot copy $src (unknown file type)\n";
-        }
-    }
-    public function chmod_recurse($src, $perm)
-    {
-        if ( empty($src) ) { 
-            return;
-        } else if (is_link($src)) {
-            return;
-        } elseif (is_dir($src)) {
-            chmod($src,$perm);
-            foreach (scandir($src) as $file) {
-                if ($file != '.' && $file != '..') {
-                    $this->chmod_recurse("$src/$file",$perm);
-                }
-            }
-        } elseif (is_file($src)) {
-            chmod($src,$perm);
-        } else {
-            echo "WARNING: Cannot apply permissions to $src (unknown file type)\n";
-        }
-    }
 }

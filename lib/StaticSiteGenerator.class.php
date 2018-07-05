@@ -761,4 +761,57 @@ class StaticSiteGenerator
         return preg_replace('/\s+/','',ucwords(str_replace(['-'],' ',$pageType)));
     }
 
+    public function copy_recurse($src, $dst, $perm=null)
+    {
+        if ( empty($src) ) { 
+            return;
+        } else if (is_link($src)) {
+            symlink(readlink($src), $dst);
+        } elseif (is_dir($src)) {
+            if ( !is_dir($dst) ) {
+                mkdir($dst,0744,true);
+            }
+            if ( $perm ) { 
+                chmod($dst,$perm); 
+            }
+            foreach (scandir($src) as $file) {
+                if ($file != '.' && $file != '..') {
+                    $this->copy_recurse("$src/$file", "$dst/$file");
+                }
+            }
+        } elseif ( is_file($src) ) {
+            if ( !is_file($dst) ) {
+                if ( !is_dir(dirname($dst)) ) {
+                    mkdir(dirname($dst),0744,true);
+                }
+                touch($dst);
+            }
+            copy($src, $dst);
+            if ( $perm ) { 
+                chmod($dst,$perm); 
+            }
+        } else {
+            echo "WARNING: Cannot copy $src (unknown file type)\n";
+        }
+    }
+    public function chmod_recurse($src, $perm)
+    {
+        if ( empty($src) ) { 
+            return;
+        } else if (is_link($src)) {
+            return;
+        } elseif (is_dir($src)) {
+            chmod($src,$perm);
+            foreach (scandir($src) as $file) {
+                if ($file != '.' && $file != '..') {
+                    $this->chmod_recurse("$src/$file",$perm);
+                }
+            }
+        } elseif (is_file($src)) {
+            chmod($src,$perm);
+        } else {
+            echo "WARNING: Cannot apply permissions to $src (unknown file type)\n";
+        }
+    }
+
 }

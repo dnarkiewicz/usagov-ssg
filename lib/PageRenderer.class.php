@@ -25,6 +25,24 @@ class PageRenderer
         $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/00-Pages';
         $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates_compiled/twig';
 
+        if ( !is_dir($this->templateDir) )
+        { 
+            mkdir($this->templateDir,0744,true);
+        }
+        if ( !is_writable($this->templateDir) )
+        {
+            $this->ssg->chmod_recurse($this->templateDir,0744);
+        }
+
+        if ( !is_dir($this->templateDirCache) )
+        { 
+            mkdir($this->templateDirCache,0744,true);
+        }
+        if ( !is_writable($this->templateDirCache) )
+        {
+            $this->ssg->chmod_recurse($this->templateDirCache,0744);
+        }
+
         $this->templateLoader   = new \Twig_Loader_Fractal($this->templateDir);
         $this->templateRenderer = new \Twig_Environment($this->templateLoader, array(
             'cache' => $this->templateDirCache,
