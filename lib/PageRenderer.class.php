@@ -21,9 +21,9 @@ class PageRenderer
         $this->ssg = &$ssg;
 
         // $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/'.$this->ssg->siteName.'/twig/00-Pages';
-        // $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates_compiled/'.$this->ssg->siteName.'/twig';
+        // $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates/compiled/'.$this->ssg->siteName.'/twig';
         $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/00-Pages';
-        $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates_compiled/twig';
+        $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates/compiled/twig';
 
         if ( !is_dir($this->templateDir) )
         { 
@@ -152,7 +152,7 @@ class PageRenderer
                 mkdir( $fileDir, 0755, true );
             }
             chmod( $fileDir, 0755 );
-            file_put_contents( $file, $path );
+            file_put_contents( $file, "Path:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'] );
             echo "Render Fail: $url ({$page['pageType']}) \"{$page['name']}\"\n";
             # echo "  - Template render failed : Creating empty page for {$page['uuid']} in $file \n";
           }
@@ -333,21 +333,21 @@ class PageRenderer
             mkdir( $this->baseDir.'/templates/twig/00-Pages', 0755, true );
         }
 
-        if ( !file_exists($this->baseDir.'/templates_compiled/') )
+        if ( !file_exists($this->baseDir.'/templates/compiled/') )
         {
-            mkdir( $this->baseDir.'/templates_compiled/', 0755, true );
+            mkdir( $this->baseDir.'/templates/compiled/', 0755, true );
         }
-        // if ( !file_exists($this->baseDir.'/templates_compiled/'.$this->ssg->siteName) )
+        // if ( !file_exists($this->baseDir.'/templates/compiled/'.$this->ssg->siteName) )
         // {
-        //     mkdir( $this->baseDir.'/templates_compiled/'.$this->ssg->siteName, 0755, true );
+        //     mkdir( $this->baseDir.'/templates/compiled/'.$this->ssg->siteName, 0755, true );
         // }
-        // if ( !file_exists($this->baseDir.'/templates_compiled/'.$this->ssg->siteName.'/twig') )
+        // if ( !file_exists($this->baseDir.'/templates/compiled/'.$this->ssg->siteName.'/twig') )
         // {
-        //     mkdir( $this->baseDir.'/templates_compiled/'.$this->ssg->siteName.'/twig', 0755, true );
+        //     mkdir( $this->baseDir.'/templates/compiled/'.$this->ssg->siteName.'/twig', 0755, true );
         // }
-        if ( !file_exists($this->baseDir.'/templates_compiled/twig') )
+        if ( !file_exists($this->baseDir.'/templates/compiled/twig') )
         {
-            mkdir( $this->baseDir.'/templates_compiled/twig', 0755, true );
+            mkdir( $this->baseDir.'/templates/compiled/twig', 0755, true );
         }
     }
 

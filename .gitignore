@@ -6,4 +6,6 @@ sites/*
 exampledata/*
 config/*.config.php
 templates_compiled/*
+templates/compiled/*
 templates/sync
+templates/twig/*
