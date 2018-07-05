@@ -69,7 +69,14 @@ class StaticSiteGenerator
     {
         if ( !is_dir('./cache/') ) { mkdir('./cache/'); }
         $cacheFile='./cache/'.$this->siteName.'.cache';
-        if ( !file_exists($cacheFile) || !is_writable($cacheFile) ) { return touch($cacheFile); }
+        if ( !file_exists($cacheFile) )
+        {
+            touch($cacheFile);
+        }
+        if ( !is_writable($cacheFile) ) 
+        { 
+            chmod($cacheFile,0644);
+        }
         $cache = serialize([ 'entities'=>$this->source->entities, 'entitiesById'=>$this->source->entitiesById ]);
         $bytes = file_put_contents($cacheFile, $cache);
         return !empty( $bytes );
