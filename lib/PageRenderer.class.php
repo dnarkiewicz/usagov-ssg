@@ -118,18 +118,14 @@ class PageRenderer
           if ( empty($twig) )
           {
             // echo "  ! no twig renderer {$page['name']} $path\n";
-            $html = $path;
-            if ( !empty($html) )
+            /// directory for path
+            if ( !file_exists($fileDir) )
             {
-                /// directory for path
-                if ( !file_exists($fileDir) )
-                {
-                    mkdir( $fileDir, 0755, true );
-                }
-                chmod( $fileDir, 0755 );
-                file_put_contents( $file, $html );
-                echo "No twig template found : Creating empty page for {$page['uuid']} in $file \n";
+                mkdir( $fileDir, 0755, true );
             }
+            chmod( $fileDir, 0755 );
+            file_put_contents( $file, $path );
+            echo "No twig template found : Creating empty page for {$page['uuid']} in $file \n";
             return null;
           }
 
@@ -137,25 +133,48 @@ class PageRenderer
           $pageData = $this->preProcessPage($page);
 
           /// HTML
-          if ( $page['type_of_page_to_generate'] == 'a-z-page' )
+          $html = $twig->render($pageData);
+          if ( !empty($html) )
           {
+              /// directory for path
+              if ( !file_exists($fileDir) )
+              {
+                  mkdir( $fileDir, 0755, true );
+              }
+              chmod( $fileDir, 0755 );
+              file_put_contents( $file, $html );
+              echo "Creating page for {$page['uuid']} in $file \n";
+          } else {
+            if ( !file_exists($fileDir) )
+            {
+                mkdir( $fileDir, 0755, true );
+            }
+            chmod( $fileDir, 0755 );
+            file_put_contents( $file, $path );
+            echo "Template render failed : Creating empty page for {$page['uuid']} in $file \n";
+          }
+
+          /// some special pages generate further sub-pages
+          if ( $page['pageType'] == 'AZPage' )
+          {
+
             foreach ( $this->ssg->siteIndexAZ as $letter => $list )
             {
-                $pageData['currentAZLetter'] = $letter;
-                $html = $twig->render($pageData);
-                if ( !empty($html) )
-                {
-                    /// directory for path
-                    $fileDir = $siteDir.'/'.$path.$letter;
-                    $file = $fileDir.'/'.'index.html';
-                    if ( !file_exists($fileDir) )
-                    {
-                        mkdir( $fileDir, 0755, true );
-                    }
-                    chmod( $fileDir, 0755 );
-                    file_put_contents( $file, $html );
-                    echo "Creating page for {$page['uuid']} in $file \n";
-                }
+            //     $pageData['currentAZLetter'] = $letter;
+            //     $html = $twig->render($pageData);
+            //     if ( !empty($html) )
+            //     {
+            //         /// directory for path
+            //         $fileDir = $siteDir.'/'.$path.$letter;
+            //         $file = $fileDir.'/'.'index.html';
+            //         if ( !file_exists($fileDir) )
+            //         {
+            //             mkdir( $fileDir, 0755, true );
+            //         }
+            //         chmod( $fileDir, 0755 );
+            //         file_put_contents( $file, $html );
+            //         echo "Creating page for {$page['uuid']} in $file \n";
+            //     }
             }
           } else if ( $page['type_of_page_to_generate'] == '50-state-page' ) {
             // render the master page with the dropdown
@@ -173,19 +192,6 @@ class PageRenderer
                 renderPage( 'blah/state_name', template(state-details-governemtn) );
             }
             */
-          } else {
-            $html = $twig->render($pageData);
-            if ( !empty($html) )
-            {
-                /// directory for path
-                if ( !file_exists($fileDir) )
-                {
-                    mkdir( $fileDir, 0755, true );
-                }
-                chmod( $fileDir, 0755 );
-                file_put_contents( $file, $html );
-                echo "Creating page for {$page['uuid']} in $file \n";
-            }
           }
 
           $paths = [ $path ];

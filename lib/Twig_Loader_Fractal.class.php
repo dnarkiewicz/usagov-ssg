@@ -128,6 +128,9 @@ class Twig_Loader_Fractal implements Twig_LoaderInterface, Twig_ExistsLoaderInte
     {
         $path = $this->findTemplate($name);
 
+        if ( empty($path) ) {
+            return '';
+        }
         return new Twig_Source(file_get_contents($path), $name, $path);
     }
 
@@ -166,11 +169,9 @@ class Twig_Loader_Fractal implements Twig_LoaderInterface, Twig_ExistsLoaderInte
      *
      * @return string|false The template name or false
      */
-    protected function findTemplate($name, $throw = true)
+    protected function findTemplate($name, $throw = false)
     {
         $name = $this->normalizeName($name);
-
-        $name = preg_replace("/^\.\.\//",'',$name);
 
         if (isset($this->cache[$name])) {
             return $this->cache[$name];
