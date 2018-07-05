@@ -3,7 +3,7 @@
 $config = [
   'siteName' => 'USA.gov',
   'siteUrl'  => 'www.usa.gov',
-  'storageDir' => realpath(dirname(__FILE__).'/..'),
+  'baseDir' => realpath(dirname(__FILE__).'/..'),
 	'elasticsearch' => [
 		'server' => 'https://elasticsearch:9443',
 		'index'  => 'cmp-data-entities',
