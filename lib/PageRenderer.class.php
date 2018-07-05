@@ -99,10 +99,11 @@ class PageRenderer
           if ( empty($url) )
           {
               /// not renderable
-              echo "Render Page: {$page['name']} unrenderable\n";
+              #echo "Render Page: {$page['name']} unrenderable\n";
+              echo "UnRenderable: {$page['name']}\n";
               return null;
           }
-          echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
+          #echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
           $path = ltrim($url,'/');
           if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
           $base = basename($path);
@@ -125,7 +126,8 @@ class PageRenderer
             }
             chmod( $fileDir, 0755 );
             file_put_contents( $file, $path );
-            echo "No twig template found : Creating empty page for {$page['uuid']} in $file \n";
+            echo "Render None: $url ({$page['pageType']}) \"{$page['name']}\"\n";
+            #echo "  - No twig template found : Creating empty page for {$page['uuid']} in $file \n";
             return null;
           }
 
@@ -143,7 +145,7 @@ class PageRenderer
               }
               chmod( $fileDir, 0755 );
               file_put_contents( $file, $html );
-              echo "Creating page for {$page['uuid']} in $file \n";
+              #echo "Creating page for {$page['uuid']} in $file \n";
           } else {
             if ( !file_exists($fileDir) )
             {
@@ -151,30 +153,36 @@ class PageRenderer
             }
             chmod( $fileDir, 0755 );
             file_put_contents( $file, $path );
-            echo "Template render failed : Creating empty page for {$page['uuid']} in $file \n";
+            echo "Render Fail: $url ({$page['pageType']}) \"{$page['name']}\"\n";
+            # echo "  - Template render failed : Creating empty page for {$page['uuid']} in $file \n";
           }
 
           /// some special pages generate further sub-pages
           if ( $page['pageType'] == 'AZPage' )
           {
-
+            if ( !empty($page['az_index_data_source']) )
+            {
+                $azSubPage = $this->ssg->formatPageType($page['az_index_data_source']);
+                $page['pageType'] = 'AZPage'.ucFirst($azSubPage);
+            }
             foreach ( $this->ssg->siteIndexAZ as $letter => $list )
             {
-            //     $pageData['currentAZLetter'] = $letter;
-            //     $html = $twig->render($pageData);
-            //     if ( !empty($html) )
-            //     {
-            //         /// directory for path
-            //         $fileDir = $siteDir.'/'.$path.$letter;
-            //         $file = $fileDir.'/'.'index.html';
-            //         if ( !file_exists($fileDir) )
-            //         {
-            //             mkdir( $fileDir, 0755, true );
-            //         }
-            //         chmod( $fileDir, 0755 );
-            //         file_put_contents( $file, $html );
-            //         echo "Creating page for {$page['uuid']} in $file \n";
-            //     }
+
+                //     $pageData['currentAZLetter'] = $letter;
+                //     $html = $twig->render($pageData);
+                //     if ( !empty($html) )
+                //     {
+                //         /// directory for path
+                //         $fileDir = $siteDir.'/'.$path.$letter;
+                //         $file = $fileDir.'/'.'index.html';
+                //         if ( !file_exists($fileDir) )
+                //         {
+                //             mkdir( $fileDir, 0755, true );
+                //         }
+                //         chmod( $fileDir, 0755 );
+                //         file_put_contents( $file, $html );
+                //         echo "Creating page for {$page['uuid']} in $file \n";
+                //     }
             }
           } else if ( $page['type_of_page_to_generate'] == '50-state-page' ) {
             // render the master page with the dropdown
@@ -249,7 +257,7 @@ class PageRenderer
 
     public function getTwigPageRenderer( $page )
     {
-        $pageType = $this->ssg->getPageType($page);
+        // $pageType = $this->ssg->getPageType($page);
         // $typeMap = [
         //     'generic-navigation-page' => 'GenericNavigationPage',
         //     'generic-content-page' => 'content-page',
@@ -267,12 +275,12 @@ class PageRenderer
         //     $pageType = $typeMap[$pageType];
         // }
         // if ( $pageType!=='Home' ){ echo "    Skipping Type:$pageType\n"; return null; }
-        if ( $pageType===null )
-        {
-            return null;
-        }
+        // if ( $pageType===null )
+        // {
+        //     return null;
+        // }
 
-        if ( empty($this->ssg->siteName) ) { echo __LINE__." no renderer:$pageType\n"; return null; }
+        if ( empty($this->ssg->siteName) ) { echo __LINE__." no renderers for site\n"; return null; }
 
         if ( empty($this->templates[$this->ssg->siteName]) )
         {

@@ -749,7 +749,7 @@ class StaticSiteGenerator
         if ( array_key_exists('type_of_page_to_generate',$page)
              && is_string($page['type_of_page_to_generate']) )
         {
-            $pageType = trim(strtolower($page['type_of_page_to_generate']));
+            $pageType = $page['type_of_page_to_generate'];
         } else if (
              empty($page['field_generate_page'])
           || empty($page['field_generate_page']['und'])
@@ -763,8 +763,14 @@ class StaticSiteGenerator
         {
             return null;
         } else {
-            $pageType = trim(strtolower($page['field_type_of_page_to_generate']['und'][0]['value']));
+            $pageType = $page['field_type_of_page_to_generate']['und'][0]['value'];
         }
+        return $this->formatPageType($type);
+    }
+
+    public function formatPageType( $type )
+    {
+        $pageType = trim(strtolower($type));
         return preg_replace('/\s+/','',ucwords(str_replace(['-'],' ',$pageType)));
     }
 

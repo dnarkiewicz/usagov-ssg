@@ -179,6 +179,7 @@ class Twig_Loader_Fractal implements Twig_LoaderInterface, Twig_ExistsLoaderInte
 
         if (isset($this->errorCache[$name])) {
             if (!$throw) {
+                error_log($this->errorCache[$name]);
                 return false;
             }
 
@@ -193,6 +194,7 @@ class Twig_Loader_Fractal implements Twig_LoaderInterface, Twig_ExistsLoaderInte
             $this->errorCache[$name] = sprintf('There are no registered paths for namespace "%s".', $namespace);
 
             if (!$throw) {
+                error_log($this->errorCache[$name]);
                 return false;
             }
 
@@ -214,6 +216,7 @@ class Twig_Loader_Fractal implements Twig_LoaderInterface, Twig_ExistsLoaderInte
         $this->errorCache[$name] = sprintf('Unable to find template "%s" (looked into: %s).', $name, implode(', ', $this->paths[$namespace]));
 
         if (!$throw) {
+            error_log($this->errorCache[$name]);
             return false;
         }
 
