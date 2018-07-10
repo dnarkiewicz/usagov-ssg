@@ -113,7 +113,7 @@ class PageRenderer
               echo "UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n";
               return null;
           }
-          #echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
+          echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
           $path = ltrim($url,'/');
           if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
           $base = basename($path);

@@ -11,11 +11,28 @@ $executionStartTime = microtime(true);
 $siteName = 'USA.gov';
 $site = new StaticSiteGenerator($siteName);
 
-$fromSource  = ( isset($argv[1]) && $argv[1]=='--nocache');
+$fromSource = false;
+$freshTemplates = false;
+
+foreach ( $argv as $arg )
+{
+    if ( isset($arg) && $arg=='--freshdata' )
+    {
+        $fromSource = true;
+    }
+    if ( isset($arg) && $arg=='--freshtemplates' )
+    {
+        $pullType = 'fresh';
+    }
+    if ( isset($arg) && $arg=='--forcetemplates' )
+    {
+        $pullType = 'force';
+    }
+}
 
 $site->loadData($fromSource);
 $site->buildSiteTreeFromEntities();
-$site->syncTemplates();
+$site->syncTemplates($pullType);
 $site->renderSite();
 
 /*** /

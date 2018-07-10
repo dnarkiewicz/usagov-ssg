@@ -34,10 +34,10 @@ class TemplateSync
         $this->site_dir             = './sites/'.trim(strtolower($this->ssg->siteName));
     }
 
-    public function sync( $force_fresh_pull=null )
+    public function sync( $pullType=null )
     {
         $prepare = $this->prepare();
-        $pull    = $this->pull($force_fresh_pull);
+        $pull    = $this->pull($pullType);
         $assets  = $this->mergeAssets();
     }
 
@@ -45,10 +45,8 @@ class TemplateSync
     {
         echo "Templates: preparing directories ... ";
         $this->prepareDir($this->source_dir);
-        // $this->prepareDir($this->source_template_base);
         $this->prepareDir($this->source_template_dir);
         $this->prepareDir($this->dest_dir);
-        // $this->prepareDir($this->dest_template_base);
         $this->prepareDir($this->dest_template_dir);
         $this->prepareDir($this->site_dir);
         echo "done\n";
@@ -84,10 +82,10 @@ class TemplateSync
         return true;
     }
 
-    public function pull( $type=false )
+    public function pull( $pullType=false )
     {
         /// check for existing directory
-        if ( $type=='force' || ( empty($type) && !$this->verifyPull() ) )
+        if ( $pullType=='force' || ( empty($pullType) && !$this->verifyPull() ) )
         {
             echo "Templates: pulling fresh templates ... ";
             if ( !empty($this->source_dir) && $this->source_dir !== '/' )
@@ -126,7 +124,7 @@ class TemplateSync
             }
             echo "done\n";
             $this->mergeTemplates();
-        } else if ( $type=='fresh' ) {
+        } else if ( $pullType=='fresh' ) {
             echo "Templates: refreshing current templates ... ";
             /// use what we already have
             $update_cmd = "cd {$this->source_dir}"
@@ -205,8 +203,8 @@ class TemplateSync
         echo "Templates: merging template files ... ";
  
         // we want the template directories somewhere we can use them
+        // echo "cp -r {$this->source_template_dir} {$this->dest_template_dir}";
         $this->ssg->copy_recurse($this->source_template_dir,$this->dest_template_dir);
-        // `cp -r {$this->source_template_base} {$this->dest_template_base}`;
 
         echo "done\n";
     }
