@@ -38,12 +38,14 @@ class DrupalAPIDataSource extends DataSource
           echo "\nLOADING batch($currentPage/$totalPages) ";
 
           $client   = new \GuzzleHttp\Client(['base_uri' => $server, 'verify' => false]);
-          $response = $client->post( $url, [
-            'query'=>[
-                'page_size'=>$batchSize,
-                'page'=>$currentPage
-            ]
-          ] );
+          $query = [
+            'page_size'=>$batchSize,
+            'page'=>$currentPage
+          ];
+          if ( !empty(intval($since)) ) {
+            $query['since'] = intval($since);
+          }
+          $response = $client->post( $url, [ 'query'=> $query ] );
           $body = $response->getBody();
           if ( empty($body) )
           {

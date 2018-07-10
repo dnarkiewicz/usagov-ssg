@@ -86,6 +86,8 @@ class StaticSiteGenerator
         $sourceFail = false;
         if ( $fromSource )
         {
+            /// if we want data from source - we might only need to update
+            /// how do we know if we want totally new data or just updated
             echo "Data: loading from source ... ";
             if ( $this->loadDataFromSource() ) 
             {

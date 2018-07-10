@@ -13,6 +13,7 @@
 ### RUN:
 * `./ssg`
 * options:
+  * `./ssg --newdata`
   * `./ssg --freshdata`
   * `./ssg --freshtemplates`
   * `./ssg --freshdata --freshtemplates`
