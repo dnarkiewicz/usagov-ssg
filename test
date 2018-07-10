@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd sites/usa.gov
+php -S localhost:8000

@@ -17,7 +17,8 @@
   * `./ssg --freshtemplates`
   * `./ssg --freshdata --freshtemplates`
 
-### VALIDATE:
-* cd sites/usa.gov
-* php -S localhost:8000
+### TEST:
+* `./test`
+  * cd sites/usa.gov
+  * php -S localhost:8000
 
