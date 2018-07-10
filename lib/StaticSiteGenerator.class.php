@@ -765,7 +765,7 @@ class StaticSiteGenerator
         } else {
             $pageType = $page['field_type_of_page_to_generate']['und'][0]['value'];
         }
-        return $this->formatPageType($type);
+        return $this->formatPageType($pageType);
     }
 
     public function formatPageType( $type )
