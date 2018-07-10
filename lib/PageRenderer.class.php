@@ -310,7 +310,6 @@ class PageRenderer
         if ( empty($this->templates[$this->ssg->siteName]['twig'][$page['pageType']]) )
         {
             /// if the template file exists
-            // error_log(__FUNCTION__.' ./templates/twig/'.$repo_template_dir.'/'.$page['pageType'].'.twig');
             if ( !file_exists('./templates/twig/'.$repo_template_dir.'/'.$page['pageType'].'.twig') )
             {
                 $this->templates[$this->ssg->siteName]['twig'][$page['pageType']] = null;
