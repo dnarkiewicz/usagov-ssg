@@ -7,27 +7,31 @@ class TemplateSync
     public $ssg;
 
     public $source_dir;
+    // public $source_template_base;
     public $source_template_dir;
-    public $source_template_base;
-    public $dest_template_base;
-    public $dest_site_dir;
+
+    // public $dest_template_base;
+    public $dest_template_dir;
+
+    public $site_dir;
 
     public function __construct( &$ssg )
     {
         $this->ssg = &$ssg;
 
+        // $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
+        // $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
+
         $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
         $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
 
-        $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
-        $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
-
         $this->source_dir           = './templates/sync';
         $this->source_template_dir  = $this->source_dir.'/'.$repo_template_dir;
-        $this->source_template_base = $this->source_dir.'/'.$repo_template_base;
 
-        $this->dest_template_base   = './templates/twig';
-        $this->dest_site_dir        = './sites/'.trim(strtolower($this->ssg->siteName));
+        $this->dest_dir             = './templates/twig';
+        $this->dest_template_dir    = $this->dest_dir.'/'.$repo_template_dir;
+
+        $this->site_dir             = './sites/'.trim(strtolower($this->ssg->siteName));
     }
 
     public function sync( $force_fresh_pull=null )
@@ -41,9 +45,12 @@ class TemplateSync
     {
         echo "Templates: preparing directories ... ";
         $this->prepareDir($this->source_dir);
+        // $this->prepareDir($this->source_template_base);
         $this->prepareDir($this->source_template_dir);
-        $this->prepareDir($this->dest_site_dir);
-        $this->prepareDir($this->dest_template_base);
+        $this->prepareDir($this->dest_dir);
+        // $this->prepareDir($this->dest_template_base);
+        $this->prepareDir($this->dest_template_dir);
+        $this->prepareDir($this->site_dir);
         echo "done\n";
     }
     public function prepareDir( &$path )
@@ -129,11 +136,13 @@ class TemplateSync
             $rslt = `{$update_cmd} 2>&1`;
             echo "done\n";
             $this->mergeTemplates();
+        } else if ( !$this->verifyDestTemplatesExist() ) {
+            echo "Templates: using synced templates\n";
+            $this->mergeTemplates();
         } else {
             echo "Templates: using existing templates\n";
-            
         }
-        return $this->verifyPull() && $this->verifyTemplatesExist();
+        return $this->verifyPull() && $this->verifyDestTemplatesExist();
     }
 
     public function verifyPull()
@@ -153,19 +162,38 @@ class TemplateSync
             //error_log("Template Sync: not in correct branch '{$this->ssg->config['templateSync']['repo_branch']}' != '$branch_name'");
             $result = false;
         }
-        return $result;
+        return $result && $this->verifySourceTemplatesExist();
     }
 
-    public function verifyTemplatesExist()
+    public function verifySourceTemplatesExist()
     {
         /// we could return false right away - but then we miss all the sweet errors
         $result = true;
         foreach ( $this->ssg->pageTypes as $type )
         {
             $template_file = "{$this->source_template_dir}/{$type}.twig";
+            // echo "verifying $template_file ... \n";
             if ( !file_exists($template_file) )
             {
-                error_log("Template Sync: verify pull: can't find template for $type: $template_file");
+                // error_log("Template Sync: verify local: can't find template for $type: $template_file");
+                $result = false;
+            }
+        }
+        return $result;
+    }
+
+    public function verifyDestTemplatesExist()
+    {
+        return true;
+        /// we could return false right away - but then we miss all the sweet errors
+        $result = true;
+        foreach ( $this->ssg->pageTypes as $type )
+        {
+            $template_file = "{$this->dest_template_dir}/{$type}.twig";
+            // echo "verifying $template_file ... \n";
+            if ( !file_exists($template_file) )
+            {
+                error_log("Template Sync: verify local: can't find template for $type: $template_file");
                 $result = false;
             }
         }
@@ -177,7 +205,7 @@ class TemplateSync
         echo "Templates: merging template files ... ";
  
         // we want the template directories somewhere we can use them
-        $this->ssg->copy_recurse($this->source_template_base,$this->dest_template_base);
+        $this->ssg->copy_recurse($this->source_template_dir,$this->dest_template_dir);
         // `cp -r {$this->source_template_base} {$this->dest_template_base}`;
 
         echo "done\n";
@@ -187,16 +215,16 @@ class TemplateSync
     {
         echo "Templates: merging public asset files ... ";
 
-        if ( !is_writable($this->dest_site_dir) )
+        if ( !is_writable($this->site_dir) )
         {
-            $this->ssg->chmod_recurse($this->dest_site_dir,0744);
+            $this->ssg->chmod_recurse($this->site_dir,0744);
         }
         // we want these /asset directories moved to root
         $asset_dirs = [ 'js', 'css', 'fonts', 'images' ];
         foreach ( $asset_dirs as $dir )
         {
             $source_asset_dir = "{$this->source_dir}/assets/{$dir}";
-            $dest_asset_dir   = "{$this->dest_site_dir}/{$dir}";
+            $dest_asset_dir   = "{$this->site_dir}/{$dir}";
             if ( !is_dir($dest_asset_dir) )
             { 
                 // echo "\nmkdir => $dest_asset_dir\n";

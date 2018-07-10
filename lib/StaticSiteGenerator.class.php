@@ -31,7 +31,7 @@ class StaticSiteGenerator
         $this->pages     = [];
         $this->sitePage  = null;
         $this->homePage  = null;
-        $this->pageTypes    = [];
+        $this->pageTypes = [];
 
         /// setup content references
         $this->directoryRecordGroups = [];

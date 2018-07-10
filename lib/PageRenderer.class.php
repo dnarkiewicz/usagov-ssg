@@ -20,9 +20,14 @@ class PageRenderer
     {
         $this->ssg = &$ssg;
 
-        // $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/'.$this->ssg->siteName.'/twig/00-Pages';
-        // $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates/compiled/'.$this->ssg->siteName.'/twig';
-        $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/00-Pages';
+        // $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
+        // $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
+
+        $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
+        $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
+
+        // $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/'.$repo_template_base;
+        $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/'.$repo_template_dir;
         $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates/compiled/twig';
 
         if ( !is_dir($this->templateDir) )
@@ -100,7 +105,12 @@ class PageRenderer
           {
               /// not renderable
               #echo "Render Page: {$page['name']} unrenderable\n";
-              echo "UnRenderable: {$page['name']}\n";
+              echo "UnRenderable: no url for {$page['name']}\n";
+              return null;
+          }
+          if ( empty($page['pageType']) )
+          {
+              echo "UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n";
               return null;
           }
           #echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
@@ -280,7 +290,13 @@ class PageRenderer
         //     return null;
         // }
 
-        if ( empty($this->ssg->siteName) ) { echo __LINE__." no renderers for site\n"; return null; }
+        // $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
+        // $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
+
+        $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
+        $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
+
+        if ( empty($this->ssg->siteName) ) { error_log(" no renderers for site"); return null; }
 
         if ( empty($this->templates[$this->ssg->siteName]) )
         {
@@ -294,12 +310,12 @@ class PageRenderer
         if ( empty($this->templates[$this->ssg->siteName]['twig'][$page['pageType']]) )
         {
             /// if the template file exists
-            if ( !file_exists('./templates/twig/00-Pages/'.$page['pageType'].'.twig') )
+            // error_log(__FUNCTION__.' ./templates/twig/'.$repo_template_dir.'/'.$page['pageType'].'.twig');
+            if ( !file_exists('./templates/twig/'.$repo_template_dir.'/'.$page['pageType'].'.twig') )
             {
                 $this->templates[$this->ssg->siteName]['twig'][$page['pageType']] = null;
             } else {
                 try {
-                    // $this->templates[$this->ssg->siteName]['twig'][$page['pageType']] = $this->templateRenderer->load('00-Pages/'.$page['pageType'].'.twig');
                     $this->templates[$this->ssg->siteName]['twig'][$page['pageType']] = $this->templateRenderer->load($page['pageType'].'.twig');
                 } catch (Exception $e) { 
                     $this->templates[$this->ssg->siteName]['twig'][$page['pageType']] = null;
@@ -316,35 +332,15 @@ class PageRenderer
         {
             mkdir( $this->baseDir.'/templates/', 0755, true );
         }
-        // if ( !file_exists($this->baseDir.'/templates/'.$this->ssg->siteName) )
-        // {
-        //     mkdir( $this->baseDir.'/templates/'.$this->ssg->siteName, 0755, true );
-        // }
-        // if ( !file_exists($this->baseDir.'/templates/'.$this->ssg->siteName.'/twig') )
-        // {
-        //     mkdir( $this->baseDir.'/templates/'.$this->ssg->siteName.'/twig', 0755, true );
-        // }
         if ( !file_exists($this->baseDir.'/templates/twig') )
         {
             mkdir( $this->baseDir.'/templates/twig', 0755, true );
-        }
-        if ( !file_exists($this->baseDir.'/templates/twig/00-Pages') )
-        {
-            mkdir( $this->baseDir.'/templates/twig/00-Pages', 0755, true );
         }
 
         if ( !file_exists($this->baseDir.'/templates/compiled/') )
         {
             mkdir( $this->baseDir.'/templates/compiled/', 0755, true );
         }
-        // if ( !file_exists($this->baseDir.'/templates/compiled/'.$this->ssg->siteName) )
-        // {
-        //     mkdir( $this->baseDir.'/templates/compiled/'.$this->ssg->siteName, 0755, true );
-        // }
-        // if ( !file_exists($this->baseDir.'/templates/compiled/'.$this->ssg->siteName.'/twig') )
-        // {
-        //     mkdir( $this->baseDir.'/templates/compiled/'.$this->ssg->siteName.'/twig', 0755, true );
-        // }
         if ( !file_exists($this->baseDir.'/templates/compiled/twig') )
         {
             mkdir( $this->baseDir.'/templates/compiled/twig', 0755, true );

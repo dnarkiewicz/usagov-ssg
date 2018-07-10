@@ -169,7 +169,7 @@ class Twig_Loader_Fractal implements Twig_LoaderInterface, Twig_ExistsLoaderInte
      *
      * @return string|false The template name or false
      */
-    protected function findTemplate($name, $throw = false)
+    protected function findTemplate($name, $throw = true)
     {
         $name = $this->normalizeName($name);
 
