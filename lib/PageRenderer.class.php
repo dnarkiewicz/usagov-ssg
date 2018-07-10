@@ -48,7 +48,8 @@ class PageRenderer
             $this->ssg->chmod_recurse($this->templateDirCache,0744);
         }
 
-        $this->templateLoader   = new \Twig_Loader_Fractal($this->templateDir);
+        // $this->templateLoader   = new \Twig_Loader_Fractal($this->templateDir);
+        $this->templateLoader   = new \Twig_Loader_Filesystem($this->templateDir);
         $this->templateRenderer = new \Twig_Environment($this->templateLoader, array(
             'cache' => $this->templateDirCache,
             'auto_reload' => 1
