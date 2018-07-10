@@ -2,18 +2,22 @@
 
 
 ### PREPARE:
-* brew install php
-* brew install composer
-* git clone https://github.com/dnarkiewicz/usagov-ssg.git
-* cd usagov-ssg
-* composer install
-* cp config/USA.gov.config-default.php config/USA.gov.config.php
-* Update repo parameters to allow access to the Template source directory
+* `brew install php`
+* `brew install composer`
+* `git clone https://github.com/dnarkiewicz/usagov-ssg.git`
+* `cd usagov-ssg`
+* `composer install`
+* `cp config/USA.gov.config-default.php config/USA.gov.config.php`
+* edit config/USA.gov.config.php to update parameters for TemplateSync source
 
 ### RUN:
-* php ssg.php
+* `./ssg`
+* options:
+  * `./ssg --freshdata`
+  * `./ssg --freshtemplates`
+  * `./ssg --freshdata --freshtemplates`
 
-### CHECK:
+### VALIDATE:
 * cd sites/usa.gov
 * php -S localhost:8000
 

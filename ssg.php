@@ -22,17 +22,13 @@ foreach ( $argv as $arg )
     }
     if ( isset($arg) && $arg=='--freshtemplates' )
     {
-        $pullType = 'fresh';
-    }
-    if ( isset($arg) && $arg=='--forcetemplates' )
-    {
-        $pullType = 'force';
+        $freshTemplates = true;
     }
 }
 
 $site->loadData($fromSource);
 $site->buildSiteTreeFromEntities();
-$site->syncTemplates($pullType);
+$site->syncTemplates($freshTemplates);
 $site->renderSite();
 
 /*** /

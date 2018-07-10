@@ -34,10 +34,10 @@ class TemplateSync
         $this->site_dir             = './sites/'.trim(strtolower($this->ssg->siteName));
     }
 
-    public function sync( $pullType=null )
+    public function sync( $freshTemplates=null )
     {
         $prepare = $this->prepare();
-        $pull    = $this->pull($pullType);
+        $pull    = $this->pull($freshTemplates);
         $assets  = $this->mergeAssets();
     }
 
@@ -82,10 +82,11 @@ class TemplateSync
         return true;
     }
 
-    public function pull( $pullType=false )
+    public function pull( $freshTemplates=false )
     {
+        $pullVerified = $this->verifyPull();
         /// check for existing directory
-        if ( $pullType=='force' || ( empty($pullType) && !$this->verifyPull() ) )
+        if ( $freshTemplates && !$pullVerified )
         {
             echo "Templates: pulling fresh templates ... ";
             if ( !empty($this->source_dir) && $this->source_dir !== '/' )
@@ -124,7 +125,7 @@ class TemplateSync
             }
             echo "done\n";
             $this->mergeTemplates();
-        } else if ( $pullType=='fresh' ) {
+        } else if ( $freshTemplates && $pullVerified ) {
             echo "Templates: refreshing current templates ... ";
             /// use what we already have
             $update_cmd = "cd {$this->source_dir}"
