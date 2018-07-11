@@ -18,6 +18,7 @@ class StaticSiteGenerator
     public $featuresByTopic;
     public $directoryRecordGroups;
     public $stateDetails;
+    public $stateAcronyms;
 
     public $renderer;
     public $config;
@@ -222,16 +223,32 @@ class StaticSiteGenerator
 
                 if ( $this->isFeature($entity) )
                 {
-                    $this->features[$entity['uuid']] =& $this->source->entities[$entity['uuid']];
-                    if ( array_key_exists('asset_topic_taxonomy',$entity) )
+                    $fubs = !empty($entity['for_use_by']) ? $entity['for_use_by'] : [$this->siteName];
+                    foreach ( $fubs as $fub )
                     {
-                        foreach ( $entity['asset_topic_taxonomy'] as $asset_topic )
+                        if ( strtolower($fub) == 'feature' )
                         {
-                            if ( !array_key_exists($asset_topic['uuid'],$this->featuresByTopic) )
+                            continue;
+                        }
+                        if ( !array_key_exists($fub,$this->features) )
+                        {
+                            $this->features[$fub] = [];
+                        }
+                        $this->features[$fub][$entity['uuid']] =& $this->source->entities[$entity['uuid']];
+                        if ( !array_key_exists($fub,$this->featuresByTopic) )
+                        {
+                            $this->featuresByTopic[$fub] = [];
+                        }
+                        if ( array_key_exists('asset_topic_taxonomy',$entity) )
+                        {
+                            foreach ( $entity['asset_topic_taxonomy'] as $asset_topic )
                             {
-                                $this->featuresByTopic[$asset_topic['uuid']] = [];
+                                if ( !array_key_exists($asset_topic['uuid'],$this->featuresByTopic[$fub]) )
+                                {
+                                    $this->featuresByTopic[$fub][$asset_topic['uuid']] = [];
+                                }
+                                $this->featuresByTopic[$fub][$asset_topic['uuid']][$entity['uuid']] =& $this->source->entities[$entity['uuid']];
                             }
-                            $this->featuresByTopic[$asset_topic['uuid']][$entity['uuid']] =& $this->source->entities[$entity['uuid']];
                         }
                     }
                 }
@@ -397,7 +414,7 @@ class StaticSiteGenerator
             if ( isset($entity['tid']) && isset($entity['vocabulary_machine_name'])
                  && $entity['vocabulary_machine_name']=='site_strucutre_taxonomy' )
             {
-                $sharesTopic = $this->sharesTopicWith($this->features,$uuid);
+                $sharesTopic = $this->sharesTopicWith($this->features[$this->siteName],$uuid);
                 array_multisort(
                     array_column($sharesTopic,'created'), SORT_ASC,
                     array_column($sharesTopic,'changed'), SORT_ASC,
@@ -424,16 +441,16 @@ class StaticSiteGenerator
         }
 
         /// each feature gets a list of associated features
-        foreach ( $this->features as $uuid=>&$feature )
+        foreach ( $this->features[$this->siteName] as $uuid=>&$feature )
         {
             $feature['shares_topic'] = [];
             if ( array_key_exists('asset_topic_taxonomy',$feature) )
             {
                 foreach ( $feature['asset_topic_taxonomy'] as $asset_topic )
                 {
-                    if ( array_key_exists($asset_topic['uuid'],$this->featuresByTopic) )
+                    if ( array_key_exists($asset_topic['uuid'],$this->featuresByTopic[$this->siteName]) )
                     {
-                        foreach ( $this->featuresByTopic[$asset_topic['uuid']] as &$sharesTopic )
+                        foreach ( $this->featuresByTopic[$this->siteName][$asset_topic['uuid']] as &$sharesTopic )
                         {
                             $feature['shares_topic'][] = [
                                 'uuid'=>$sharesTopic['uuid'],
@@ -542,11 +559,12 @@ class StaticSiteGenerator
             'à'=>'a', 'á'=>'a', 'â'=>'a', 'ã'=>'a', 'ä'=>'a', 'å'=>'a', 'æ'=>'a', 'ç'=>'c', 'è'=>'e', 'é'=>'e',
             'ê'=>'e', 'ë'=>'e', 'ì'=>'i', 'í'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'o', 'ñ'=>'n', 'ò'=>'o', 'ó'=>'o',
             'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'ý'=>'y', 'þ'=>'b',
-            'ÿ'=>'y', 'R'=>'R', 'r'=>'r', "'"=>'-', '"'=>'-', '.'=>'-', ','=>'-'
+            'ÿ'=>'y', 'R'=>'R', 'r'=>'r', "'"=>'-', '"'=>'-', '.'=>'-', ','=>'-', '('=>'-', ')'=>'-'
         );
         $str = strtr($str, $table);
         $str = strtolower($str);
-        $str = preg_replace('/[\s\.,\(\)]+/','-',$str);
+        #$str = preg_replace('/[\s\.,\(\)\]+/','-',$str);
+        $str = preg_replace('/\W+/','-',$str);
         $str = preg_replace('/-+/','-',$str);
         $str = preg_replace('/^-+/','',$str);
         $str = preg_replace('/-+$/','',$str);

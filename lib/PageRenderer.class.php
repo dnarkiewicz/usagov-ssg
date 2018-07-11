@@ -171,59 +171,77 @@ class PageRenderer
           /// some special pages generate further sub-pages
           if ( $page['pageType'] == 'AZPage' )
           {
-            if ( !empty($page['az_index_data_source']) )
-            {
-                $azSubPage = $this->ssg->formatPageType($page['az_index_data_source']);
-                $page['pageType'] = 'AZPage'.ucFirst($azSubPage);
-            }
             foreach ( $this->ssg->siteIndexAZ as $letter => $list )
             {
-
-                //     $pageData['currentAZLetter'] = $letter;
-                //     $html = $twig->render($pageData);
-                //     if ( !empty($html) )
-                //     {
-                //         /// directory for path
-                //         $fileDir = $siteDir.'/'.$path.$letter;
-                //         $file = $fileDir.'/'.'index.html';
-                //         if ( !file_exists($fileDir) )
-                //         {
-                //             mkdir( $fileDir, 0755, true );
-                //         }
-                //         chmod( $fileDir, 0755 );
-                //         file_put_contents( $file, $html );
-                //         echo "Creating page for {$page['uuid']} in $file \n";
-                //     }
-            }
-          } else if ( $page['type_of_page_to_generate'] == '50-state-page' ) {
-            // render the master page with the dropdown
-            // render one page per state in a subdirectory
-            /*
-            renderPage( 'blah/50-state-friendly-url', template(50-state-page) );
-            if ( $page['50-state-category'] == 'autogenerate-business' )
-            {
-                foreach ( $states as $state_name )
+                $pageData['currentAZLetter'] = $letter;
+                $html = $twig->render($pageData);
+                if ( !empty($html) )
                 {
-                    // get state details record for state name
-                    renderPage( 'blah/state_name', template(state-details-business) );
+                    /// directory for path
+                    $fileDir = $siteDir.'/'.$path.strtolower($letter);
+                    $file = $fileDir.'/'.'index.html';
+                    if ( !file_exists($fileDir) )
+                    {
+                        mkdir( $fileDir, 0755, true );
+                    }
+                    chmod( $fileDir, 0755 );
+                    file_put_contents( $file, $html );
+                    // echo "Creating page for {$page['uuid']} in $file \n";
+                    echo "Render Page: {$path}".strtolower($letter)."\n";
+
                 }
-            } else if ( $page['50-state-category'] == 'autogenerate-government' ) {
-                renderPage( 'blah/state_name', template(state-details-governemtn) );
             }
-            */
+          } else if ( $page['pageType'] == '50StatePage' ) {
+            $matches = [];
+            if ( preg_match('/^autogenerate\-(.*)/',$page['usa_gov_50_state_category'],$matches) )
+            {
+                if ( !empty($matches[1]) )
+                {
+                    /// just get a copy of this array
+                    $detailsPage = array_merge($page,[]);
+                    $detailsType = ucfirst($matches[1]);
+                    $detailsPage['pageType'] = 'StateDetails'.$detailsType;
+                    $baseUrl = $url;
+                    // for each state
+                    foreach ( $this->ssg->stateAcronyms as $acronym=>$name ) 
+                    {
+                        if ( !empty($detailsPage['usa_gov_50_state_prefix']) )
+                        {
+                            $baseUrl = $detailsPage['usa_gov_50_state_prefix'];
+                        }
+                        $urlSafeName = $this->ssg->sanitizeForUrl($name);
+                        // echo "StateDetails url:$baseUrl/$urlSafeName state:$state acronym:$acronym\n";
+                        $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
+                        $detailsPage['state'] = $acronym;
+                        $this->renderPage($detailsPage);
+                    }
+                }
+            }
+          } else if ( $page['pageType'] == 'Features' ) {
+            
+            $featurePage = array_merge($page,[]);
+            $featurePage['pageType'] = 'Feature';
+            // for each state
+            foreach ( $this->ssg->features[$this->ssg->siteName] as $feature ) 
+            {
+                if ( !array_key_exists('title',$feature) ) {
+                    print_r($feature);die;
+                }
+                $urlSafeTitle = $this->ssg->sanitizeForUrl($feature['title']);
+                $featurePage['friendly_url'] = $url.'/'.$urlSafeTitle;
+                $featurePage['asset_order_content'] = [
+                        'target_id' => $feature['nid'],
+                        'uuid' => $feature['uuid'],
+                        'type' => 'node',
+                        'bundle' => $feature['type'],
+                ];
+                $this->renderPage($featurePage);
+            }
+          } else if ( $page['pageType'] == 'GenericContentPage' ) {
           }
 
           $paths = [ $path ];
 
-          /// SUB-PAGES
-          // if ( !empty($pageData['subPages']) )
-          // {
-          //     foreach ( $pageData['subPages'] as $subPage )
-          //     {
-          //         $subPaths = $this->renderPage($subPage);
-          //         $paths += $subPaths;
-          //     }
-          // }
           return $paths;
   	}
 

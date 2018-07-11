@@ -13,13 +13,12 @@
 ### RUN:
 * `./ssg`
 * options:
-  * `./ssg --newdata`
   * `./ssg --freshdata`
   * `./ssg --freshtemplates`
   * `./ssg --freshdata --freshtemplates`
 
 ### TEST:
 * `./test`
-  * cd sites/usa.gov
-  * php -S localhost:8000
+  * `cd sites/usa.gov`
+  * `php -S localhost:8000`
 
