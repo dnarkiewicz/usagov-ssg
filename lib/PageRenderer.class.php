@@ -20,13 +20,9 @@ class PageRenderer
     {
         $this->ssg = &$ssg;
 
-        // $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
-        // $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
-
         $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
         $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
 
-        // $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/'.$repo_template_base;
         $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/'.$repo_template_dir;
         $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates/compiled/twig';
 
@@ -48,7 +44,6 @@ class PageRenderer
             $this->ssg->chmod_recurse($this->templateDirCache,0744);
         }
 
-        // $this->templateLoader   = new \Twig_Loader_Fractal($this->templateDir);
         $this->templateLoader   = new \Twig_Loader_Filesystem($this->templateDir);
         $this->templateRenderer = new \Twig_Environment($this->templateLoader, array(
             'cache' => $this->templateDirCache,
@@ -105,7 +100,6 @@ class PageRenderer
           if ( empty($url) )
           {
               /// not renderable
-              #echo "Render Page: {$page['name']} unrenderable\n";
               echo "UnRenderable: no url for {$page['name']}\n";
               return null;
           }
@@ -122,23 +116,21 @@ class PageRenderer
 
           $siteDir = './sites/'.trim(strtolower($this->ssg->siteName));
           $fileDir = $siteDir.'/'.$path;
-          // $file = $fileDir.'/'.$base.'.html';
           $file = $fileDir.'index.html';
 
           /// TEMPLATE
           $twig = $this->getTwigPageRenderer($page);
           if ( empty($twig) )
           {
-            // echo "  ! no twig renderer {$page['name']} $path\n";
             /// directory for path
             if ( !file_exists($fileDir) )
             {
                 mkdir( $fileDir, 0755, true );
             }
             chmod( $fileDir, 0755 );
-            file_put_contents( $file, $path );
-            echo "Render None: $url ({$page['pageType']}) \"{$page['name']}\"\n";
-            #echo "  - No twig template found : Creating empty page for {$page['uuid']} in $file \n";
+            $msg = "No renderer found<br />\nPath:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
+            file_put_contents( $file, $msg );
+            echo preg_replace('/(\<br \/\>|\n)/','',$msg)."\n";
             return null;
           }
 
@@ -156,21 +148,21 @@ class PageRenderer
               }
               chmod( $fileDir, 0755 );
               file_put_contents( $file, $html );
-              #echo "Creating page for {$page['uuid']} in $file \n";
           } else {
             if ( !file_exists($fileDir) )
             {
                 mkdir( $fileDir, 0755, true );
             }
             chmod( $fileDir, 0755 );
-            file_put_contents( $file, "Path:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'] );
-            echo "Render Fail: $url ({$page['pageType']}) \"{$page['name']}\"\n";
-            # echo "  - Template render failed : Creating empty page for {$page['uuid']} in $file \n";
+            $msg = "Render Failed<br />\nPath:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
+            file_put_contents( $file, $msg );
+            echo preg_replace('/(\<br \/\>|\n)/','',$msg)."\n";
           }
 
           /// some special pages generate further sub-pages
           if ( $page['pageType'] == 'AZPage' )
           {
+
             foreach ( $this->ssg->siteIndexAZ as $letter => $list )
             {
                 $pageData['currentAZLetter'] = $letter;
@@ -186,12 +178,13 @@ class PageRenderer
                     }
                     chmod( $fileDir, 0755 );
                     file_put_contents( $file, $html );
-                    // echo "Creating page for {$page['uuid']} in $file \n";
                     echo "Render Page: {$path}".strtolower($letter)."\n";
 
                 }
             }
+
           } else if ( $page['pageType'] == '50StatePage' ) {
+
             $matches = [];
             if ( preg_match('/^autogenerate\-(.*)/',$page['usa_gov_50_state_category'],$matches) )
             {
@@ -210,23 +203,20 @@ class PageRenderer
                             $baseUrl = $detailsPage['usa_gov_50_state_prefix'];
                         }
                         $urlSafeName = $this->ssg->sanitizeForUrl($name);
-                        // echo "StateDetails url:$baseUrl/$urlSafeName state:$state acronym:$acronym\n";
                         $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
                         $detailsPage['state'] = $acronym;
                         $this->renderPage($detailsPage);
                     }
                 }
             }
+
           } else if ( $page['pageType'] == 'Features' ) {
-            
+
             $featurePage = array_merge($page,[]);
             $featurePage['pageType'] = 'Feature';
             // for each state
             foreach ( $this->ssg->features[$this->ssg->siteName] as $feature ) 
             {
-                if ( !array_key_exists('title',$feature) ) {
-                    print_r($feature);die;
-                }
                 $urlSafeTitle = $this->ssg->sanitizeForUrl($feature['title']);
                 $featurePage['friendly_url'] = $url.'/'.$urlSafeTitle;
                 $featurePage['asset_order_content'] = [
@@ -237,11 +227,10 @@ class PageRenderer
                 ];
                 $this->renderPage($featurePage);
             }
-          } else if ( $page['pageType'] == 'GenericContentPage' ) {
+
           }
 
           $paths = [ $path ];
-
           return $paths;
   	}
 
@@ -263,55 +252,14 @@ class PageRenderer
 
     public function preProcessPage( &$page )
     {
-        $processor = null;
         $pageParams = [];
-
-        // $processorClass = "Processor".$this->ssg->getPageType($page);
-        // if ( class_exists($processorClass) )
-        // {
-        //   $processor = new $processorClass($this,$page);
-        // } else {
-          $processorClass = 'ProcessorMain';
-          $processor = new ProcessorMain($this,$page);
-        // }
-        if ( !empty($processor) )
-        {
-          // $processor->renderer =& $this;
-          // $processor->page =& $page;
-          $processor->process( $pageParams );
-        }
-
+        $processor = new ProcessorMain($this,$page);
+        $processor->process( $pageParams );
         return $pageParams;
     }
 
     public function getTwigPageRenderer( $page )
     {
-        // $pageType = $this->ssg->getPageType($page);
-        // $typeMap = [
-        //     'generic-navigation-page' => 'GenericNavigationPage',
-        //     'generic-content-page' => 'content-page',
-        //     '50-state-page' => '50StatePage',
-        //     'a-z-page' => 'atoz',
-        //     'more' => 'more-topics',
-        //     'home' => 'homepage',
-        //     'forms' => 'form',
-        //     'site-index' => null,
-        //     'directory-record' => 'federal-directory-record',
-        //     'government-by-organization' => null
-        // ];
-        // if ( !empty($typeMap[$pageType]) )
-        // {
-        //     $pageType = $typeMap[$pageType];
-        // }
-        // if ( $pageType!=='Home' ){ echo "    Skipping Type:$pageType\n"; return null; }
-        // if ( $pageType===null )
-        // {
-        //     return null;
-        // }
-
-        // $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
-        // $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
-
         $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
         $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
 
