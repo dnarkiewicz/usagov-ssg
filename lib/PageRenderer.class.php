@@ -3,7 +3,6 @@
 namespace ctac\ssg;
 
 use \Twig\Loader;
-use \ctac\ssg\ProcessorMain;
 
 class PageRenderer
 {
@@ -253,8 +252,7 @@ class PageRenderer
     public function preProcessPage( &$page )
     {
         $pageParams = [];
-        $processor = new ProcessorMain($this,$page);
-        $processor->process( $pageParams );
+        $this->process( $page, $pageParams );
         return $pageParams;
     }
 
@@ -311,6 +309,30 @@ class PageRenderer
         {
             mkdir( $this->baseDir.'/templates/compiled/twig', 0755, true );
         }
+    }
+
+    public function process( &$page, &$params )
+    {
+      $params = array_merge($params,$page);
+  
+      $params['siteName'] = $this->ssg->siteName;
+      $params['siteUrl']  = $this->ssg->config['siteUrl'];
+
+      $params['entities'] = $this->ssg->source->entities;
+      $params['sitePage'] = $this->ssg->sitePage;
+      $params['homePage'] = $this->ssg->homePage;
+  
+      $params['directoryRecordGroups'] = $this->ssg->directoryRecordGroups;
+      $params['siteIndexAZ'] = $this->ssg->siteIndexAZ;
+      $params['currentAZLetter'] = null;
+  
+      $params['features']        = $this->ssg->features;
+      $params['featuresByTopic'] = $this->ssg->featuresByTopic;
+
+      $params['stateDetails']    = $this->ssg->stateDetails;
+      $params['stateAcronyms']   = $this->ssg->stateAcronyms;
+  
+      
     }
 
 }
