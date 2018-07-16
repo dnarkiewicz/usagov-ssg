@@ -237,6 +237,23 @@ class TemplateSync
             }
             $this->ssg->copy_recurse($source_asset_dir,$dest_asset_dir);
             // `cp -r {$source_asset_dir} {$dest_asset_dir}`;
+            /****/
+            # TMP LOCATION
+            $dest_asset_dir   = "{$this->site_dir}/sites/all/themes/usa/{$dir}";
+            if ( !is_dir($dest_asset_dir) )
+            { 
+                // echo "\nmkdir => $dest_asset_dir\n";
+                mkdir($dest_asset_dir,0744,true);
+                //`mkdir -p $dest_asset_dir`;
+            }
+            if ( !is_writable($dest_asset_dir) )
+            {
+                $this->ssg->chmod_recurse($dest_asset_dir,0744);
+                //`chmod -r 0744 $dest_asset_dir`;
+            }
+            $this->ssg->copy_recurse($source_asset_dir,$dest_asset_dir);
+            // `cp -r {$source_asset_dir} {$dest_asset_dir}`;
+            /****/
         }
 
         echo "done\n";

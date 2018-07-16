@@ -92,7 +92,7 @@ class PageRenderer
         }));
     }
 
-  	public function renderPage( &$page )
+  	public function renderPage( &$page, $renderPageOnFailure=false )
   	{
           /// PATH
           $url = $this->getPageUrl($page);
@@ -128,7 +128,10 @@ class PageRenderer
             }
             chmod( $fileDir, 0755 );
             $msg = "No renderer found<br />\nPath:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
-            file_put_contents( $file, $msg );
+            if ( $renderPageOnFailure )
+            {
+                file_put_contents( $file, $msg );
+            }
             echo preg_replace('/(\<br \/\>|\n)/','',$msg)."\n";
             return null;
           }
@@ -154,7 +157,10 @@ class PageRenderer
             }
             chmod( $fileDir, 0755 );
             $msg = "Render Failed<br />\nPath:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
-            file_put_contents( $file, $msg );
+            if ( $renderPageOnFailure )
+            {
+                file_put_contents( $file, $msg );
+            }
             echo preg_replace('/(\<br \/\>|\n)/','',$msg)."\n";
           }
 
@@ -179,6 +185,13 @@ class PageRenderer
                     file_put_contents( $file, $html );
                     echo "Render Page: {$path}".strtolower($letter)."\n";
 
+                } else {
+                    $msg = "Render Failed<br />\nPath:".$path.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
+                    if ( $this->renderPageOnFailure )
+                    {
+                        file_put_contents( $file, $msg."<pre>".print_r($page,1)."</pre>" );
+                    }
+                    echo preg_replace('/(\<br \/\>|\n)/','',$msg)."\n";
                 }
             }
 
@@ -194,7 +207,7 @@ class PageRenderer
                     $detailsType = ucfirst($matches[1]);
                     $detailsPage['pageType'] = 'StateDetails'.$detailsType;
                     $baseUrl = $url;
-                    // for each state
+                    // for each feature
                     foreach ( $this->ssg->stateAcronyms as $acronym=>$name ) 
                     {
                         if ( !empty($detailsPage['usa_gov_50_state_prefix']) )

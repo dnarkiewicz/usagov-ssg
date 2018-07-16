@@ -728,7 +728,83 @@ class StaticSiteGenerator
         return $pageList;
     }
 
-    public function renderSite()
+    public function validateSite()
+    {
+        if ( empty($this->pagesByUrl) )
+        {
+            echo "Validate Site: no site found to validate\n";
+            return null;
+        }
+        $requiredPages = 0;
+        $renderedPages = 0;
+        foreach ( $this->pagesByUrl as $url=>&$page )
+        {
+            $requiredPages++;
+            $pageDir = './sites/'.strtolower($this->siteName).'/'.$url;
+            $fileExists = file_exists($pageDir.'/index.html');
+            $renderedPages += $fileExists ? 1 : 0;
+            if ( !$fileExists )
+            {
+                echo ( $fileExists ? 'Y' : 'N' )." {$url}\n";
+            }
+            /// some special pages generate further sub-pages
+            if ( $page['pageType'] == 'AZPage' )
+            {
+                foreach ( $this->siteIndexAZ as $letter => $list )
+                {
+                    $requiredPages++;
+                    $subUrl = $url.'/'.strtolower($letter);
+                    $subPageDir = $pageDir.'/'.strtolower($letter);
+                    $subFileExists = file_exists($subPageDir.'/index.html');
+                    $renderedPages += $subFileExists ? 1 : 0;
+                    if ( !$subFileExists )
+                    {
+                        echo ( $subFileExists ? 'Y' : 'N' )." {$url}\n";
+                    }
+                }
+            } else if ( $page['pageType'] == '50StatePage' ) {
+                if ( !empty($page['usa_gov_50_state_category']) 
+                  && preg_match('/^autogenerate\-(.*)/',$page['usa_gov_50_state_category']) )
+                {
+                    foreach ( $this->stateAcronyms as $stateAcronym=>$stateName ) 
+                    {
+                        $requiredPages++;
+                        $subUrl = $url.'/'.$this->sanitizeForUrl($stateName);
+                        if ( !empty($page['usa_gov_50_state_prefix']) )
+                        {
+                            $subUrl = $page['usa_gov_50_state_prefix']
+                                        .'/'.$this->sanitizeForUrl($stateName);
+                        }
+                        $subPageDir = './sites/'.strtolower($this->siteName).'/'.$subUrl;
+                        $subFileExists = file_exists($subPageDir.'/index.html');
+                        $renderedPages += $subFileExists ? 1 : 0;
+                        if ( !$subFileExists )
+                        {
+                            echo ( $subFileExists ? 'Y' : 'N' )." {$url}\n";
+                        }
+                    }
+                }
+            } else if ( $page['pageType'] == 'Features' ) {
+    
+                foreach ( $this->features[$this->siteName] as $feature ) 
+                {
+                    $requiredPages++;
+                    $urlSafeTitle = $this->sanitizeForUrl($feature['title']);
+                    $subUrl = $url.'/'.$urlSafeTitle;
+                    $subPageDir = $pageDir.'/'.$urlSafeTitle;
+                    $subFileExists = file_exists($subPageDir.'/index.html');
+                    $renderedPages += $subFileExists ? 1 : 0;
+                    if ( !$subFileExists )
+                    {
+                        echo ( $subFileExists ? 'Y' : 'N' )." {$url}\n";
+                    }
+                }
+            
+            }
+        }
+        echo "Site Validation: $renderedPages of $requiredPages pages rendered to /sites/{$this->siteName} \n";
+    }
+    public function renderSite( $renderPageOnFailure=false )
     {
         if ( empty($this->sitePage) )
         {
@@ -743,13 +819,13 @@ class StaticSiteGenerator
         }
         return $result;
     }
-    public function renderTree( $page )
+    public function renderTree( $page, $renderPageOnFailure=false )
     {
         if ( empty($page) )
         {
             return false;
         }
-        $this->renderer->renderPage($page);
+        $this->renderer->renderPage($page,$renderPageOnFailure);
         foreach ( $page['children'] as $childPage )
         {
             if ( !empty($childPage['uuid']) )

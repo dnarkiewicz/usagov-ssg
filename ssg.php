@@ -13,6 +13,7 @@ $site = new StaticSiteGenerator($siteName);
 
 $fromSource = false;
 $freshTemplates = false;
+$renderPageOnFailure = true;
 
 foreach ( $argv as $arg )
 {
@@ -24,12 +25,17 @@ foreach ( $argv as $arg )
     {
         $freshTemplates = true;
     }
+    if ( isset($arg) && $arg=='--nodebugpages' )
+    {
+        $renderPageOnFailure = false;
+    }
 }
 
 $site->loadData($fromSource);
 $site->buildSiteTreeFromEntities();
 $site->syncTemplates($freshTemplates);
-$site->renderSite();
+$site->renderSite($renderPageOnFailure);
+$site->validateSite();
 
 /*** /
 
