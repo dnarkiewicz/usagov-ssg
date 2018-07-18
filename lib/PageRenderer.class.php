@@ -366,7 +366,7 @@ class PageRenderer
         && empty($params['currentPage']) )
       {
         $params['currentPage'] = 1;
-      } else {
+      } else if ( !isset($params['currentPage']) ) {
         $params['currentPage'] = null;
       }
 
