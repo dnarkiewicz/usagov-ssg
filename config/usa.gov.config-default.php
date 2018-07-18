@@ -4,6 +4,7 @@ $config = [
   'siteName' => 'USA.gov',
   'siteUrl'  => 'www.usa.gov',
   'baseDir'  => realpath(dirname(__FILE__).'/..'),
+  'featuresPageBatchSize' => 5,
   'elasticsearch' => [
     'server'       => 'https://elasticsearch:9443',
     'index'        => 'cmp-data-entities',

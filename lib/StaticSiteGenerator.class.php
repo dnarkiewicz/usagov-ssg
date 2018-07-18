@@ -440,6 +440,14 @@ class StaticSiteGenerator
             $details);
         }
 
+        foreach ( array_keys($this->features) as $siteName )
+        {
+            array_multisort(
+                array_column($this->features[$siteName],'created'), SORT_ASC,
+                array_column($this->features[$siteName],'changed'), SORT_ASC,
+            $this->features[$siteName]);
+        }
+
         /// each feature gets a list of associated features
         foreach ( $this->features[$this->siteName] as $uuid=>&$feature )
         {
@@ -728,6 +736,25 @@ class StaticSiteGenerator
         return $pageList;
     }
 
+    public function validateFile( $filename, $checkHtml = true )
+    {
+        $fileExists = file_exists($filename);
+        $fileFilled = ( filesize($filename) > 0 );
+
+        $fileValid = ( $fileExists && $fileFilled );
+        
+        if ( $checkHtml ) 
+        {
+            $fileHandle = fopen($filename, 'r');
+            $fileHeader = fread($fileHandle, 100);
+            fclose($fileHandle);
+            $fileHeader = trim($fileHeader);
+            $fileIsHtml = ( $fileHeader{0} == '<');
+        }
+
+        return ( $fileExists && $fileFilled && $fileIsHtml );
+    }
+
     public function validateSite()
     {
         if ( empty($this->pagesByUrl) )
@@ -741,12 +768,15 @@ class StaticSiteGenerator
         {
             $requiredPages++;
             $pageDir = './sites/'.strtolower($this->siteName).'/'.$url;
-            $fileExists = file_exists($pageDir.'/index.html');
-            $renderedPages += $fileExists ? 1 : 0;
-            if ( !$fileExists )
+            $pageFile = $pageDir.'/index.html';
+
+            if ( $this->validateFile($pageFile) )
             {
-                echo ( $fileExists ? 'Y' : 'N' )." {$url}\n";
+                $renderedPages++;
+            } else {
+                echo "Invalid: {$url}\n";
             }
+
             /// some special pages generate further sub-pages
             if ( $page['pageType'] == 'AZPage' )
             {
@@ -755,12 +785,13 @@ class StaticSiteGenerator
                     $requiredPages++;
                     $subUrl = $url.'/'.strtolower($letter);
                     $subPageDir = $pageDir.'/'.strtolower($letter);
-                    $subFileExists = file_exists($subPageDir.'/index.html');
-                    $renderedPages += $subFileExists ? 1 : 0;
-                    if ( !$subFileExists )
+                    $subPageFile = $subPageDir.'/index.html';
+                    if ( $this->validateFile($subPageFile) )
                     {
-                        echo ( $subFileExists ? 'Y' : 'N' )." {$url}\n";
-                    }
+                        $renderedPages++;
+                    } else {
+                        echo "Invalid: {$subUrl}\n";
+                    }        
                 }
             } else if ( $page['pageType'] == '50StatePage' ) {
                 if ( !empty($page['usa_gov_50_state_category']) 
@@ -776,12 +807,13 @@ class StaticSiteGenerator
                                         .'/'.$this->sanitizeForUrl($stateName);
                         }
                         $subPageDir = './sites/'.strtolower($this->siteName).'/'.$subUrl;
-                        $subFileExists = file_exists($subPageDir.'/index.html');
-                        $renderedPages += $subFileExists ? 1 : 0;
-                        if ( !$subFileExists )
+                        $subPageFile = $subPageDir.'/index.html';
+                        if ( $this->validateFile($subPageFile) )
                         {
-                            echo ( $subFileExists ? 'Y' : 'N' )." {$url}\n";
-                        }
+                            $renderedPages++;
+                        } else {
+                            echo "Invalid: {$subUrl}\n";
+                        }        
                     }
                 }
             } else if ( $page['pageType'] == 'Features' ) {
@@ -792,12 +824,13 @@ class StaticSiteGenerator
                     $urlSafeTitle = $this->sanitizeForUrl($feature['title']);
                     $subUrl = $url.'/'.$urlSafeTitle;
                     $subPageDir = $pageDir.'/'.$urlSafeTitle;
-                    $subFileExists = file_exists($subPageDir.'/index.html');
-                    $renderedPages += $subFileExists ? 1 : 0;
-                    if ( !$subFileExists )
+                    $subPageFile = $subPageDir.'/index.html';
+                    if ( $this->validateFile($subPageFile) )
                     {
-                        echo ( $subFileExists ? 'Y' : 'N' )." {$url}\n";
-                    }
+                        $renderedPages++;
+                    } else {
+                        echo "Invalid: {$subUrl}\n";
+                    }        
                 }
             
             }

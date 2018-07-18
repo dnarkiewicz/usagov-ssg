@@ -19,6 +19,8 @@ class SiteDestination
     public function push()
     {
         /**
+         solution: aws s3 sync --delete
+          
         find local site directory
         generate hashes for each local file
         store hashes in hash file

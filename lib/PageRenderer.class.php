@@ -113,7 +113,7 @@ class PageRenderer
           $base = basename($path);
           if ( empty($base) ) { $base = 'index'; }
 
-          $siteDir = './sites/'.trim(strtolower($this->ssg->siteName));
+          $siteDir = $this->ssg->config['baseDir'].'/sites/'.trim(strtolower($this->ssg->siteName));
           $fileDir = $siteDir.'/'.$path;
           $file = $fileDir.'index.html';
 
@@ -141,6 +141,7 @@ class PageRenderer
 
           /// HTML
           $html = $twig->render($pageData);
+          $html = trim($html);
           if ( !empty($html) )
           {
               /// directory for path
@@ -222,20 +223,37 @@ class PageRenderer
                 }
             }
 
-          } else if ( $page['pageType'] == 'Features' ) {
+          } else if ( $page['pageType'] == 'Features' && empty($page['currentPage']) ) {
+            /// feature page with an empty currentPage is seen by the system as the master page
+            /// all other paginated subpages generated will have an integer currentPage
+            /// and should not generate further subpages 
+
+            if ( !empty($this->ssg->features[$this->ssg->siteName]) )
+            {
+                $batchSize = !empty($this->ssg->config['featuresPageBatchSize']) ? $this->ssg->config['featuresPageBatchSize'] : 5;
+                for ( $currentPage = 1; $currentPage*$batchSize < count($this->ssg->features[$this->ssg->siteName]); $currentPage++ )
+                {
+                    $featuresPaginated = array_merge($page,[]);
+                    $featuresPaginated['currentPage']  = $currentPage;
+                    $featuresPaginated['friendly_url'] = $url.'/'.$currentPage;
+                    $this->renderPage($featuresPaginated);
+                }
+            }
 
             $featurePage = array_merge($page,[]);
-            $featurePage['pageType'] = 'Feature';
+            $featurePage['pageType'] = 'Feature'; // singular
             // for each state
             foreach ( $this->ssg->features[$this->ssg->siteName] as $feature ) 
             {
                 $urlSafeTitle = $this->ssg->sanitizeForUrl($feature['title']);
                 $featurePage['friendly_url'] = $url.'/'.$urlSafeTitle;
                 $featurePage['asset_order_content'] = [
+                    [
                         'target_id' => $feature['nid'],
                         'uuid' => $feature['uuid'],
                         'type' => 'node',
                         'bundle' => $feature['type'],
+                    ]
                 ];
                 $this->renderPage($featurePage);
             }
@@ -341,6 +359,14 @@ class PageRenderer
   
       $params['features']        = $this->ssg->features;
       $params['featuresByTopic'] = $this->ssg->featuresByTopic;
+
+      if ( $page['pageType']=='Features' 
+        && empty($params['currentPage']) )
+      {
+        $params['currentPage'] = 1;
+      } else {
+        $params['currentPage'] = null;
+      }
 
       $params['stateDetails']    = $this->ssg->stateDetails;
       $params['stateAcronyms']   = $this->ssg->stateAcronyms;
