@@ -231,7 +231,8 @@ class PageRenderer
             if ( !empty($this->ssg->features[$this->ssg->siteName]) )
             {
                 $batchSize = !empty($this->ssg->config['featuresPageBatchSize']) ? $this->ssg->config['featuresPageBatchSize'] : 5;
-                for ( $currentPage = 1; $currentPage*$batchSize < count($this->ssg->features[$this->ssg->siteName]); $currentPage++ )
+                $maxPage   = ceil(count($this->ssg->features[$this->ssg->siteName])/$batchSize);
+                for ( $currentPage = 1; $currentPage <= $maxPage; $currentPage++ )
                 {
                     $featuresPaginated = array_merge($page,[]);
                     $featuresPaginated['currentPage']  = $currentPage;
