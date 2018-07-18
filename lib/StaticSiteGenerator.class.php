@@ -736,7 +736,7 @@ class StaticSiteGenerator
         return $pageList;
     }
 
-    public function validateFile( $filename, $checkHtml = true )
+    public function validatePage( $filename, $checkHtml = true )
     {
         $fileExists = file_exists($filename);
         $fileFilled = ( filesize($filename) > 0 );
@@ -770,7 +770,7 @@ class StaticSiteGenerator
             $pageDir = './sites/'.strtolower($this->siteName).'/'.$url;
             $pageFile = $pageDir.'/index.html';
 
-            if ( $this->validateFile($pageFile) )
+            if ( $this->validatePage($pageFile) )
             {
                 $renderedPages++;
             } else {
@@ -786,7 +786,7 @@ class StaticSiteGenerator
                     $subUrl = $url.'/'.strtolower($letter);
                     $subPageDir = $pageDir.'/'.strtolower($letter);
                     $subPageFile = $subPageDir.'/index.html';
-                    if ( $this->validateFile($subPageFile) )
+                    if ( $this->validatePage($subPageFile) )
                     {
                         $renderedPages++;
                     } else {
@@ -808,7 +808,7 @@ class StaticSiteGenerator
                         }
                         $subPageDir = './sites/'.strtolower($this->siteName).'/'.$subUrl;
                         $subPageFile = $subPageDir.'/index.html';
-                        if ( $this->validateFile($subPageFile) )
+                        if ( $this->validatePage($subPageFile) )
                         {
                             $renderedPages++;
                         } else {
@@ -825,7 +825,7 @@ class StaticSiteGenerator
                     $subUrl = $url.'/'.$urlSafeTitle;
                     $subPageDir = $pageDir.'/'.$urlSafeTitle;
                     $subPageFile = $subPageDir.'/index.html';
-                    if ( $this->validateFile($subPageFile) )
+                    if ( $this->validatePage($subPageFile) )
                     {
                         $renderedPages++;
                     } else {
