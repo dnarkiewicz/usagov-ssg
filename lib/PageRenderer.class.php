@@ -345,7 +345,9 @@ class PageRenderer
     public function process( &$page, &$params )
     {
       $params = array_merge($params,$page);
-  
+
+      $params['config']   = $this->ssg->config;
+
       $params['siteName'] = $this->ssg->siteName;
       $params['siteUrl']  = $this->ssg->config['siteUrl'];
 

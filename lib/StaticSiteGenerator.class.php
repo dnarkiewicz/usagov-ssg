@@ -639,7 +639,8 @@ class StaticSiteGenerator
             $page['child_pages'] = $this->buildPageMenu($page);
         }
     }
-    public function buildMainNavMenu($page) {
+    public function buildMainNavMenu($page) 
+    {
         $menu = [];
         $directChildren = $this->filteredDescendantPages($page,'children','generate_menu');
         $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page','generate_menu');
@@ -660,7 +661,8 @@ class StaticSiteGenerator
 
         return $menu;
     }
-    public function buildMainNavSubMenu(&$page) {
+    public function buildMainNavSubMenu(&$page) 
+    {
         $menu = [];
 
         $directChildren = $this->filteredDescendantPages($page,'children','generate_menu');
@@ -679,7 +681,8 @@ class StaticSiteGenerator
         $menu = array_merge($directChildren, $alsoInclude);
         return $menu;
     }
-    public function buildNavMenu( &$page ) {
+    public function buildNavMenu( &$page ) 
+    {
         $menu = [];
 
         $directChildren = $this->filteredDescendantPages($page,'children','generate_menu');
@@ -694,8 +697,8 @@ class StaticSiteGenerator
 
         return $menu;
     }
-
-    public function buildPageMenu( &$page ) {
+    public function buildPageMenu( &$page ) 
+    {
         $menu = [];
 
         $directChildren = $this->filteredDescendantPages($page,'children','generate_page');
@@ -754,7 +757,6 @@ class StaticSiteGenerator
 
         return ( $fileExists && $fileFilled && $fileIsHtml );
     }
-
     public function validateSite()
     {
         if ( empty($this->pagesByUrl) )
@@ -837,6 +839,7 @@ class StaticSiteGenerator
         }
         echo "Site Validation: $renderedPages of $requiredPages pages rendered to /sites/{$this->siteName} \n";
     }
+
     public function renderSite( $renderPageOnFailure=false )
     {
         if ( empty($this->sitePage) )
