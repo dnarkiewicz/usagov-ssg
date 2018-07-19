@@ -196,6 +196,30 @@ class PageRenderer
                 }
             }
 
+            if ( $page['az_index_data_source'] == 'directory-records-federal' )
+            { 
+                // genreate one subpage per record
+                foreach ( $this->ssg->directoryRecordGroups[$this->ssg->siteName]['all']['Federal Agencies']['all'] as $agencyInfo )
+                {
+                    $agency = $this->ssg->source->entities[$agencyInfo['uuid']];
+
+                    $directoryRecordPage = array_merge($page,[]);
+                    $directoryRecordPage['pageType'] = 'federal-directory-record';
+                    
+                    $urlSafeTitle = $this->ssg->sanitizeForUrl($agency['title']);
+                    $directoryRecordPage['friendly_url'] = $url.'/'.$urlSafeTitle;
+                    $directoryRecordPage['asset_order_content'] = [
+                        [
+                            'target_id' => $agency['nid'],
+                            'uuid' => $agency['uuid'],
+                            'type' => 'node',
+                            'bundle' => $agency['type'],
+                        ]
+                    ];
+                    $this->renderPage($directoryRecordPage);
+                }
+            }
+
           } else if ( $page['pageType'] == '50StatePage' ) {
 
             $matches = [];

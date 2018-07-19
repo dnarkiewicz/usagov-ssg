@@ -361,11 +361,17 @@ class StaticSiteGenerator
                                 foreach ( $entity['synonym'] as $synonym )
                                 {
                                     $letter = strtoupper($synonym['value']{0});
+                                    $this->directoryRecordGroups[$fub]['all'][$type]['all'][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                    $this->directoryRecordGroups[$fub][$state][$type]['all'][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+
                                     $this->directoryRecordGroups[$fub]['all'][$type][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
                                     $this->directoryRecordGroups[$fub][$state][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
 
                                     if ( strtolower($type) == 'state government agencies' )
                                     {
+                                        $this->directoryRecordGroups[$fub]['all']['Federal Agencies']['all'][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                        $this->directoryRecordGroups[$fub][$state]['Federal Agencies']['all'][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                        
                                         $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
                                         $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
                                     }
