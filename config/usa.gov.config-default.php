@@ -22,5 +22,12 @@ $config = [
     'repo_pass'   => '',
     'repo_branch' => '',
     'repo_template_dir' => ''
-  ]
+  ],
+  'aws' => [
+    'aws_access_key_id' => '',
+    'aws_secret_access_key' => '',
+    'region'  => 'us-east-1',
+    'version' => 'latest',
+    'bucket' => ''
+  ],
 ];

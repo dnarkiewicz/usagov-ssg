@@ -54,11 +54,17 @@ class StaticSiteGenerator
         ];
 
         /// get helper objects
-        $this->config    = ConfigLoader::loadConfig( $this->siteName );
+        $this->config      = ConfigLoader::loadConfig( $this->siteName );
         //$this->source    = new ElasticsearchDataSource( $this );
-        $this->source    = new DrupalAPIDataSource( $this );
-        $this->renderer  = new PageRenderer( $this );
-        $this->templates = new TemplateSync( $this ); 
+        $this->source      = new DrupalAPIDataSource( $this );
+        $this->renderer    = new PageRenderer( $this );
+        $this->templates   = new TemplateSync( $this ); 
+        $this->destination = new SiteDestination( $this );
+    }
+
+    public function pushToDestination()
+    {
+        $this->destination->push();
     }
 
     public function syncTemplates( $force_fresh_pull=false )
@@ -78,7 +84,11 @@ class StaticSiteGenerator
         { 
             chmod($cacheFile,0644);
         }
-        $cache = serialize([ 'entities'=>$this->source->entities, 'entitiesById'=>$this->source->entitiesById ]);
+        $cache = serialize([ 
+            'entities'=>$this->source->entities, 
+            'entitiesById'=>$this->source->entitiesById,
+            'redirects'=>$this->source->redirects,
+        ]);
         $bytes = file_put_contents($cacheFile, $cache);
         return !empty( $bytes );
     }
@@ -115,7 +125,7 @@ class StaticSiteGenerator
     }
     public function loadDataFromSource()
     {
-        $this->source->getEntities();
+        $this->source->pull();
         return $this->storeDataInCache();
     }
     public function loadDataFromCache()
@@ -131,6 +141,10 @@ class StaticSiteGenerator
         ) { return false; }
         $this->source->entities     = $cache['entities'];
         $this->source->entitiesById = $cache['entitiesById'];
+        if ( array_key_exists('redirects', $cache) )
+        {
+            $this->source->redirects     = $cache['redirects'];
+        }
         return true;
     }
 
@@ -844,6 +858,7 @@ class StaticSiteGenerator
             }
         }
         echo "Site Validation: $renderedPages of $requiredPages pages rendered to /sites/{$this->siteName} \n";
+        return ($requiredPages <= $renderedPages);
     }
 
     public function renderSite( $renderPageOnFailure=false )

@@ -11,9 +11,10 @@ $executionStartTime = microtime(true);
 $siteName = 'USA.gov';
 $site = new StaticSiteGenerator($siteName);
 
-$fromSource = false;
+$fromSource     = false;
 $freshTemplates = false;
 $renderPageOnFailure = true;
+$syncToDestination   = false;
 
 foreach ( $argv as $arg )
 {
@@ -29,13 +30,21 @@ foreach ( $argv as $arg )
     {
         $renderPageOnFailure = false;
     }
+    if ( isset($arg) && $arg=='--sync' )
+    {
+        $syncToDestination = true;
+    }
 }
 
 $site->loadData($fromSource);
 $site->buildSiteTreeFromEntities();
 $site->syncTemplates($freshTemplates);
 $site->renderSite($renderPageOnFailure);
-$site->validateSite();
+if ( $site->validateSite() && $syncToDestination )
+{
+    echo "Syncing to destination bucket\n";
+    $site->destination->sync();
+}
 
 /*** /
 

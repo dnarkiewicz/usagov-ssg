@@ -6,20 +6,32 @@ class DataSource
 {
 	public $ssg;
 	public $entities;
-  public $entitiesById;
+	public $entitiesById;
+	public $redirects;
 
 	public function __construct( $ssg )
 	{
 		$this->ssg          = $ssg;
 		$this->entities     = [];
-    $this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
+   		$this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
+		$this->redirects    = [];
+	}
+
+	public function pull( $since=0 )
+	{
+		$this->getEntites($since);
+		$this->getRedirects();
 	}
 
 	public function getEntities( $since=0 )
 	{
-    $this->entities     = [];
-    $this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
-    return;
+		$this->entities     = [];
+		$this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
+	}
+
+	public function getRedirects()
+	{
+		$this->redirects    = [];
 	}
 
 }

@@ -4,44 +4,190 @@ namespace ctac\ssg;
 
 class SiteDestination
 {
-	public $ssg;
-
+    public $ssg;
+    public $source;
+    public $dest;
+    public $bads;
+    public $s3Sync;
+    public $s3Pull;
+    
 	public function __construct( $ssg )
 	{
-		$this->ssg = $ssg;
+        $this->ssg = $ssg;
+        
+        $this->source = './sites/'.trim(strtolower($this->ssg->siteName));
+        $this->dest   = 's3://'.trim($this->ssg->config['aws']['bucket']);
+
+        $this->s3Sync = "aws s3 sync {$this->source} {$this->dest} --delete";
+        $this->s3Pull = "aws s3 sync {$this->dest} {$this->source} --delete";
+
+        $this->bads = [ 'command not found', 'usage', 'error' ];
 	}
 
-    public function validatePush()
+    public function sync()
     {
+        /// try using the aws command-line tool on whole directory
+        if (!($filesSynced = $this->syncFilesCli()))
+        {
+            echo "Sync Files ... aws cli failed, trying sdk\n";
+            $filesSynced = $this->syncFilesSdk();
+        }
+        if ( !$filesSynced ) 
+        { 
+            echo "Sync Files ... aws sdk failed\n";
+            return false; 
+        }
 
+
+        $redirectsSynced = $this->syncRedirects();
+        if ( !$redirectsSynced ) 
+        { 
+            echo "Sync Redirects ... failed\n";
+            return false; 
+        }
+
+        return ( $filesSynced && $redirectsSynced );
     }
 
-    public function push()
+    public function syncFilesCli()
     {
-        /**
-         solution: aws s3 sync --delete
-          
-        find local site directory
-        generate hashes for each local file
-        store hashes in hash file
-        grab hashes from remote destination
-        compare hash file itself - if no changes, abort
-        ????
-            prep local dir with changes only 
-                - so only one AWS SYNC command is necessary
-                - files not in local are deleted from destination
-            OR
-            compare each file's hashes 
-                - if no match, sync up that file
-                - if in dest and not in local, remove from dest
-            OR
-            check site-wide hash, but don't worry about file specific hashes 
-                - sync up whole site to a timestamped dir
-                - reset bucket to use new dir as siteroot
-         **/
+        $looksGood = true;
+
+        echo $this->s3Sync." --dryrun\n";
+        $result = `{$this->s3Sync} --dryrun`;
+        foreach ( $this->bads as $bad )
+        {
+            if ( stristr($bad,$result) )
+            {
+                $looksGood = false;
+            }
+        }
+        if ( $looksGood )
+        {
+            echo $this->s3Sync."\n";
+            $result = `{$this->s3Sync}`;
+            foreach ( $this->bads as $bad )
+            {
+                if ( stristr($bad,$result) )
+                {
+                    $looksGood = false;
+                }
+            }
+        }
+        return $looksGood;
     }
 
-    public function deployPush()
+    public function syncFilesSdk()
     {
+        $sdk = new \Aws\Sdk($this->ssg->config['aws']);
+        $s3 = $sdk->createS3();
+        $s3->registerStreamWrapper();
+
+        /// get local and remote file listings
+        $removeFromDest = [];
+        $destFiles   = $this->getFilesInDir($this->dest);
+        $sourceFiles = $this->getFilesInDir($this->source);
+
+        /// remove any old files
+        foreach ( $destFiles as $key=>$destFile )
+        {
+            /// if remote-destination has no local-source equiv
+            ///     it should be removed from remote-destination
+            if ( !array_key_exists($key,$sourceFiles) )
+            {
+                echo "Remove from destination : $key\n";
+                flush();
+                $removeFromDest[] = $key;
+            }
+        }
+        if ( !empty($removeFromDest) )
+        {
+            $s3->deleteObjects([
+                'Bucket'  => $config['aws']['bucket'],
+                'Delete' => [
+                    'Objects' => array_map(function ($key) {
+                        return ['Key' => $key];
+                    }, $removeFromDest)
+                ],
+            ]);
+        }
+
+        /// add/update any new/changed files
+        foreach ( $sourceFiles as $key=>$sourceFile )
+        {
+            /// if local-source has no remote-destination equiv
+            ///     it should be added to remote-destination
+            if ( !array_key_exists($key,$destFiles) )
+            {
+                echo "Sync: Create $key\n";
+                flush();
+                try {
+                    $s3->putObject([
+                        'Bucket' => $config['aws']['bucket'],
+                        'Key'    => $key,
+                        'Body'   => fopen($sourceFile['path'], 'r'),
+                        'ACL'    => 'public-read',
+                    ]);
+                } catch (\Aws\S3\Exception\S3Exception $e) {
+                    echo "Sync: There was an error adding the file $key.\n";
+                    flush();
+                }
+            } else { /// this file exists on both places
+                $destFile = $destFiles[$key];
+                /// this file has changed
+                if ( $destFile['md5'] != $sourceFile['md5'] ) 
+                {
+                    echo "Sync: Update $key\n";
+                    flush();
+                    try {
+                        $s3->putObject([
+                            'Bucket' => $config['aws']['bucket'],
+                            'Key'    => $key,
+                            'Body'   => fopen($sourceFile['path'], 'r'),
+                            'ACL'    => 'public-read',
+                        ]);
+                    } catch (\Aws\S3\Exception\S3Exception $e) {
+                        echo "Sync: There was an error updating the file $key.\n";
+                        flush();
+                    }
+                } else {
+                    echo "Sync: NoChange $key\n";
+                    flush();
+                }
+            }
+        }
+        echo "\n";
     }
+
+    public function syncRedirects()
+    {
+        # set header per url 
+        #   $redirectHeader = ['x-amz-website-redirect-location'=>'/'];
+        #   upload a 0 length index.html file for that location
+        # OR
+        #
+        # generate xml with all redirect in it, and upload as bucket-wider RoutingRules
+        return true;
+    }
+
+    public function getFilesInDir($targetDir)
+    {
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->targetDir));
+        $files    = [];
+        foreach ($iterator as $file) 
+        {
+            if (!$file->isDir())
+            {
+                $path = $file->getPathname();
+                $key = str_replace($targetDir.'/','',$path);
+                $files[$key] = [
+                    'path'=>$path,
+                    'md5'=>md5_file($path)
+                ];
+            }
+        }
+        ksort($files);
+        return $files;
+    }
+
 }
