@@ -18,10 +18,10 @@
   * `./ssg --freshdata`
   * `./ssg --freshtemplates`
   * `./ssg --freshdata --freshtemplates`
-  * `./ssg --sync`
-  * `./ssg --sync --freshdata`
-  * `./ssg --sync --freshtemplates`
-  * `./ssg --sync --freshdata --freshtemplates`
+  * `./ssg --pushs3`
+  * `./ssg --pushs3 --freshdata`
+  * `./ssg --pushs3 --freshtemplates`
+  * `./ssg --pushs3 --freshdata --freshtemplates`
 
 ### TEST:
 * `./test`
