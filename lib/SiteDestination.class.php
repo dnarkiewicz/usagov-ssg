@@ -27,6 +27,7 @@ class SiteDestination
     public function sync()
     {
         /// try using the aws command-line tool on whole directory
+        /*
         if (!($filesSynced = $this->syncFilesCli()))
         {
             echo "Sync Files ... aws cli failed, trying sdk\n";
@@ -37,7 +38,8 @@ class SiteDestination
             echo "Sync Files ... aws sdk failed\n";
             return false; 
         }
-
+        */
+        $filesSynced = true;
 
         $redirectsSynced = $this->syncRedirects();
         if ( !$redirectsSynced ) 
@@ -161,13 +163,15 @@ class SiteDestination
 
     public function syncRedirects()
     {
+        # foreach direct-paht-redirect
         # set header per url 
         #   $redirectHeader = ['x-amz-website-redirect-location'=>'/'];
         #   upload a 0 length index.html file for that location
         # OR
         #
         # generate xml with all redirect in it, and upload as bucket-wider RoutingRules
-        return true;
+        #
+        # foreach 
     }
 
     public function getFilesInDir($targetDir)

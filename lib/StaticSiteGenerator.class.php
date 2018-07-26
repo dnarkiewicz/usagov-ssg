@@ -55,7 +55,6 @@ class StaticSiteGenerator
 
         /// get helper objects
         $this->config      = ConfigLoader::loadConfig( $this->siteName );
-        //$this->source    = new ElasticsearchDataSource( $this );
         $this->source      = new DrupalAPIDataSource( $this );
         $this->renderer    = new PageRenderer( $this );
         $this->templates   = new TemplateSync( $this ); 
@@ -456,7 +455,7 @@ class StaticSiteGenerator
         foreach ( $this->stateDetails as $fud=>&$details )
         {
             array_multisort(
-                array_column($details,'state_canonical_name'), SORT_ASC,
+                array_column($details,'state_canonical_name'),SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             $details);
         }
 
@@ -529,7 +528,7 @@ class StaticSiteGenerator
                     foreach ( $typeList as $group=>&$groupList )
                     {
                         array_multisort(
-                            array_column($groupList,'title'), SORT_ASC,
+                            array_column($groupList,'title'), SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
                         $groupList);
                     }
                 }
@@ -540,7 +539,7 @@ class StaticSiteGenerator
         foreach ( $this->siteIndexAZ as $letter=>&$pages )
         {
             array_multisort(
-                array_column($pages,'title'), SORT_ASC,
+                array_column($pages,'title'), SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
                 array_column($pages,'uuid'),  SORT_ASC,
             $pages);
         }
@@ -667,7 +666,7 @@ class StaticSiteGenerator
 
         $menu = array_merge($directChildren, $alsoInclude);
         array_multisort(
-            array_column($menu,'name'),  SORT_ASC,
+            array_column($menu,'name'),  SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($menu,'tid'),   SORT_ASC,
         $menu);
 
@@ -688,13 +687,13 @@ class StaticSiteGenerator
         $directChildren = $this->filteredDescendantPages($page,'children','generate_menu');
         array_multisort(
             array_column($directChildren,'weight'),SORT_ASC,
-            array_column($directChildren,'name'),  SORT_ASC,
+            array_column($directChildren,'name'),  SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($directChildren,'tid'),   SORT_ASC,
         $directChildren);
 
         $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page','generate_menu');
         array_multisort(
-            array_column($alsoInclude,'name'),SORT_ASC,
+            array_column($alsoInclude,'name'),SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($alsoInclude,'tid'), SORT_ASC,
         $alsoInclude);
 
@@ -711,7 +710,7 @@ class StaticSiteGenerator
         $menu = array_merge($directChildren, $alsoInclude);
 
         array_multisort(
-            array_column($menu,'name'),SORT_ASC,
+            array_column($menu,'name'),SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($menu,'tid'), SORT_ASC,
         $menu);
 
@@ -727,7 +726,7 @@ class StaticSiteGenerator
         $menu = array_merge($directChildren, $alsoInclude);
 
         array_multisort(
-            array_column($menu,'name'),SORT_ASC,
+            array_column($menu,'name'),SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($menu,'tid'), SORT_ASC,
         $menu);
 
@@ -742,7 +741,9 @@ class StaticSiteGenerator
         {
             if ( !is_array($item) || !array_key_exists('uuid',$item) || empty($item['uuid']) || empty($this->source->entities[$item['uuid']]) ) { continue; }
             $child =& $this->source->entities[$item['uuid']];
-            if ( array_key_exists($generateCheckKey,$child) && $child[$generateCheckKey]=='no' ) { continue; }
+            if ( array_key_exists($generateCheckKey,$child) && $child[$generateCheckKey]=='no' ) { 
+                continue; 
+            }
             $listItem = [
                 'uuid'=>$child['uuid'],
                 'name'=>$child['name'],

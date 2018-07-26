@@ -12,9 +12,10 @@ $config = [
     'getAllAssets' => [ 'directory_content_type', 'state_details' ],
   ],
   'drupalAPI' => [
-    'server'    => 'https://usa-cmp-stg.gsa.ctacdev.com',
-    'url'       => '/usaapi/entities',
-    'batchSize' => 100
+    'server'       => 'https://usa-cmp-stg.gsa.ctacdev.com',
+    'redirectsUrl' => '/usaapi/redirects',
+    'entitiesUrl'  => '/usaapi/entities',
+    'batchSize'    => 100
   ],
   'templateSync' => [
     'repo_url'    => '',

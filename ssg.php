@@ -30,7 +30,7 @@ foreach ( $argv as $arg )
     {
         $renderPageOnFailure = false;
     }
-    if ( isset($arg) && $arg=='--sync' )
+    if ( isset($arg) && $arg=='--pushs3' )
     {
         $syncToDestination = true;
     }
@@ -40,11 +40,19 @@ $site->loadData($fromSource);
 $site->buildSiteTreeFromEntities();
 $site->syncTemplates($freshTemplates);
 $site->renderSite($renderPageOnFailure);
-if ( $site->validateSite() && $syncToDestination )
-{
-    echo "Syncing to destination bucket\n";
-    $site->destination->sync();
-}
+// if ( $site->validateSite() && $syncToDestination )
+// {
+//     echo "Syncing to destination bucket\n";
+//     $site->destination->sync();
+// }
+
+//print_r($site->source->entities['5630b982-1e8d-4846-8cce-d8e879f0c6ab']);
+// print_r($site->pagesByUrl['/laws']);
+// print_r($site->pagesByUrl['/disability-rights']);
+
+
+// $site->source->getRedirects();
+// print_r( $site->source->redirects );
 
 /*** /
 

@@ -5,71 +5,19 @@ namespace ctac\ssg;
 class DrupalAPIDataSource extends DataSource
 {
 
-  public function getRedirects()
+  public function getEntities( $since=0 )
   {
     $tunit=['sec','min','hour'];
 
     /// fetch from drupal api
-    $batchSize = ( !empty($this->ssg->config['drupalAPI']['batchSize']) ) ? $this->ssg->config['drupalAPI']['batchSize'] : 1;
-    $server    = ( !empty($this->ssg->config['drupalAPI']['server']) )    ? $this->ssg->config['drupalAPI']['server']    : 'https://usa-cmp-stg.gsa.ctacdev.com';
-    $url       = ( !empty($this->ssg->config['drupalAPI']['url']) )       ? $this->ssg->config['drupalAPI']['url']       : '/usaapi/entities';
+    $batchSize = ( !empty($this->ssg->config['drupalAPI']['batchSize']) )
+                    ? $this->ssg->config['drupalAPI']['batchSize'] : 100;
 
-    $siteName = $this->ssg->siteName;
-    $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
+    $server    = ( !empty($this->ssg->config['drupalAPI']['server']) )
+                    ? $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
 
-    $batchSize = 100;
-
-    $sanity      = 20000;
-    $resultsData = [];
-
-    $currentPage = 0;
-    $totalPages  = null;
-    $totalCount  = null;
-    $processedCount = 0;
-    $acceptedCount = 0;
-
-    while ( $sanity-- )
-    {
-      $loadStartTime = microtime(true);
-      try
-      {
-        echo "\nLOADING batch($currentPage/$totalPages) ";
-
-        $client   = new \GuzzleHttp\Client(['base_uri' => $server, 'verify' => false]);
-        $query = [
-          'page_size'=>$batchSize,
-          'page'=>$currentPage
-        ];
-        if ( !empty(intval($since)) ) {
-          $query['since'] = intval($since);
-        }
-        $response = $client->post( $url, [ 'query'=> $query ] );
-        $body = $response->getBody();
-        if ( empty($body) )
-        {
-          continue;
-        }
-        $responseData = json_decode($body->getContents(),true);
-        if ( $response->getStatusCode()!==200 )
-        {
-          break;
-        }
-      } catch (Exception $e) {
-      }
-      $loadEndTime = microtime(true);
-      $loadTime = round($loadEndTime - $loadStartTime,4);
-      $loadTime = ( $loadTime >= 1 ) ? @round($loadTime/pow(60,   ($i=floor(log($loadTime, 60)))),   2).' '.$tunit[$i] : "$loadTime sec";
-    }
-  }
-
-  public function getEntities($since=0)
-  {
-    $tunit=['sec','min','hour'];
-
-    /// fetch from drupal api
-    $batchSize = ( !empty($this->ssg->config['drupalAPI']['batchSize']) ) ? $this->ssg->config['drupalAPI']['batchSize'] : 1;
-    $server    = ( !empty($this->ssg->config['drupalAPI']['server']) )    ? $this->ssg->config['drupalAPI']['server']    : 'https://usa-cmp-stg.gsa.ctacdev.com';
-    $url       = ( !empty($this->ssg->config['drupalAPI']['url']) )       ? $this->ssg->config['drupalAPI']['url']       : '/usaapi/entities';
+    $url       = ( !empty($this->ssg->config['drupalAPI']['entitiesUrl']) )
+                    ? $this->ssg->config['drupalAPI']['entitiesUrl'] : '/usaapi/entities';
 
     $siteName = $this->ssg->siteName;
     $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
@@ -185,9 +133,10 @@ class DrupalAPIDataSource extends DataSource
       }
 
     }
+    return ( $processedCount > 0 );
   }
 
-  function cleanResult( $_source )
+  public function cleanResult( $_source )
   {
     $renamed_keys = [
       'emergency_management_agenc' => 'emergency_management_agency',
@@ -301,7 +250,7 @@ class DrupalAPIDataSource extends DataSource
     return $_source;
   }
 
-  function belongsToSite( $siteName, $entity )
+  public function belongsToSite( $siteName, $entity )
   {
     if ( !array_key_exists('for_use_by',$entity) )
     {
@@ -325,6 +274,46 @@ class DrupalAPIDataSource extends DataSource
         }
       }
       return $belongsToSite;
+    }
+
+    return true;
+  }
+
+
+  public function getRedirects()
+  {
+    $tunit=['sec','min','hour'];
+
+    /// fetch from drupal api
+    $server    = ( !empty($this->ssg->config['drupalAPI']['server']) ) ? 
+                    $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
+
+    $url       = ( !empty($this->ssg->config['drupalAPI']['redirectsUrl']) ) ? 
+                    $this->ssg->config['drupalAPI']['redirectsUrl'] : '/usaapi/redirects';
+
+    $siteName = $this->ssg->siteName;
+    $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
+
+    $this->redirects = [];
+
+    $client   = new \GuzzleHttp\Client(['base_uri' => $server, 'verify' => false]);
+    $response = $client->post( $url );
+    $body = $response->getBody();
+    if ( empty($body) )
+    {
+      echo "No {$this->ssg->siteName} Redirects";
+      return false;
+    }
+    $responseData = json_decode($body->getContents(),true);
+    if ( $response->getStatusCode()!==200 )
+    {
+      echo "Error retrieving {$this->ssg->siteName} Redirects";
+      return false;
+    }
+
+    foreach( $responseData['result'] as $result )
+    {
+      $this->redirects[$result['rid']] = $result;
     }
 
     return true;

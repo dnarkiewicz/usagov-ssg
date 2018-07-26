@@ -19,7 +19,7 @@ class DataSource
 
 	public function pull( $since=0 )
 	{
-		$this->getEntites($since);
+		$this->getEntities($since);
 		$this->getRedirects();
 	}
 
