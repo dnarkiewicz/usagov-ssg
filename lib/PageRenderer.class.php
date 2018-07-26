@@ -54,6 +54,26 @@ class PageRenderer
     public function addFilters()
     {
         $ssg =& $this->ssg;
+
+        $this->templateRenderer->addFilter(new \Twig_Filter('headerSwap', function ($html)
+        {
+            $html = preg_replace("/<h3>/i",   "<header><h2>",   $html);
+            $html = preg_replace("/<h3 /i",   "<header><h2 ",   $html);
+            $html = preg_replace("/<\/h3>/i", "</h2></header>", $html);
+
+            $html = preg_replace("/<h4>/i",   "<h3>",  $html);
+            $html = preg_replace("/<h4 /i",   "<h3 ",  $html);
+            $html = preg_replace("/<\/h4>/i", "</h3>", $html);
+
+            // $html = str_ireplace("<h3>",  "<header><h2>",   $html);
+            // $html = str_ireplace("<h3 ",  "<header><h2 ",   $html);
+            // $html = str_ireplace("</h3>", "</h2></header>", $html);
+
+            // $html = str_ireplace("<h4>",  "<h3>",  $html);
+            // $html = str_ireplace("<h4 ",  "<h3 ",  $html);
+            // $html = str_ireplace("</h4>", "</h3>", $html);
+            return $html;
+        }));
         $this->templateRenderer->addFilter(new \Twig_Filter('friendly_url', function ($string) use ($ssg)
         {
             return $ssg->sanitizeForUrl($string);
