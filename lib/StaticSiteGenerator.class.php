@@ -23,6 +23,8 @@ class StaticSiteGenerator
     public $renderer;
     public $config;
 
+    public $loadDatafromSource;
+
     public function __construct( $siteName )
     {
         $this->time = microtime();
@@ -59,6 +61,9 @@ class StaticSiteGenerator
         $this->renderer    = new PageRenderer( $this );
         $this->templates   = new TemplateSync( $this ); 
         $this->destination = new SiteDestination( $this );
+
+        $this->getDatafromSource = false;
+
     }
 
     public function pushToDestination()
@@ -66,9 +71,9 @@ class StaticSiteGenerator
         $this->destination->push();
     }
 
-    public function syncTemplates( $force_fresh_pull=false )
+    public function syncTemplates()
     {
-        $this->templates->sync( $force_fresh_pull );
+        $this->templates->sync();
     }
 
     public function storeDataInCache()
@@ -91,10 +96,10 @@ class StaticSiteGenerator
         $bytes = file_put_contents($cacheFile, $cache);
         return !empty( $bytes );
     }
-    public function loadData( $fromSource=false )
+    public function loadData()
     {
         $sourceFail = false;
-        if ( $fromSource )
+        if ( $this->getDatafromSource )
         {
             /// if we want data from source - we might only need to update
             /// how do we know if we want totally new data or just updated
@@ -790,7 +795,7 @@ class StaticSiteGenerator
         foreach ( $this->pagesByUrl as $url=>&$page )
         {
             $requiredPages++;
-            $pageDir = './sites/'.strtolower($this->siteName).'/'.$url;
+            $pageDir = rtrim( './sites/'.trim(strtolower($this->siteName),'/').'/'.trim($url,'/'), '/' );
             $pageFile = $pageDir.'/index.html';
 
             if ( $this->validatePage($pageFile) )
@@ -807,7 +812,7 @@ class StaticSiteGenerator
                 {
                     $requiredPages++;
                     $subUrl = $url.'/'.strtolower($letter);
-                    $subPageDir = $pageDir.'/'.strtolower($letter);
+                    $subPageDir = rtrim( $pageDir.'/'.trim(strtolower($letter),'/'), '/' );
                     $subPageFile = $subPageDir.'/index.html';
                     if ( $this->validatePage($subPageFile) )
                     {
@@ -829,7 +834,7 @@ class StaticSiteGenerator
                             $subUrl = $page['usa_gov_50_state_prefix']
                                         .'/'.$this->sanitizeForUrl($stateName);
                         }
-                        $subPageDir = './sites/'.strtolower($this->siteName).'/'.$subUrl;
+                        $subPageDir = rtrim('./sites/'.trim(strtolower($this->siteName)).'/'.trim($subUrl,'/'), '/' );
                         $subPageFile = $subPageDir.'/index.html';
                         if ( $this->validatePage($subPageFile) )
                         {
@@ -846,7 +851,7 @@ class StaticSiteGenerator
                     $requiredPages++;
                     $urlSafeTitle = $this->sanitizeForUrl($feature['title']);
                     $subUrl = $url.'/'.$urlSafeTitle;
-                    $subPageDir = $pageDir.'/'.$urlSafeTitle;
+                    $subPageDir = rtrim( $pageDir.'/'.$urlSafeTitle, '/');
                     $subPageFile = $subPageDir.'/index.html';
                     if ( $this->validatePage($subPageFile) )
                     {
@@ -869,13 +874,14 @@ class StaticSiteGenerator
             echo "Render: site ... not found\n";
             return false;
         }
-        $result = $this->renderTree($this->sitePage);
-        if ( empty($result) ) {
+        $treeResult = $this->renderTree($this->sitePage);
+        $redirectResult = $this->renderRedirects();
+        if ( empty($treeResult) ||  empty($redirectResult) ) {
             echo "Render: site ... failed\n";
         } else {
             echo "Render: site ... done\n";
         }
-        return $result;
+        return $treeResult && $redirectResult;
     }
     public function renderTree( $page, $renderPageOnFailure=false )
     {
@@ -894,6 +900,15 @@ class StaticSiteGenerator
                     $this->renderTree($child);
                 }
             }
+        }
+        return true;
+    }
+
+    public function renderRedirects()
+    {
+        foreach ( $this->source->redirects as $redirect )
+        {
+            $this->renderer->renderRedirect($redirect);
         }
         return true;
     }

@@ -5,101 +5,55 @@ namespace ctac\ssg;
 require_once 'vendor/autoload.php';
 require_once 'lib/autoload.php';
 
-
 $executionStartTime = microtime(true);
 
-$siteName = 'USA.gov';
-$site = new StaticSiteGenerator($siteName);
+$site = new StaticSiteGenerator('USA.gov');
 
-$fromSource     = false;
-$freshTemplates = false;
-$renderPageOnFailure = true;
-$syncToDestination   = false;
+$syncToDestination = false;
+$fractalExamples   = false;
 
 foreach ( $argv as $arg )
 {
-    if ( isset($arg) && $arg=='--freshdata' )
+    if ( isset($arg) && $arg=='--fresh-data' )
     {
-        $fromSource = true;
+        $site->getDatafromSource = true;
     }
-    if ( isset($arg) && $arg=='--freshtemplates' )
+    if ( isset($arg) && $arg=='--fresh-templates' )
     {
-        $freshTemplates = true;
+        $site->templates->freshTemplates = true;
     }
-    if ( isset($arg) && $arg=='--nodebugpages' )
+    if ( isset($arg) && $arg=='--no-debug-pages' )
     {
-        $renderPageOnFailure = false;
+        $site->renderer->renderPageOnFailure = false;
     }
-    if ( isset($arg) && $arg=='--pushs3' )
+    if ( isset($arg) && $arg=='--push-s3' )
     {
         $syncToDestination = true;
     }
-}
-
-$site->loadData($fromSource);
-$site->buildSiteTreeFromEntities();
-$site->syncTemplates($freshTemplates);
-$site->renderSite($renderPageOnFailure);
-// if ( $site->validateSite() && $syncToDestination )
-// {
-//     echo "Syncing to destination bucket\n";
-//     $site->destination->sync();
-// }
-
-//print_r($site->source->entities['5630b982-1e8d-4846-8cce-d8e879f0c6ab']);
-// print_r($site->pagesByUrl['/laws']);
-// print_r($site->pagesByUrl['/disability-rights']);
-
-
-// $site->source->getRedirects();
-// print_r( $site->source->redirects );
-
-/*** /
-
-if ( !is_dir('./exampledata') ) { mkdir('./exampledata'); }
-
-$ex = json_encode(["entities"=>$site->source->entities], JSON_PRETTY_PRINT);
-file_put_contents('./exampledata/entities.js', $ex);
-
-$ex = json_encode(["pagesByUrl"=>$site->pagesByUrl], JSON_PRETTY_PRINT);
-file_put_contents('./exampledata/data_pagesByUrl.json', $ex);
-
-$ex = json_encode(["siteIndexAZ"=>$site->siteIndexAZ], JSON_PRETTY_PRINT);
-file_put_contents('./exampledata/siteIndexAZ.js', $ex);
-
-$ex = json_encode(["mainNav"=>$site->sitePage['menu']], JSON_PRETTY_PRINT);
-file_put_contents('./exampledata/data_mainNav.json', $ex);
-
-$ex = json_encode(["directoryRecordGroups"=>$site->directoryRecordGroups], JSON_PRETTY_PRINT);
-file_put_contents('./exampledata/data_directoryRecordGroups.json', $ex);
-
-$ex = json_encode(["stateDetails"=>$site->stateDetails], JSON_PRETTY_PRINT);
-file_put_contents('./exampledata/data_stateDetails.json', $ex);
-
-
-/***/
-
-//$site->renderer->renderPage($site->homePage);
-
-//$x = array_pop($site->features);
-/*
-$types = array_keys($site->directoryRecordGroups['USA.gov']['all']);
-$groups = [];
-foreach ($types as $type)
-{
-    $type_groups = array_keys($site->directoryRecordGroups['USA.gov']['all'][$type]);
-    foreach ( $type_groups as $type_group )
+    if ( isset($arg) && $arg=='--local-redirects' )
     {
-        if ( !isset($groups[$type_group]) )
-        {
-            $groups[$type_group] = 0;
-        }
-        $groups[$type_group]++;
+        $site->source->useLocalRedirects = true;
+    }
+    if ( isset($arg) && $arg=='--fractal-examples' )
+    {
+        $fractalExamples = true;
     }
 }
-ksort($groups);
-print_r(json_encode($groups,JSON_PRETTY_PRINT));
-*/
+
+
+$site->loadData();
+$site->buildSiteTreeFromEntities();
+$site->syncTemplates();
+$site->renderSite();
+if ( $site->validateSite() && $syncToDestination )
+{
+    $site->destination->sync();
+}
+
+if ( $fractalExamples ) 
+{
+    generateFractalData($site);
+}
 
 // print_r(json_encode($site->pageTypes,JSON_PRETTY_PRINT));
 
@@ -117,5 +71,28 @@ echo "\nFound Pages    : ". count($site->pages);
 echo "\nFound Root     : ". $site->sitePage['name'];
 echo "\nMax Memory     : ". ( ( $size > 1 ) ? @round($size/pow(1024, ($i=floor(log($size, 1024)))), 2).' '.@$unit[$i]  : $size.' '.$unit[0]  );
 echo "\nExecution Time : ". ( ( $time > 1 ) ? @round($time/pow(60, ($i=floor(log($time, 60)))), 2).' '.@$tunit[$i] : $time.' '.$tunit[0] );
-// echo "\nExecution Time : ". ( ( $time > 1 ) ? "$time >1" : $time.' <1 '.$tunit[0] );
 echo "\n\n";
+
+
+function generateFractalData($site)
+{
+    if ( !is_dir('./exampledata') ) { mkdir('./exampledata'); }
+
+    $ex = json_encode(["entities"=>$site->source->entities], JSON_PRETTY_PRINT);
+    file_put_contents('./exampledata/entities.js', $ex);
+
+    $ex = json_encode(["pagesByUrl"=>$site->pagesByUrl], JSON_PRETTY_PRINT);
+    file_put_contents('./exampledata/data_pagesByUrl.json', $ex);
+
+    $ex = json_encode(["siteIndexAZ"=>$site->siteIndexAZ], JSON_PRETTY_PRINT);
+    file_put_contents('./exampledata/siteIndexAZ.js', $ex);
+
+    $ex = json_encode(["mainNav"=>$site->sitePage['menu']], JSON_PRETTY_PRINT);
+    file_put_contents('./exampledata/data_mainNav.json', $ex);
+
+    $ex = json_encode(["directoryRecordGroups"=>$site->directoryRecordGroups], JSON_PRETTY_PRINT);
+    file_put_contents('./exampledata/data_directoryRecordGroups.json', $ex);
+
+    $ex = json_encode(["stateDetails"=>$site->stateDetails], JSON_PRETTY_PRINT);
+    file_put_contents('./exampledata/data_stateDetails.json', $ex);
+}

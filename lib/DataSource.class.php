@@ -8,6 +8,7 @@ class DataSource
 	public $entities;
 	public $entitiesById;
 	public $redirects;
+	public $useLocalRedirects;
 
 	public function __construct( $ssg )
 	{
@@ -15,6 +16,7 @@ class DataSource
 		$this->entities     = [];
    		$this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
 		$this->redirects    = [];
+		$this->useLocalRedirects = false;
 	}
 
 	public function pull( $since=0 )

@@ -15,13 +15,12 @@
 ### RUN:
 * `./ssg`
 * options:
-  * `./ssg --freshdata`
-  * `./ssg --freshtemplates`
-  * `./ssg --freshdata --freshtemplates`
-  * `./ssg --pushs3`
-  * `./ssg --pushs3 --freshdata`
-  * `./ssg --pushs3 --freshtemplates`
-  * `./ssg --pushs3 --freshdata --freshtemplates`
+  * `./ssg --fresh-data` to pull a fresh set of data, defaults to cached data
+  * `./ssg --fresh-data --local-redirects` to use redirects listed in a local file rather than from data source
+  * `./ssg --fresh-templates` to pull a fresh set of templates, default to local templates
+  * `./ssg --push-s3` to deploy the site to an s3 bucket
+  * `./ssg --no-debug-pages` to not generate fake pages with debug info on failure
+  * `./ssg --fractal-examples` to generate a directory of example data useful for fractal
 
 ### TEST:
 * `./test`

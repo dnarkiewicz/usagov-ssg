@@ -282,8 +282,15 @@ class DrupalAPIDataSource extends DataSource
 
   public function getRedirects()
   {
-    $tunit=['sec','min','hour'];
-
+    if ( $this->useLocalRedirects && file_exists(dirname(__FILE__).'/redirects.php') )
+    {
+      include dirname(__FILE__).'/redirects.php';
+      if ( !empty($redirects) ) 
+      {
+        $this->redirects = $redirects;
+        return true;
+      }
+    }
     /// fetch from drupal api
     $server    = ( !empty($this->ssg->config['drupalAPI']['server']) ) ? 
                     $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
@@ -315,6 +322,8 @@ class DrupalAPIDataSource extends DataSource
     {
       $this->redirects[$result['rid']] = $result;
     }
+
+     
 
     return true;
   }

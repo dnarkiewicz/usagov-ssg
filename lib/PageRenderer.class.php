@@ -15,14 +15,16 @@ class PageRenderer
     public $templateLoader;
     public $templateRenderer;
 
+    public $renderPageOnFailure;
+
     public function __construct( &$ssg )
     {
         $this->ssg = &$ssg;
 
-        $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
-        $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
+        $repoTemplateDir = $this->ssg->config['templateSync']['repo_template_dir'];
+        $repoTemplateDir = preg_replace('(^[\.\/]|[\.\/]$)','',$repoTemplateDir);
 
-        $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/'.$repo_template_dir;
+        $this->templateDir      = realpath($this->ssg->config['baseDir']).'/templates/twig/'.$repoTemplateDir;
         $this->templateDirCache = realpath($this->ssg->config['baseDir']).'/templates/compiled/twig';
 
         if ( !is_dir($this->templateDir) )
@@ -49,6 +51,8 @@ class PageRenderer
             'auto_reload' => 1
         ));
         $this->addFilters();
+
+        $this->renderPageOnFailure = true;
     }
 
     public function addFilters()
@@ -112,7 +116,7 @@ class PageRenderer
         }));
     }
 
-  	public function renderPage( &$page, $renderPageOnFailure=false )
+  	public function renderPage( &$page )
   	{
           /// PATH
           $url = $this->getPageUrl($page);
@@ -128,15 +132,14 @@ class PageRenderer
               return null;
           }
           echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
-          $path = ltrim($url,'/');
-          if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
-          $base = basename($path);
-          if ( empty($base) ) { $base = 'index'; }
+          $path = trim($url,'/ ');
 
-          $siteDir = $this->ssg->config['baseDir'].'/sites/'.trim(strtolower($this->ssg->siteName));
+          $siteDir = '/'.
+                     trim($this->ssg->config['baseDir'],'/ ')
+                     .'/sites/'.
+                     trim(strtolower($this->ssg->siteName),'/ ');
           $fileDir = $siteDir.'/'.$path;
-          $file = $fileDir.'index.html';
-
+          $file = $fileDir.'/index.html';
           /// TEMPLATE
           $twig = $this->getTwigPageRenderer($page);
           if ( empty($twig) )
@@ -148,7 +151,7 @@ class PageRenderer
             }
             chmod( $fileDir, 0755 );
             $msg = "No renderer found<br />\nPath:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
-            if ( $renderPageOnFailure )
+            if ( $this->renderPageOnFailure )
             {
                 file_put_contents( $file, $msg );
             }
@@ -178,7 +181,7 @@ class PageRenderer
             }
             chmod( $fileDir, 0755 );
             $msg = "Render Failed<br />\nPath:".$path."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
-            if ( $renderPageOnFailure )
+            if ( $this->renderPageOnFailure )
             {
                 file_put_contents( $file, $msg );
             }
@@ -196,7 +199,7 @@ class PageRenderer
                 if ( !empty($html) )
                 {
                     /// directory for path
-                    $fileDir = $siteDir.'/'.$path.strtolower($letter);
+                    $fileDir = $siteDir.'/'.$path.'/'.strtolower($letter);
                     $file = $fileDir.'/'.'index.html';
                     if ( !file_exists($fileDir) )
                     {
@@ -204,10 +207,10 @@ class PageRenderer
                     }
                     chmod( $fileDir, 0755 );
                     file_put_contents( $file, $html );
-                    echo "Render Page: {$path}".strtolower($letter)."\n";
+                    echo "Render Page: {$path}/".strtolower($letter)."\n";
 
                 } else {
-                    $msg = "Render Failed<br />\nPath:".$path.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
+                    $msg = "Render Failed<br />\nPath: /".$path.'/'.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
                     if ( $this->renderPageOnFailure )
                     {
                         file_put_contents( $file, $msg."<pre>".print_r($page,1)."</pre>" );
@@ -309,6 +312,58 @@ class PageRenderer
           return $paths;
   	}
 
+    public function renderRedirect($redirect)
+    {
+        $path = trim($redirect['source_path'],'/ ');
+        if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
+        $base = basename($path);
+
+        $siteDir = rtrim($this->ssg->config['baseDir'],'/ ')
+                   .'/sites/'.
+                   trim(strtolower($this->ssg->siteName),'/ ');
+        $fileDir = $siteDir.'/'.$path;
+        if ( $base !== 'index.html' ) 
+        { 
+            $file = $fileDir.'/index.html';
+        } else {
+            $file = $fileDir;
+        }
+
+        if (!( substr($redirect['target'],0,7)=='http://' 
+            || substr($redirect['target'],0,8)=='https://' 
+            || $redirect['target']{0} !== '/' ) )
+        { 
+            $redirect['target'] .= '/';
+        }
+
+        echo "Render Redirect: {$redirect['source_path']} => {$redirect['target']} \n";
+
+        $html = "<DOCTYPE html>
+            <html>
+                <head>
+                    <meta http-equiv=\"refresh\" content=\"2;url='{$redirect['target']}'\" />
+                    <script>
+                        window.location.replace(\"{$redirect['target']}\");
+                    </script>
+                </head>
+                <body>
+                    <p>This page has moved. Click <a href=\"{$redirect['target']}\">{$redirect['target']}</a> to go to the new page.</p>
+                </body>
+            </html>";
+        $html = trim($html);
+        if ( !empty($html) )
+        {
+            /// directory for path
+            if ( !file_exists($fileDir) )
+            {
+                mkdir( $fileDir, 0755, true );
+            }
+            chmod( $fileDir, 0755 );
+            file_put_contents( $file, $html );
+        }
+        return true;
+    }
+
     public function getPageUrl( $page )
     {
         if ( !empty($page['field_friendly_url'])
@@ -334,8 +389,8 @@ class PageRenderer
 
     public function getTwigPageRenderer( $page )
     {
-        $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
-        $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
+        $repoTemplateDir = $this->ssg->config['templateSync']['repo_template_dir'];
+        $repoTemplateDir = preg_replace('(^[\.\/]|[\.\/]$)','',$repoTemplateDir);
 
         if ( empty($this->ssg->siteName) ) { error_log(" no renderers for site"); return null; }
 
@@ -351,7 +406,7 @@ class PageRenderer
         if ( empty($this->templates[$this->ssg->siteName]['twig'][$page['pageType']]) )
         {
             /// if the template file exists
-            if ( !file_exists('./templates/twig/'.$repo_template_dir.'/'.$page['pageType'].'.twig') )
+            if ( !file_exists('./templates/twig/'.$repoTemplateDir.'/'.$page['pageType'].'.twig') )
             {
                 $this->templates[$this->ssg->siteName]['twig'][$page['pageType']] = null;
             } else {

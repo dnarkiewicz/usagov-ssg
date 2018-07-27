@@ -6,49 +6,46 @@ class TemplateSync
 {
     public $ssg;
 
-    public $source_dir;
-    // public $source_template_base;
-    public $source_template_dir;
+    public $sourceDir;
+    public $sourceTemplateDir;
+    public $destTemplateDir;
+    public $siteDir;
 
-    // public $dest_template_base;
-    public $dest_template_dir;
-
-    public $site_dir;
+    public $freshTemplates;
 
     public function __construct( &$ssg )
     {
         $this->ssg = &$ssg;
 
-        // $repo_template_base = $this->ssg->config['templateSync']['repo_template_base'];
-        // $repo_template_base = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_base);
+        $repoTemplateDir = $this->ssg->config['templateSync']['repo_template_dir'];
+        $repoTemplateDir = preg_replace('(^[\.\/]|[\.\/]$)','',$repoTemplateDir);
 
-        $repo_template_dir = $this->ssg->config['templateSync']['repo_template_dir'];
-        $repo_template_dir = preg_replace('(^[\.\/]|[\.\/]$)','',$repo_template_dir);
+        $this->sourceDir           = './templates/sync';
+        $this->sourceTemplateDir  = $this->sourceDir.'/'.$repoTemplateDir;
 
-        $this->source_dir           = './templates/sync';
-        $this->source_template_dir  = $this->source_dir.'/'.$repo_template_dir;
+        $this->destDir             = './templates/twig';
+        $this->destTemplateDir    = $this->destDir.'/'.$repoTemplateDir;
 
-        $this->dest_dir             = './templates/twig';
-        $this->dest_template_dir    = $this->dest_dir.'/'.$repo_template_dir;
-
-        $this->site_dir             = './sites/'.trim(strtolower($this->ssg->siteName));
+        $this->siteDir             = './sites/'.trim(strtolower($this->ssg->siteName));
+        
+        $this->freshTemplates     = false;
     }
 
-    public function sync( $freshTemplates=null )
+    public function sync()
     {
         $prepare = $this->prepare();
-        $pull    = $this->pull($freshTemplates);
+        $pull    = $this->pull();
         $assets  = $this->mergeAssets();
     }
 
     public function prepare()
     {
         echo "Templates: preparing directories ... ";
-        $this->prepareDir($this->source_dir);
-        $this->prepareDir($this->source_template_dir);
-        $this->prepareDir($this->dest_dir);
-        $this->prepareDir($this->dest_template_dir);
-        $this->prepareDir($this->site_dir);
+        $this->prepareDir($this->sourceDir);
+        $this->prepareDir($this->sourceTemplateDir);
+        $this->prepareDir($this->destDir);
+        $this->prepareDir($this->destTemplateDir);
+        $this->prepareDir($this->siteDir);
         echo "done\n";
     }
     public function prepareDir( &$path )
@@ -59,12 +56,10 @@ class TemplateSync
         }
         if ( !is_dir($path) )
         {
-            // echo "mkdir => {$path} \n";
             mkdir($path, 0744, true);
         }
         if ( !is_writable($path) )
         {
-            // echo "chmod => {$path} \n";
             chmod($path, 0744 );
         }
         $real_path = realpath($path);
@@ -74,24 +69,22 @@ class TemplateSync
         }
         if ( !is_dir($real_path) || !is_writable($real_path) )
         {
-            // echo " $real_path not writable \n";
             return false;
         }
-        // echo " $path = $real_path \n";
         $path = $real_path;
         return true;
     }
 
-    public function pull( $freshTemplates=false )
+    public function pull()
     {
         $pullVerified = $this->verifyPull();
         /// check for existing directory
-        if ( $freshTemplates && !$pullVerified )
+        if ( $this->freshTemplates && !$pullVerified )
         {
             echo "Templates: pulling fresh templates ... ";
-            if ( !empty($this->source_dir) && $this->source_dir !== '/' )
+            if ( !empty($this->sourceDir) && $this->sourceDir !== '/' )
             {
-                $remove_cmd = "rm -rf {$this->source_dir}";
+                $remove_cmd = "rm -rf {$this->sourceDir}";
                 // echo $remove_cmd."\n";
                 $rslt = `{$remove_cmd} 2>&1`;
             }
@@ -101,7 +94,7 @@ class TemplateSync
                     .':'.urlencode($this->ssg->config['templateSync']['repo_pass'])
                     .'@'.$this->ssg->config['templateSync']['repo_url'];
             
-            $clone_cmd = "git clone '{$git_repo}' {$this->source_dir}";
+            $clone_cmd = "git clone '{$git_repo}' {$this->sourceDir}";
             // echo $clone_cmd."\n";
             $rslt = `{$clone_cmd} 2>&1`;
             
@@ -116,7 +109,7 @@ class TemplateSync
             }
 
             /// switch to the branch we want
-            $branch_cmd = "cd {$this->source_dir} && git checkout {$this->ssg->config['templateSync']['repo_branch']}";
+            $branch_cmd = "cd {$this->sourceDir} && git checkout {$this->ssg->config['templateSync']['repo_branch']}";
             // echo $branch_cmd."\n";
             $rslt = `{$branch_cmd} 2>&1`;
             if ( strpos($rslt, 'error') === 0 ) {
@@ -125,10 +118,10 @@ class TemplateSync
             }
             echo "done\n";
             $this->mergeTemplates();
-        } else if ( $freshTemplates && $pullVerified ) {
+        } else if ( $this->freshTemplates && $pullVerified ) {
             echo "Templates: refreshing current templates ... ";
             /// use what we already have
-            $update_cmd = "cd {$this->source_dir}"
+            $update_cmd = "cd {$this->sourceDir}"
                          ." && git checkout {$this->ssg->config['templateSync']['repo_branch']} 2>&1 >/dev/null"
                          ." && git pull";
             // echo $update_cmd."\n";
@@ -150,12 +143,12 @@ class TemplateSync
         /// we need, at minimum, a template dir and one template named after each page type
         /// we could return false right away - but then we miss all the sweet errors
         $result = true;
-        if ( !is_dir($this->source_template_dir) ) {
-            //error_log("Template Sync: can't find template dir: $this->source_template_dir");
+        if ( !is_dir($this->sourceTemplateDir) ) {
+            //error_log("Template Sync: can't find template dir: $this->sourceTemplateDir");
             $result = false;
         }
-        $rslt = `cd {$this->source_dir} && git checkout {$this->ssg->config['templateSync']['repo_branch']} 2>&1 >/dev/null`;
-        $branch_name = trim(`cd {$this->source_dir} && git rev-parse --abbrev-ref HEAD`);
+        $rslt = `cd {$this->sourceDir} && git checkout {$this->ssg->config['templateSync']['repo_branch']} 2>&1 >/dev/null`;
+        $branch_name = trim(`cd {$this->sourceDir} && git rev-parse --abbrev-ref HEAD`);
         if ( $branch_name != $this->ssg->config['templateSync']['repo_branch'] )
         {
             //error_log("Template Sync: not in correct branch '{$this->ssg->config['templateSync']['repo_branch']}' != '$branch_name'");
@@ -170,7 +163,7 @@ class TemplateSync
         $result = true;
         foreach ( $this->ssg->pageTypes as $type )
         {
-            $template_file = "{$this->source_template_dir}/{$type}.twig";
+            $template_file = "{$this->sourceTemplateDir}/{$type}.twig";
             // echo "verifying $template_file ... \n";
             if ( !file_exists($template_file) )
             {
@@ -188,7 +181,7 @@ class TemplateSync
         $result = true;
         foreach ( $this->ssg->pageTypes as $type )
         {
-            $template_file = "{$this->dest_template_dir}/{$type}.twig";
+            $template_file = "{$this->destTemplateDir}/{$type}.twig";
             // echo "verifying $template_file ... \n";
             if ( !file_exists($template_file) )
             {
@@ -204,8 +197,8 @@ class TemplateSync
         echo "Templates: merging template files ... ";
  
         // we want the template directories somewhere we can use them
-        // echo "cp -r {$this->source_template_dir} {$this->dest_template_dir}";
-        $this->ssg->copy_recurse($this->source_template_dir,$this->dest_template_dir);
+        // echo "cp -r {$this->sourceTemplateDir} {$this->destTemplateDir}";
+        $this->ssg->copy_recurse($this->sourceTemplateDir,$this->destTemplateDir);
 
         echo "done\n";
     }
@@ -214,45 +207,37 @@ class TemplateSync
     {
         echo "Templates: merging public asset files ... ";
 
-        if ( !is_writable($this->site_dir) )
+        if ( !is_writable($this->siteDir) )
         {
-            $this->ssg->chmod_recurse($this->site_dir,0744);
+            $this->ssg->chmod_recurse($this->siteDir,0744);
         }
         // we want these /asset directories moved to root
         $asset_dirs = [ 'js', 'css', 'fonts', 'images' ];
         foreach ( $asset_dirs as $dir )
         {
-            $source_asset_dir = "{$this->source_dir}/assets/{$dir}";
-            $dest_asset_dir   = "{$this->site_dir}/{$dir}";
-            if ( !is_dir($dest_asset_dir) )
+            $sourceAssetDir = "{$this->sourceDir}/assets/{$dir}";
+            $destAssetDir   = "{$this->siteDir}/{$dir}";
+            if ( !is_dir($destAssetDir) )
             { 
-                // echo "\nmkdir => $dest_asset_dir\n";
-                mkdir($dest_asset_dir,0744,true);
-                //`mkdir -p $dest_asset_dir`;
+                mkdir($destAssetDir,0744,true);
             }
-            if ( !is_writable($dest_asset_dir) )
+            if ( !is_writable($destAssetDir) )
             {
-                $this->ssg->chmod_recurse($dest_asset_dir,0744);
-                //`chmod -r 0744 $dest_asset_dir`;
+                $this->ssg->chmod_recurse($destAssetDir,0744);
             }
-            $this->ssg->copy_recurse($source_asset_dir,$dest_asset_dir);
-            // `cp -r {$source_asset_dir} {$dest_asset_dir}`;
+            $this->ssg->copy_recurse($sourceAssetDir,$destAssetDir);
             /****/
             # TMP LOCATION
-            $dest_asset_dir   = "{$this->site_dir}/sites/all/themes/usa/{$dir}";
-            if ( !is_dir($dest_asset_dir) )
+            $destAssetDir   = "{$this->siteDir}/sites/all/themes/usa/{$dir}";
+            if ( !is_dir($destAssetDir) )
             { 
-                // echo "\nmkdir => $dest_asset_dir\n";
-                mkdir($dest_asset_dir,0744,true);
-                //`mkdir -p $dest_asset_dir`;
+                mkdir($destAssetDir,0744,true);
             }
-            if ( !is_writable($dest_asset_dir) )
+            if ( !is_writable($destAssetDir) )
             {
-                $this->ssg->chmod_recurse($dest_asset_dir,0744);
-                //`chmod -r 0744 $dest_asset_dir`;
+                $this->ssg->chmod_recurse($destAssetDir,0744);
             }
-            $this->ssg->copy_recurse($source_asset_dir,$dest_asset_dir);
-            // `cp -r {$source_asset_dir} {$dest_asset_dir}`;
+            $this->ssg->copy_recurse($sourceAssetDir,$destAssetDir);
             /****/
         }
 

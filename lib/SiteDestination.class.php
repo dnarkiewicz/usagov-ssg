@@ -26,8 +26,8 @@ class SiteDestination
 
     public function sync()
     {
+        echo "Syncing to destination bucket\n";
         /// try using the aws command-line tool on whole directory
-        /*
         if (!($filesSynced = $this->syncFilesCli()))
         {
             echo "Sync Files ... aws cli failed, trying sdk\n";
@@ -38,7 +38,6 @@ class SiteDestination
             echo "Sync Files ... aws sdk failed\n";
             return false; 
         }
-        */
         $filesSynced = true;
 
         $redirectsSynced = $this->syncRedirects();
@@ -105,7 +104,7 @@ class SiteDestination
         if ( !empty($removeFromDest) )
         {
             $s3->deleteObjects([
-                'Bucket'  => $config['aws']['bucket'],
+                'Bucket'  => $this->ssg->config['aws']['bucket'],
                 'Delete' => [
                     'Objects' => array_map(function ($key) {
                         return ['Key' => $key];
@@ -125,10 +124,11 @@ class SiteDestination
                 flush();
                 try {
                     $s3->putObject([
-                        'Bucket' => $config['aws']['bucket'],
+                        'Bucket' => $this->ssg->config['aws']['bucket'],
                         'Key'    => $key,
                         'Body'   => fopen($sourceFile['path'], 'r'),
                         'ACL'    => 'public-read',
+                        'WebsiteRedirectLocation' => '',
                     ]);
                 } catch (\Aws\S3\Exception\S3Exception $e) {
                     echo "Sync: There was an error adding the file $key.\n";
@@ -143,10 +143,11 @@ class SiteDestination
                     flush();
                     try {
                         $s3->putObject([
-                            'Bucket' => $config['aws']['bucket'],
+                            'Bucket' => $this->ssg->config['aws']['bucket'],
                             'Key'    => $key,
                             'Body'   => fopen($sourceFile['path'], 'r'),
                             'ACL'    => 'public-read',
+                            'WebsiteRedirectLocation' => '',
                         ]);
                     } catch (\Aws\S3\Exception\S3Exception $e) {
                         echo "Sync: There was an error updating the file $key.\n";
@@ -163,20 +164,55 @@ class SiteDestination
 
     public function syncRedirects()
     {
-        # foreach direct-paht-redirect
-        # set header per url 
-        #   $redirectHeader = ['x-amz-website-redirect-location'=>'/'];
-        #   upload a 0 length index.html file for that location
-        # OR
-        #
-        # generate xml with all redirect in it, and upload as bucket-wider RoutingRules
-        #
-        # foreach 
+        $sdk = new \Aws\Sdk($this->ssg->config['aws']);
+        $s3 = $sdk->createS3();
+
+        $sourceFiles = $this->getFilesInDir($this->source);
+        foreach ( $sourceFiles as $key=>$sourceFile )
+        {
+            // echo "check for redirect in $key \n";
+            $html = file_get_contents($sourceFile['path']);
+            if ( stristr($html,'http-equiv="refresh"') )
+            {
+                $m = [];
+                if ( preg_match("/http\-equiv=\"refresh\"\s+content=\"\d+;url=\'?(.*?)\'?\" \/\>/",$html,$m) ) 
+                {
+                    if ( !empty($m[1]) )
+                    {
+                        echo "Sync: Redirect @ $key => {$m[1]}\n";
+                        flush();
+
+                        $s3->putObject([
+                            'Bucket' => $this->ssg->config['aws']['bucket'],
+                            'Key'    => $key,
+                            'WebsiteRedirectLocation' => $m[1]
+                        ]);
+                    }
+                }
+            }
+        }
+        // foreach ( $this->ssg->source->redirects as $redirect )
+        // {
+        //     $path = ltrim($redirect['source_path'],'/');
+        //     if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
+        //     $base = basename($path);
+            
+        //     $siteDir = $this->ssg->config['baseDir'].'/sites/'.trim(strtolower($this->ssg->siteName));
+        //     $fileDir = $siteDir.'/'.$path;
+        //     if ( $base !== 'index.html' ) 
+        //     { 
+        //         $file = $fileDir.'/index.html';
+        //     } else {
+        //         $file = $fileDir;
+        //     }
+        // }
+        return true;
+    
     }
 
     public function getFilesInDir($targetDir)
     {
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->targetDir));
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($targetDir));
         $files    = [];
         foreach ($iterator as $file) 
         {
