@@ -55,7 +55,9 @@ if ( $fractalExamples )
     generateFractalData($site);
 }
 
-// print_r(json_encode($site->pageTypes,JSON_PRETTY_PRINT));
+//print_r(json_encode($site->directoryRecordGroups['USA.gov']['PR']['State Government Agencies']['State'][0]['uuid'],JSON_PRETTY_PRINT));
+
+// print_r(json_encode($site->directoryRecordGroups['USA.gov']['pr']['State Government Agencies']['all'][0],JSON_PRETTY_PRINT));
 
 echo "\n";
 

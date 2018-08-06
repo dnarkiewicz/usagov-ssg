@@ -212,6 +212,7 @@ class StaticSiteGenerator
                     $this->source->entities[$uuid]['usa_gov_50_state_category'] = preg_replace('/^field_/','',$entity['usa_gov_50_state_category']);
                 }
                 /// CORRECT THIS HERE UNTIL ECAS/CMP FIELD CHANGE IS ADDEDED
+                /*
                 if ( $entity['pageType'] === 'DirectoryRecord' )
                 {
                     if ( !empty($this->pages[$uuid]['friendly_url'])
@@ -225,7 +226,8 @@ class StaticSiteGenerator
                 } else {
                     //$this->pages[$uuid]['directory-record-link-field'] = null;
                 }
-                /// build a fake sub-page for each one of these special cases
+                */
+                // build a fake sub-page for each one of these special cases
                 /// FEATURES - generate landing page, and all sub pages
                 /// AZ-INDEX - list of each displayable page, grouped by first letter of browser_title
                 /// AZ-DIRREC - list of listable directory records, grouped by first letter of title
@@ -876,6 +878,7 @@ class StaticSiteGenerator
         }
         $treeResult = $this->renderTree($this->sitePage);
         $redirectResult = $this->renderRedirects();
+        //$redirectResult = true;
         if ( empty($treeResult) ||  empty($redirectResult) ) {
             echo "Render: site ... failed\n";
         } else {

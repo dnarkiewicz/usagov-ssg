@@ -265,6 +265,16 @@ class PageRenderer
                         $urlSafeName = $this->ssg->sanitizeForUrl($name);
                         $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
                         $detailsPage['state'] = $acronym;
+
+                        $stateDirectoryRecord = $this->ssg->source->entities[0];
+                        $detailsPage['asset_order_content'] = [
+                            [
+                                'target_id' => $stateDirectoryRecord['nid'],
+                                'uuid' => $stateDirectoryRecord['uuid'],
+                                'type' => 'node',
+                                'bundle' => $stateDirectoryRecord['type'],
+                            ]
+                        ];
                         $this->renderPage($detailsPage);
                     }
                 }
