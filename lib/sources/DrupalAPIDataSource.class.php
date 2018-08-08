@@ -256,6 +256,8 @@ class DrupalAPIDataSource extends DataSource
     {
       return true;
     }
+    /// check: published
+    /// check: not-deleted
     /*
     if ( ( array_key_exists('vocabulary_machine_name',$entity) 
             || $entity['type'] == 'state_details' )

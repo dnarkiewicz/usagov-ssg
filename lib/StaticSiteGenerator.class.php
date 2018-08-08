@@ -416,7 +416,7 @@ class StaticSiteGenerator
                             && !empty($entity['link_form_links']['url'])
                             && !empty($entity['link_form_links']['title']) )
                         {
-                            $letter = strtoupper($entity['link_form_links']['title']{0});
+                            $letter = strtoupper($entity['title']{0});
                             $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
                                 'uuid'=>$uuid, 
                                 'title'=>$entity['title'], 
