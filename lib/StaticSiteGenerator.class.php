@@ -417,14 +417,24 @@ class StaticSiteGenerator
                             && !empty($entity['link_form_links']['title']) )
                         {
                             $letter = strtoupper($entity['link_form_links']['title']{0});
-                            $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$entity['link_form_links']['title'] ];
+                            $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
+                                'uuid'=>$uuid, 
+                                'title'=>$entity['title'], 
+                                'synonym'=>'',
+                                'formTitle'=>$entity['link_form_links']['title']
+                            ];
 
                             if ( !empty($entity['synonym']) )
                             {
                                 foreach ( $entity['synonym'] as $synonym )
                                 {
                                     $letter = strtoupper($synonym['value']{0});
-                                    $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                    $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
+                                        'uuid'=>$uuid, 
+                                        'title'=>$entity['title'], 
+                                        'synonym'=>$synonym['value'],
+                                        'formTitle'=>$entity['link_form_links']['title']
+                                    ];
                                 }
                             }
                         }

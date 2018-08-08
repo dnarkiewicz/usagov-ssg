@@ -59,6 +59,12 @@ class PageRenderer
     {
         $ssg =& $this->ssg;
 
+        /*
+        * These filteres are written in a style as close to javascript as I can 
+        * because these may need to be translated into js filters for the JS Twig
+        * to use in Fractal
+        */
+
         $this->templateRenderer->addFilter(new \Twig_Filter('headerSwap', function ($html)
         {
             $html = preg_replace("/<h3>/i",   "<header><h2>",   $html);
@@ -482,8 +488,6 @@ class PageRenderer
 
       $params['stateDetails']    = $this->ssg->stateDetails;
       $params['stateAcronyms']   = $this->ssg->stateAcronyms;
-  
-      
     }
 
 }
