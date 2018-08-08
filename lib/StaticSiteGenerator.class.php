@@ -400,7 +400,9 @@ class StaticSiteGenerator
                         }
 
                         /// GOV Branches
-                        if ( trim(strtolower($type)) == 'federal agencies' )
+                        if ( array_key_exists('show_on_az_index',$entity)
+                             && trim(strtolower($entity['show_on_az_index'])) == 'yes'
+                             && trim(strtolower($type)) == 'federal agencies' )
                         {
                             $letter = strtoupper($entity['title']{0});
                             $branch = !empty($entity['government_branch']) ? $entity['government_branch'] : 'None';
