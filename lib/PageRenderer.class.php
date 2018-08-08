@@ -272,15 +272,25 @@ class PageRenderer
                         $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
                         $detailsPage['state'] = $acronym;
 
-                        $stateDirectoryRecord = $this->ssg->source->entities[0];
-                        $detailsPage['asset_order_content'] = [
-                            [
-                                'target_id' => $stateDirectoryRecord['nid'],
-                                'uuid' => $stateDirectoryRecord['uuid'],
-                                'type' => 'node',
-                                'bundle' => $stateDirectoryRecord['type'],
-                            ]
-                        ];
+                        /// lookup state Directory Record using name?
+                        try {
+                            if ( array_key_exists("USA.gov",$this->ssg->directoryRecordGroups) 
+                              && array_key_exists($acronym,$this->ssg->directoryRecordGroups["USA.gov"])
+                              && array_key_exists(0,$this->ssg->directoryRecordGroups["USA.gov"][$acronym]["State Government Agencies"]["all"]) ) 
+                            {
+                                $stateDirectoryRecord = $this->ssg->source->entities[
+                                    $this->ssg->directoryRecordGroups["USA.gov"][$acronym]["State Government Agencies"]["all"][0]["uuid"]
+                                ];
+                                $detailsPage['asset_order_content'] = [
+                                    [
+                                        'target_id' => $stateDirectoryRecord['nid'],
+                                        'uuid' => $stateDirectoryRecord['uuid'],
+                                        'type' => 'node',
+                                        'bundle' => $stateDirectoryRecord['type'],
+                                    ]
+                                ];
+                            }
+                        } catch(Exception $e) {}
                         $this->renderPage($detailsPage);
                     }
                 }

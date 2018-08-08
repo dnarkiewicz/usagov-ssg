@@ -469,7 +469,7 @@ class StaticSiteGenerator
             }
         }
 
-        foreach ( $this->stateDetails as $fud=>&$details )
+        foreach ( $this->stateDetails as $fub=>&$details )
         {
             array_multisort(
                 array_column($details,'state_canonical_name'),SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
