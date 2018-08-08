@@ -420,7 +420,6 @@ class StaticSiteGenerator
                             $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
                                 'uuid'=>$uuid, 
                                 'title'=>$entity['title'], 
-                                'synonym'=>'',
                                 'formTitle'=>$entity['link_form_links']['title']
                             ];
 
@@ -431,8 +430,7 @@ class StaticSiteGenerator
                                     $letter = strtoupper($synonym['value']{0});
                                     $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
                                         'uuid'=>$uuid, 
-                                        'title'=>$entity['title'], 
-                                        'synonym'=>$synonym['value'],
+                                        'title'=>$synonym['value'], 
                                         'formTitle'=>$entity['link_form_links']['title']
                                     ];
                                 }
