@@ -234,6 +234,7 @@ class PageRenderer
 
                     $directoryRecordPage = array_merge($page,[]);
                     $directoryRecordPage['pageType'] = 'federal-directory-record';
+                    $directoryRecordPage['type_of_page_to_generate'] = 'federal-directory-record';
                     
                     $urlSafeTitle = $this->ssg->sanitizeForUrl($agency['title']);
                     $directoryRecordPage['friendly_url'] = $url.'/'.$urlSafeTitle;
@@ -260,6 +261,7 @@ class PageRenderer
                     $detailsPage = array_merge($page,[]);
                     $detailsType = ucfirst($matches[1]);
                     $detailsPage['pageType'] = 'StateDetails'.$detailsType;
+                    $detailsPage['type_of_page_to_generate'] = 'state-details-'.strtolower($detailsType);
                     $baseUrl = $url;
                     // for each feature
                     foreach ( $this->ssg->stateAcronyms as $acronym=>$name ) 
@@ -316,6 +318,8 @@ class PageRenderer
 
             $featurePage = array_merge($page,[]);
             $featurePage['pageType'] = 'Feature'; // singular
+            $featurePage['type_of_page_to_generate'] = 'feature';
+
             // for each state
             foreach ( $this->ssg->features[$this->ssg->siteName] as $feature ) 
             {
@@ -498,6 +502,58 @@ class PageRenderer
 
       $params['stateDetails']    = $this->ssg->stateDetails;
       $params['stateAcronyms']   = $this->ssg->stateAcronyms;
+
+      $params['dataLayer'] = $this->getPageDataLayer($page);
     }
 
+    public function getPageDataLayer(&$page)
+    {
+        /// the main metadata array in special format the USA team wants
+        $dataLayer = [ 
+            'pageType' => $page['type_of_page_to_generate'],
+        ];
+
+        /// tell about any assets rendered on this page
+        $assetIds = [];
+        foreach($page['asset_order_content'] as $contentItem ) 
+        {
+            $assetIds[] = $contentItem['target_id'];
+        }
+        if ( !empty($assetIds) )
+        {
+            $dataLayer['assetIDs'] = implode( ', ', $assetIds );
+        }
+        
+        /// calculate all ancestors including the top level SiteName term
+        $parents = [];
+        $parent = $page;
+        while( $parent )
+        {
+            $parents[] = $parent['name'];
+            if ( !empty($parent['parent_uuid']) 
+              && !empty($this->ssg->source->entities[ $parent['parent_uuid'] ]) )
+            {
+                $parent = $this->ssg->source->entities[ $parent['parent_uuid'] ];
+            } else {
+                $parent = null;
+                break;
+            }
+        };
+        $parents = array_reverse($parents);
+
+        /// make sure we have at least X levels of Taxonomy, repeating the last entry if necessary
+        $maxLevel = 6;
+        $p = 0;
+        foreach ( $parents as $i=>$parentName ) 
+        {
+            $p++; /// so we start at 1
+            $dataLayer['TaxLevel'.$p] = $parentName;
+        }
+        for( $p=$p+1; $p<=$maxLevel; $p++ )
+        {
+            $dataLayer['TaxLevel'.$p] = $parentName;
+        }
+
+        return $dataLayer;
+    }
 }
