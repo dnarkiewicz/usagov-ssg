@@ -540,6 +540,15 @@ class PageRenderer
             }
         };
         $parents = array_reverse($parents);
+        
+        /// remove "All Topics and Services" from the second slot if it is not the last term
+        /// first item in the list should be sitesname, if second item is "All Topics" remove it
+        /// unless we are rendering the actual "All Topics" page, we just don't want it in the
+        /// breadcrumb list of any other pages
+        if ( count($parents)>2 && $parents[1]=='All Topics and Services' )
+        {
+            unset($parents[1]);
+        }
 
         /// make sure we have at least X levels of Taxonomy, repeating the last entry if necessary
         $maxLevel = 6;
