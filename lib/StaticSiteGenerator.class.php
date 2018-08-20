@@ -303,6 +303,7 @@ class StaticSiteGenerator
                     $group_by   = !empty($entity['group_by']) ? $entity['group_by'] : 'None';
                     $type       = $entity['directory_type'];
                     $fubs       = !empty($entity['for_use_by']) ? $entity['for_use_by'] : [$this->siteName];
+                    $fubs[]     = 'all';
 
                     if ( empty($entity['friendly_url']) )
                     {
