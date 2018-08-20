@@ -120,6 +120,10 @@ class PageRenderer
              });
             return $entities;
         }));
+        $this->templateRenderer->addFilter(new \Twig_Filter('is_array', function ($value)
+        {
+            return is_array($value);
+        }));
     }
 
   	public function renderPage( &$page )
