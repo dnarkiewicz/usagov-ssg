@@ -357,9 +357,9 @@ class StaticSiteGenerator
                         $this->directoryRecordGroups[$fub][$state][$type][$group_by][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
 
                         /// AZ Index
-                        if ( ( array_key_exists('show_on_az_index',$entity)
+                        if ( ( /* array_key_exists('show_on_az_index',$entity)
                                 && trim(strtolower($entity['show_on_az_index'])) == 'yes'
-                                && trim(strtolower($type)) == 'federal agencies' )
+                                && */ trim(strtolower($type)) == 'federal agencies' )
                            || strtolower($type) == 'state government agencies' )
                         {
                             $letter = strtoupper($entity['title']{0});
@@ -400,9 +400,9 @@ class StaticSiteGenerator
                         }
 
                         /// GOV Branches
-                        if ( array_key_exists('show_on_az_index',$entity)
+                        if ( /*array_key_exists('show_on_az_index',$entity)
                              && trim(strtolower($entity['show_on_az_index'])) == 'yes'
-                             && trim(strtolower($type)) == 'federal agencies' )
+                             && */ trim(strtolower($type)) == 'federal agencies' )
                         {
                             $letter = strtoupper($entity['title']{0});
                             $branch = !empty($entity['government_branch']) ? $entity['government_branch'] : 'None';
