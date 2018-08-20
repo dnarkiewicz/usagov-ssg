@@ -451,14 +451,14 @@ class StaticSiteGenerator
                  && $entity['vocabulary_machine_name']=='site_strucutre_taxonomy' )
             {
                 $sharesTopic = $this->sharesTopicWith($this->features[$this->siteName],$uuid);
+                $sharesTopic = array_filter($sharesTopic, function($v) {
+                    return isset($v['created']) && $v['created'] > time()-1209600;///two weeks ago  3600*24*7*2;
+                });
                 array_multisort(
                     array_column($sharesTopic,'created'), SORT_ASC,
                     array_column($sharesTopic,'changed'), SORT_ASC,
                     $sharesTopic
                 );
-                $sharesTopic = array_filter($sharesTopic, function($v) {
-                    return isset($v['created']) && $v['created'] > time()-1209600;///two weeks ago  3600*24*7*2;
-                });
                 if ( !empty($sharesTopic) )
                 {
                    $first = array_shift($sharesTopic);
@@ -496,7 +496,7 @@ class StaticSiteGenerator
                     {
                         foreach ( $this->featuresByTopic[$this->siteName][$asset_topic['uuid']] as &$sharesTopic )
                         {
-                            $feature['shares_topic'][] = [
+                            $feature['shares_topic'][$sharesTopic['uuid']] = [
                                 'uuid'=>$sharesTopic['uuid'],
                                 'title'=>$sharesTopic['title'],
                                 'changed'=>$sharesTopic['changed'],

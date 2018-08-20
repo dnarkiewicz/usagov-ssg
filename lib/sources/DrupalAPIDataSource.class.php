@@ -256,14 +256,14 @@ class DrupalAPIDataSource extends DataSource
     {
       return true;
     }
-    /// check: published
-    /// check: not-deleted
-    /*
-    if ( ( array_key_exists('vocabulary_machine_name',$entity) 
-            || $entity['type'] == 'state_details' )
-          && array_key_exists('for_use_by',$entity) 
-          && !empty($entity['for_use_by']) )
-          */
+    if ( array_key_exists('status',$entity) && intval($entity['status'])!=1 )
+    {
+      return false;
+    }
+    if ( array_key_exists('deleted',$entity) && intval($entity['deleted'])==1 )
+    {
+      return false;
+    }
     if ( array_key_exists('vocabulary_machine_name',$entity)
           && !empty($entity['for_use_by']) )
     {

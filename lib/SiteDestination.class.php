@@ -10,7 +10,9 @@ class SiteDestination
     public $bads;
     public $s3Sync;
     public $s3Pull;
-    
+    public $sourceInventory;
+    public $destInventory;
+
 	public function __construct( $ssg )
 	{
         $this->ssg = $ssg;
@@ -22,17 +24,30 @@ class SiteDestination
         $this->s3Pull = "aws s3 sync {$this->dest} {$this->source} --delete";
 
         $this->bads = [ 'command not found', 'usage', 'error' ];
-	}
+    }
+    
+    public function generateInventoryFiles()
+    {
+        $sourceInventory = $this->getFilesInDir($this->source);
+        $destInventoryFile = $this->dest.'/inventory.json';
+        if ( file_exists($destInventoryFile) )
+        {
+            $destInventoryData = file_get_contents($destInventoryFile);
+            // if ( )
+        }
+        // $destInventory
+    }
 
     public function sync()
     {
-        echo "Syncing to destination bucket\n";
-        /// try using the aws command-line tool on whole directory
-        if (!($filesSynced = $this->syncFilesCli()))
-        {
-            echo "Sync Files ... aws cli failed, trying sdk\n";
+        $this->generateInventoryFile();
+        // echo "Syncing to destination bucket\n";
+        // try using the aws command-line tool on whole directory
+        // if (!($filesSynced = $this->syncFilesCli()))
+        // {
+            echo "Sync Files ... trying sdk\n";
             $filesSynced = $this->syncFilesSdk();
-        }
+        // }
         if ( !$filesSynced ) 
         { 
             echo "Sync Files ... aws sdk failed\n";
@@ -92,6 +107,11 @@ class SiteDestination
         /// remove any old files
         foreach ( $destFiles as $key=>$destFile )
         {
+            if ( preg_match('/index.html$/',$key) && !preg_match('/^index.html/',$key) )
+            {
+                $key = dirname($key);
+            }
+            if ( $key == '.' || $key == '..' ) { continue; }
             /// if remote-destination has no local-source equiv
             ///     it should be removed from remote-destination
             if ( !array_key_exists($key,$sourceFiles) )
@@ -103,19 +123,24 @@ class SiteDestination
         }
         if ( !empty($removeFromDest) )
         {
-            $s3->deleteObjects([
-                'Bucket'  => $this->ssg->config['aws']['bucket'],
-                'Delete' => [
-                    'Objects' => array_map(function ($key) {
-                        return ['Key' => $key];
-                    }, $removeFromDest)
-                ],
-            ]);
+            // $s3->deleteObjects([
+            //     'Bucket'  => $this->ssg->config['aws']['bucket'],
+            //     'Delete' => [
+            //         'Objects' => array_map(function ($key) {
+            //             return ['Key' => $key];
+            //         }, $removeFromDest)
+            //     ],
+            // ]);
         }
 
         /// add/update any new/changed files
         foreach ( $sourceFiles as $key=>$sourceFile )
         {
+            if ( preg_match('/index.html$/',$key) && !preg_match('/^index.html/',$key) )
+            {
+                $key = dirname($key);
+            }
+            if ( $key == '.' || $key == '..' ) { continue; }
             /// if local-source has no remote-destination equiv
             ///     it should be added to remote-destination
             if ( !array_key_exists($key,$destFiles) )
@@ -128,7 +153,7 @@ class SiteDestination
                         'Key'    => $key,
                         'Body'   => fopen($sourceFile['path'], 'r'),
                         'ACL'    => 'public-read',
-                        'WebsiteRedirectLocation' => '',
+                        //'WebsiteRedirectLocation' => '',
                     ]);
                 } catch (\Aws\S3\Exception\S3Exception $e) {
                     echo "Sync: There was an error adding the file $key.\n";
@@ -147,7 +172,7 @@ class SiteDestination
                             'Key'    => $key,
                             'Body'   => fopen($sourceFile['path'], 'r'),
                             'ACL'    => 'public-read',
-                            'WebsiteRedirectLocation' => '',
+                            // 'WebsiteRedirectLocation' => '',
                         ]);
                     } catch (\Aws\S3\Exception\S3Exception $e) {
                         echo "Sync: There was an error updating the file $key.\n";
@@ -164,6 +189,7 @@ class SiteDestination
 
     public function syncRedirects()
     {
+return true;
         $sdk = new \Aws\Sdk($this->ssg->config['aws']);
         $s3 = $sdk->createS3();
 
@@ -212,6 +238,7 @@ class SiteDestination
 
     public function getFilesInDir($targetDir)
     {
+        echo "Getting files in dir: $targetDir\n";
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($targetDir));
         $files    = [];
         foreach ($iterator as $file) 
@@ -219,8 +246,15 @@ class SiteDestination
             if (!$file->isDir())
             {
                 $path = $file->getPathname();
+                echo "Getting File : $path\n";
                 $key = str_replace($targetDir.'/','',$path);
+                if ( preg_match('/index.html$/',$key) && !preg_match('/^index.html/',$key) )
+                {
+                    $key = dirname($key);
+                }
+                if ( $key == '.' || $key == '..' ) { continue; }    
                 $files[$key] = [
+                    'key'=>$key,
                     'path'=>$path,
                     'md5'=>md5_file($path)
                 ];

@@ -50,10 +50,10 @@ if ( $site->validateSite() && $syncToDestination )
     $site->destination->sync();
 }
 
-if ( $fractalExamples ) 
-{
-    generateFractalData($site);
-}
+// if ( $fractalExamples ) 
+// {
+//     generateFractalData($site);
+// }
 
 // print_r(json_encode($site->directoryRecordGroups['USA.gov']['PR']['State Government Agencies']['State'][0]['uuid'],JSON_PRETTY_PRINT));
 // print_r(json_encode($site->source->entitiesById['nid'][210484],JSON_PRETTY_PRINT));
@@ -76,25 +76,25 @@ echo "\nExecution Time : ". ( ( $time > 1 ) ? @round($time/pow(60, ($i=floor(log
 echo "\n\n";
 
 
-function generateFractalData($site)
-{
-    if ( !is_dir('./exampledata') ) { mkdir('./exampledata'); }
+// function generateFractalData($site)
+// {
+//     if ( !is_dir('./exampledata') ) { mkdir('./exampledata'); }
 
-    $ex = json_encode(["entities"=>$site->source->entities], JSON_PRETTY_PRINT);
-    file_put_contents('./exampledata/entities.js', $ex);
+//     $ex = json_encode(["entities"=>$site->source->entities], JSON_PRETTY_PRINT);
+//     file_put_contents('./exampledata/entities.js', $ex);
 
-    $ex = json_encode(["pagesByUrl"=>$site->pagesByUrl], JSON_PRETTY_PRINT);
-    file_put_contents('./exampledata/data_pagesByUrl.json', $ex);
+//     $ex = json_encode(["pagesByUrl"=>$site->pagesByUrl], JSON_PRETTY_PRINT);
+//     file_put_contents('./exampledata/data_pagesByUrl.json', $ex);
 
-    $ex = json_encode(["siteIndexAZ"=>$site->siteIndexAZ], JSON_PRETTY_PRINT);
-    file_put_contents('./exampledata/siteIndexAZ.js', $ex);
+//     $ex = json_encode(["siteIndexAZ"=>$site->siteIndexAZ], JSON_PRETTY_PRINT);
+//     file_put_contents('./exampledata/siteIndexAZ.js', $ex);
 
-    $ex = json_encode(["mainNav"=>$site->sitePage['menu']], JSON_PRETTY_PRINT);
-    file_put_contents('./exampledata/data_mainNav.json', $ex);
+//     $ex = json_encode(["mainNav"=>$site->sitePage['menu']], JSON_PRETTY_PRINT);
+//     file_put_contents('./exampledata/data_mainNav.json', $ex);
 
-    $ex = json_encode(["directoryRecordGroups"=>$site->directoryRecordGroups], JSON_PRETTY_PRINT);
-    file_put_contents('./exampledata/data_directoryRecordGroups.json', $ex);
+//     $ex = json_encode(["directoryRecordGroups"=>$site->directoryRecordGroups], JSON_PRETTY_PRINT);
+//     file_put_contents('./exampledata/data_directoryRecordGroups.json', $ex);
 
-    $ex = json_encode(["stateDetails"=>$site->stateDetails], JSON_PRETTY_PRINT);
-    file_put_contents('./exampledata/data_stateDetails.json', $ex);
-}
+//     $ex = json_encode(["stateDetails"=>$site->stateDetails], JSON_PRETTY_PRINT);
+//     file_put_contents('./exampledata/data_stateDetails.json', $ex);
+// }
