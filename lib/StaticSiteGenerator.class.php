@@ -305,6 +305,10 @@ class StaticSiteGenerator
                     $fubs       = !empty($entity['for_use_by']) ? $entity['for_use_by'] : [$this->siteName];
                     $fubs[]     = 'all';
 
+                    /// groupings are done by these fields 
+                    /// there is 'all' variation for FUB, STATE, and GROUP_BY but not TYPE
+                    /// directoryRecordGroups[$fub][$state][$type][$group_by]
+
                     if ( empty($entity['friendly_url']) )
                     {
                         $entity['friendly_url'] = '';
