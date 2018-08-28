@@ -348,7 +348,6 @@ class PageRenderer
 
     public function renderRedirect($redirect)
     {
-return true;
         $path = trim($redirect['source_path'],'/ ');
         if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
         $base = basename($path);

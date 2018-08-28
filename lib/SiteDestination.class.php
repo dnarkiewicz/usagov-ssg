@@ -40,14 +40,14 @@ class SiteDestination
 
     public function sync()
     {
-        $this->generateInventoryFile();
+
         // echo "Syncing to destination bucket\n";
         // try using the aws command-line tool on whole directory
-        // if (!($filesSynced = $this->syncFilesCli()))
-        // {
+        if (!($filesSynced = $this->syncFilesCli()))
+        {
             echo "Sync Files ... trying sdk\n";
             $filesSynced = $this->syncFilesSdk();
-        // }
+        }
         if ( !$filesSynced ) 
         { 
             echo "Sync Files ... aws sdk failed\n";
@@ -95,6 +95,8 @@ class SiteDestination
 
     public function syncFilesSdk()
     {
+        //$this->generateInventoryFile();
+
         $sdk = new \Aws\Sdk($this->ssg->config['aws']);
         $s3 = $sdk->createS3();
         $s3->registerStreamWrapper();
@@ -123,28 +125,36 @@ class SiteDestination
         }
         if ( !empty($removeFromDest) )
         {
-            // $s3->deleteObjects([
-            //     'Bucket'  => $this->ssg->config['aws']['bucket'],
-            //     'Delete' => [
-            //         'Objects' => array_map(function ($key) {
-            //             return ['Key' => $key];
-            //         }, $removeFromDest)
-            //     ],
-            // ]);
+            $s3->deleteObjects([
+                'Bucket'  => $this->ssg->config['aws']['bucket'],
+                'Delete' => [
+                    'Objects' => array_map(function ($key) {
+                        return ['Key' => $key];
+                    }, $removeFromDest)
+                ],
+            ]);
         }
 
         /// add/update any new/changed files
-        foreach ( $sourceFiles as $key=>$sourceFile )
+        foreach ( $sourceFiles as $_key=>$sourceFile )
         {
-            if ( preg_match('/index.html$/',$key) && !preg_match('/^index.html/',$key) )
+            if ( preg_match('/index.html$/',$_key) && !preg_match('/^index.html/',$_key) )
             {
-                $key = dirname($key);
+                #$key = dirname($_key);
+                $key = $_key;
             }
             if ( $key == '.' || $key == '..' ) { continue; }
             /// if local-source has no remote-destination equiv
             ///     it should be added to remote-destination
             if ( !array_key_exists($key,$destFiles) )
             {
+                /// we want cleaned urls:
+                /// so /path/to/file/index.html is what the file system has
+                /// so /path/to/file/ should redirect
+                /// to /path/to/file
+                /// since we are dealing with index.html files locally
+                /// we need to just assume an index.html should be 
+                /// represented by the clean path in the s3 bucker 
                 echo "Sync: Create $key\n";
                 flush();
                 try {
@@ -154,6 +164,14 @@ class SiteDestination
                         'Body'   => fopen($sourceFile['path'], 'r'),
                         'ACL'    => 'public-read',
                         //'WebsiteRedirectLocation' => '',
+                    ]);
+                    $ext = pathinfo($key, PATHINFO_EXTENSION);
+                    $s3->putObject([
+                        'Bucket' => $this->ssg->config['aws']['bucket'],
+                        'Key'    => $key.'/',
+                        'Body'   => '',
+                        'ACL'    => 'public-read',
+                        'WebsiteRedirectLocation' => $key,
                     ]);
                 } catch (\Aws\S3\Exception\S3Exception $e) {
                     echo "Sync: There was an error adding the file $key.\n";
@@ -189,7 +207,6 @@ class SiteDestination
 
     public function syncRedirects()
     {
-return true;
         $sdk = new \Aws\Sdk($this->ssg->config['aws']);
         $s3 = $sdk->createS3();
 
@@ -217,21 +234,23 @@ return true;
                 }
             }
         }
-        // foreach ( $this->ssg->source->redirects as $redirect )
-        // {
-        //     $path = ltrim($redirect['source_path'],'/');
-        //     if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
-        //     $base = basename($path);
+        /*
+        foreach ( $this->ssg->source->redirects as $redirect )
+        {
+            $path = ltrim($redirect['source_path'],'/');
+            if ( !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
+            $base = basename($path);
             
-        //     $siteDir = $this->ssg->config['baseDir'].'/sites/'.trim(strtolower($this->ssg->siteName));
-        //     $fileDir = $siteDir.'/'.$path;
-        //     if ( $base !== 'index.html' ) 
-        //     { 
-        //         $file = $fileDir.'/index.html';
-        //     } else {
-        //         $file = $fileDir;
-        //     }
-        // }
+            $siteDir = $this->ssg->config['baseDir'].'/sites/'.trim(strtolower($this->ssg->siteName));
+            $fileDir = $siteDir.'/'.$path;
+            if ( $base !== 'index.html' ) 
+            { 
+                $file = $fileDir.'/index.html';
+            } else {
+                $file = $fileDir;
+            }
+        }
+        */
         return true;
     
     }

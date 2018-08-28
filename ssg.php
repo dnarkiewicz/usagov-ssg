@@ -56,7 +56,7 @@ if ( $site->validateSite() && $syncToDestination )
 // }
 
 // print_r(json_encode($site->directoryRecordGroups['USA.gov']['PR']['State Government Agencies']['State'][0]['uuid'],JSON_PRETTY_PRINT));
-// print_r(json_encode($site->source->entitiesById['nid'][210484],JSON_PRETTY_PRINT));
+// print_r(json_encode($site->source->entities['170b7adc-1232-4f11-92f3-4b3e9d53ddd7'],JSON_PRETTY_PRINT));
 // print_r(json_encode($site->directoryRecordGroups['USA.gov']['all']['Federal Agencies']['Executive'],JSON_PRETTY_PRINT));
 
 echo "\n";
