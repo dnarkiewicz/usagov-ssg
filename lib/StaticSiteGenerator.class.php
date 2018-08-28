@@ -125,6 +125,7 @@ class StaticSiteGenerator
             }
         }
         echo "done\n";
+
         return false;
     }
     public function loadDataFromSource()
@@ -590,12 +591,41 @@ class StaticSiteGenerator
             $this->topicsPage = $this->source->entities[$this->topicsPage['uuid']];
         }
 
+        foreach ( $this->source->entities as &$entity )
+        {
+          $this->filterOutMissingEntities($entity);
+        }
+
         // $treeEndTime = microtime(true);
         // $tunit=['sec','min','hour'];
         // $treeTime = round($treeEndTime - $treeStartTime,4);
         // $treeTime = ( $treeTime >= 1 ) ? @round($treeTime/pow(60,   ($i=floor(log($treeTime, 60)))),   2).' '.$tunit[$i] : "$treeTime sec";
         // // echo "\n BuildTree time($treeTime)";
         echo "done\n";
+    }
+
+    public function filterOutMissingEntities( &$_source )
+    {
+        if ( !is_array($_source) )
+        {
+        return;
+        }
+        foreach ( array_keys($_source) as $key )
+        {
+        if ( !is_array($_source[$key]) )
+        {
+            continue;
+        }
+        if ( array_key_exists('uuid',$_source[$key]) )
+        {
+            if ( empty($this->entities[ $_source[$key]['uuid'] ]) ) 
+            {
+            unset($_source[$key]);
+            }
+        } else {
+            $this->filterOutMissingEntities($_source[$key]);
+        }
+        }
     }
 
     public function sanitizeForUrl( $str='' )

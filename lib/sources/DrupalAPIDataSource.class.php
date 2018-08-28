@@ -163,7 +163,8 @@ class DrupalAPIDataSource extends DataSource
       'asset_order_bottom',
       'children',
       'synonym',
-      'for_use_by'
+      'for_use_by',
+      'child_records_en'
     ];
     /// if directory_record - give friendly url base off alpha_order_name
     /// if feature = give friendly url base off title
@@ -280,7 +281,6 @@ class DrupalAPIDataSource extends DataSource
 
     return true;
   }
-
 
   public function getRedirects()
   {
