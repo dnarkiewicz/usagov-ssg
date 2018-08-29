@@ -186,14 +186,6 @@ class DrupalAPIDataSource extends DataSource
         unset($_source[$key]);
         continue;
       }
-      // rename some fields
-      if ( array_key_exists($key,$renamed_keys) )
-      {
-        $renamed_key = $renamed_keys[$key];
-        $_source[ $renamed_key ] = $_source[$key];
-        unset($_source[$key]);
-        continue;
-      }
       /// get rid of intermediate 'value'
       if ( $key == 'value' && count($_source) == 1 )
       {
@@ -246,6 +238,14 @@ class DrupalAPIDataSource extends DataSource
       if ( !is_array($_source[$key]) && in_array($key,$always_array) )
       {
         $_source[$key] = [$_source[$key]];
+      }
+      // rename some fields
+      if ( array_key_exists($key,$renamed_keys) )
+      {
+        $renamed_key = $renamed_keys[$key];
+        $_source[ $renamed_key ] = $_source[$key];
+        unset($_source[$key]);
+        continue;
       }
     }
     return $_source;
