@@ -1037,17 +1037,22 @@ class StaticSiteGenerator
     public function validatePage( $filename, $checkHtml = true )
     {
         $fileExists = file_exists($filename);
+        if ( !$fileExists ) { return false; }
         $fileFilled = ( filesize($filename) > 0 );
 
-        $fileValid = ( $fileExists && $fileFilled );
+        $fileValid  = ( $fileExists && $fileFilled );
+        $fileIsHtml = false;
         
         if ( $checkHtml ) 
         {
             $fileHandle = fopen($filename, 'r');
-            $fileHeader = fread($fileHandle, 100);
-            fclose($fileHandle);
-            $fileHeader = trim($fileHeader);
-            $fileIsHtml = ( $fileHeader{0} == '<');
+            if ( $fileHandle )
+            {
+                $fileHeader = fread($fileHandle, 100);
+                fclose($fileHandle);
+                $fileHeader = trim($fileHeader);
+                $fileIsHtml = ( $fileHeader{0} == '<');
+            }
         }
 
         return ( $fileExists && $fileFilled && $fileIsHtml );
@@ -1071,7 +1076,7 @@ class StaticSiteGenerator
             {
                 $renderedPages++;
             } else {
-                echo "Invalid: {$url}\n";
+                echo "Invalid: {$url} // {$page['uuid']}\n";
             }
 
             /// some special pages generate further sub-pages
@@ -1089,6 +1094,27 @@ class StaticSiteGenerator
                     } else {
                         echo "Invalid: {$subUrl}\n";
                     }        
+                }
+
+                if ( isset($page['az_index_data_source']) 
+                  && $page['az_index_data_source'] == 'directory-records-federal' )
+                {
+                    foreach ( $this->directoryRecordGroups[$this->siteName]['all']['Federal Agencies']['all'] as $agencyInfo )
+                    {
+                        $requiredPages++;
+                        $agency = $this->source->entities[$agencyInfo['uuid']];
+
+                        $urlSafeTitle = $this->sanitizeForUrl($agency['title']);
+                        $subUrl = $url.'/'.$urlSafeTitle;
+                        $subPageDir = rtrim( $pageDir.'/'.$urlSafeTitle, '/');
+                        $subPageFile = $subPageDir.'/index.html';
+                        if ( $this->validatePage($subPageFile) )
+                        {
+                            $renderedPages++;
+                        } else {
+                            echo "Invalid: {$subUrl} // {$agency['title']} // {$agency['uuid']}\n";
+                        }        
+                    }
                 }
             } else if ( $page['pageType'] == '50StatePage' ) {
                 if ( !empty($page['usa_gov_50_state_category']) 

@@ -128,6 +128,7 @@ class PageRenderer
 
   	public function renderPage( &$page )
   	{
+          $paths = [];
           /// PATH
           $url = $this->getPageUrl($page);
           if ( empty($url) )
@@ -141,7 +142,7 @@ class PageRenderer
               echo "UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n";
               return null;
           }
-          echo "Render Page: $url ({$page['pageType']}) \"{$page['name']}\"\n";
+          echo "Render Page: $url   name:\"{$page['name']}\" type:{$page['pageType']} \n";
           $path = trim($url,'/ ');
 
           $siteDir = '/'.
@@ -217,7 +218,7 @@ class PageRenderer
                     }
                     chmod( $fileDir, 0755 );
                     file_put_contents( $file, $html );
-                    echo "Render Page: {$path}/".strtolower($letter)."\n";
+                    echo "Render Page AZ: {$path}/".strtolower($letter)."\n";
 
                 } else {
                     $msg = "Render Failed<br />\nPath: /".$path.'/'.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
@@ -237,6 +238,8 @@ class PageRenderer
                     $agency = $this->ssg->source->entities[$agencyInfo['uuid']];
 
                     $directoryRecordPage = array_merge($page,[]);
+                    $directoryRecordPage['uuid'] = $agencyInfo['uuid'];
+                    $directoryRecordPage['name'] = $agency['title'];
                     $directoryRecordPage['pageType'] = 'federal-directory-record';
                     $directoryRecordPage['type_of_page_to_generate'] = 'federal-directory-record';
                     
@@ -250,8 +253,9 @@ class PageRenderer
                             'bundle' => $agency['type'],
                         ]
                     ];
-                    echo "Render Page: $url ({$directoryRecordPage['pageType']}) \"{$directoryRecordPage['name']}\"\n";
-                    $this->renderPage($directoryRecordPage);
+                    $subPaths = $this->renderPage($directoryRecordPage);
+                    $paths = array_merge( $paths, $subPaths ); 
+
                 }
             }
 
@@ -343,7 +347,7 @@ class PageRenderer
 
           }
 
-          $paths = [ $path ];
+          array_unshift( $paths, $path );
           return $paths;
   	}
 
