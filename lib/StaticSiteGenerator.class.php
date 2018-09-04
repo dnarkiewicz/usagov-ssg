@@ -300,6 +300,7 @@ class StaticSiteGenerator
 
                 if ( @!empty($entity['directory_type']) )
                 {
+
                     $state      = !empty($entity['state'])    ? strtolower($entity['state']) : strtolower('None');
                     $state_name = ( array_key_exists($state,$this->stateAcronyms) ) ? $this->stateAcronyms[$state] : 'None';
                     $group_by   = !empty($entity['group_by']) ? $entity['group_by'] : 'None';
@@ -322,6 +323,7 @@ class StaticSiteGenerator
 
                     foreach ( $fubs as $fub )
                     {
+                        /// start organizing array
                         if ( !array_key_exists( $fub, $this->directoryRecordGroups ) )
                         {
                             $this->directoryRecordGroups[$fub] = [ 'all'=>[], 'forms'=>[], 'none'=>[] ];
@@ -355,8 +357,8 @@ class StaticSiteGenerator
                         if ( !array_key_exists( $group_by, $this->directoryRecordGroups[$fub][$state][$type] ) ) {
                             $this->directoryRecordGroups[$fub][$state][$type][$group_by] = [];
                         }
-                        /** */
-                        
+                        /// finish organizing array - start putting in content
+
                         $this->directoryRecordGroups[$fub]['all'][$type]['all'][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
                         $this->directoryRecordGroups[$fub][$state][$type]['all'][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
 
@@ -364,23 +366,32 @@ class StaticSiteGenerator
                         $this->directoryRecordGroups[$fub][$state][$type][$group_by][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
 
                         /// AZ Index
-                        if ( ( /* array_key_exists('show_on_az_index',$entity)
-                                && trim(strtolower($entity['show_on_az_index'])) == 'yes'
-                                && */ trim(strtolower($type)) == 'federal agencies' )
+                        if ( ( trim(strtolower($type)) == 'federal agencies' )
                            || strtolower($type) == 'state government agencies' )
                         {
                             $letter = strtoupper($entity['title']{0});
 
-                            $this->directoryRecordGroups[$fub]['all'][$type][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
-                            $this->directoryRecordGroups[$fub][$state][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                            if ( array_key_exists('show_on_az_index',$entity)
+                                && trim(strtolower($entity['show_on_az_index'])) == 'yes' )
+                            {
+                                $this->directoryRecordGroups[$fub]['all'][$type][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                                $this->directoryRecordGroups[$fub][$state][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                            }
 
                             if ( strtolower($type) == 'state government agencies' )
                             {
                                 $this->directoryRecordGroups[$fub]['all']['Federal Agencies']['all'][]    = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
                                 $this->directoryRecordGroups[$fub][$state]['Federal Agencies']['all'][]   = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
 
-                                $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
-                                $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$letter][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                                $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$group_by][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                                $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$group_by][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+        
+                                if ( array_key_exists('show_on_az_index',$entity)
+                                    && trim(strtolower($entity['show_on_az_index'])) == 'yes' )
+                                {
+                                    $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                                    $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$letter][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                                }
                             }
 
                             if ( !empty($entity['synonym']) )
@@ -388,34 +399,46 @@ class StaticSiteGenerator
                                 foreach ( $entity['synonym'] as $synonym )
                                 {
                                     $letter = strtoupper($synonym['value']{0});
+
                                     $this->directoryRecordGroups[$fub]['all'][$type]['all'][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
                                     $this->directoryRecordGroups[$fub][$state][$type]['all'][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
 
-                                    $this->directoryRecordGroups[$fub]['all'][$type][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
-                                    $this->directoryRecordGroups[$fub][$state][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                    $this->directoryRecordGroups[$fub]['all'][$type][$group_by][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                    $this->directoryRecordGroups[$fub][$state][$type][$group_by][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+
+                                    if ( array_key_exists('show_on_az_index',$entity)
+                                        && trim(strtolower($entity['show_on_az_index'])) == 'yes' )
+                                    {
+                                        $this->directoryRecordGroups[$fub]['all'][$type][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                        $this->directoryRecordGroups[$fub][$state][$type][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                    }
 
                                     if ( strtolower($type) == 'state government agencies' )
                                     {
                                         $this->directoryRecordGroups[$fub]['all']['Federal Agencies']['all'][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
                                         $this->directoryRecordGroups[$fub][$state]['Federal Agencies']['all'][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
-                                        
-                                        $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
-                                        $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+
+                                        $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$group_by][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                        $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$group_by][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+
+                                        if ( array_key_exists('show_on_az_index',$entity)
+                                            && trim(strtolower($entity['show_on_az_index'])) == 'yes' )
+                                        {
+                                            $this->directoryRecordGroups[$fub]['all']['Federal Agencies'][$letter][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                            $this->directoryRecordGroups[$fub][$state]['Federal Agencies'][$letter][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
+                                        }
                                     }
                                 }
                             }
                         }
 
                         /// GOV Branches
-                        if ( /*array_key_exists('show_on_az_index',$entity)
-                             && trim(strtolower($entity['show_on_az_index'])) == 'yes'
-                             && */ trim(strtolower($type)) == 'federal agencies' )
+                        if ( trim(strtolower($type)) == 'federal agencies' && !empty($entity['government_branch']) )
                         {
                             $letter = strtoupper($entity['title']{0});
-                            $branch = !empty($entity['government_branch']) ? $entity['government_branch'] : 'None';
-
-                            $this->directoryRecordGroups[$fub]['all'][$type][$branch][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
-                            $this->directoryRecordGroups[$fub][$state][$type][$branch][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                            
+                            $this->directoryRecordGroups[$fub]['all'][$type][$entity['government_branch']][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
+                            $this->directoryRecordGroups[$fub][$state][$type][$entity['government_branch']][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
                         }
 
                         /// FORMS Index
@@ -600,6 +623,7 @@ class StaticSiteGenerator
         echo "done\n";
     }
 
+
     public function sanitizeForUrl( $string='' )
     {
         $string = $this->_remove_accents($string);
@@ -607,19 +631,19 @@ class StaticSiteGenerator
         $string = trim($string);
         $string = strtolower($string);
         $string = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $string);
+
+        // $string = str_replace([
+        //     '’', '”', '"', "'",
+        // ], '', $string);
     
-        $replaceWithDash = array('_', '/', "\\", ' ', '.', '~', '(', ')', '[', ']', ':', ';', '!', '@', '”', '"', "'", "?",",");
-    
-        $string = str_replace($replaceWithDash, '-', $string);
-    
-        while ( strpos($string, '--') !== false ) {
-            $string = str_replace('--', '-', $string);
-        }
-    
-        $string = trim($string, '-');
+        $string = preg_replace('/[\W_]+/','-',$string);
+        $string = preg_replace('/-+/','-',$string);
+        $string = preg_replace('/^-+/','',$string);
+        $string = preg_replace('/-+$/','',$string);
+
         return $string;
     }
-    
+
     public function _remove_accents($string)
     {
         if ( !preg_match('/[\x80-\xff]/', $string) )
@@ -846,9 +870,6 @@ class StaticSiteGenerator
         }
         return true;
     }
-    
-
-
 
     public function isFeature($entity)
     {

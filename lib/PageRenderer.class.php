@@ -250,6 +250,7 @@ class PageRenderer
                             'bundle' => $agency['type'],
                         ]
                     ];
+                    echo "Render Page: $url ({$directoryRecordPage['pageType']}) \"{$directoryRecordPage['name']}\"\n";
                     $this->renderPage($directoryRecordPage);
                 }
             }

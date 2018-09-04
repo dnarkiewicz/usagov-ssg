@@ -40,7 +40,6 @@ foreach ( $argv as $arg )
     }
 }
 
-
 $site->loadData();
 $site->buildSiteTreeFromEntities();
 $site->syncTemplates();
@@ -50,13 +49,71 @@ if ( $site->validateSite() && $syncToDestination )
     $site->destination->sync();
 }
 
+// print_r(json_encode($site->source->entities['2579eb59-9d7a-4c30-8ccf-1e2c6992e03d'],JSON_PRETTY_PRINT));
+
+/*
+foreach ( $site->source->entities as $uuid=>$e )
+{
+    $tid = !empty($e['tid']) ? $e['tid'] : '';
+    $nid = !empty($e['nid']) ? $e['nid'] : '';
+    checkExists($e," tid:$tid nid:$nid uuid:$uuid");
+}
+
+function checkExists( $o, $bc )
+{
+    global $site;
+    if ( is_array($o) )
+    {
+        if ( !empty($o['uuid']) )
+        {
+//            echo "\n\n$bc >> ";
+            if ( array_key_exists( $o['uuid'], $site->source->entities ) ) {
+                //echo "found";
+            } else if ( !preg_match('/(file_media|file_text|agency|content_tags|asset_topic_taxonomy)/',$bc) ) {
+                echo "\n\n$bc >> ";
+                echo " ({$o['uuid']}) NOT FOUND!!";
+                print_r(json_encode($o,JSON_PRETTY_PRINT));
+            }
+        }
+        foreach ( $o as $k=>$v )
+        {
+            checkExists($v,"$bc > $k");
+        }
+    }
+}
+/**/
+// print_r(json_encode($site->source->entities['35e35591-9e3e-4d62-80fe-e7256331531d'],JSON_PRETTY_PRINT));
+
+//   print_r(json_encode($site->source->entitiesById['tid']['2771'],JSON_PRETTY_PRINT));
+
+// print_r(json_encode($site->source->entities['386c1c0c-94c3-409a-bd28-cc93a4f79c74'],JSON_PRETTY_PRINT));
+
+// echo "NID\tUUID\tTYPE\t \tRAW+OLD+NEW\n";
+// foreach ( $site->source->entities as $entity )
+// {
+//     if ( empty($entity['nid']) ) { $entity['nid']=''; }
+    
+//     if ( !empty($entity['title']) )
+//     {
+//         $new = $site->sanitizeForUrl($entity['title']);
+//         $old = $site->sanitizeForUrlOld($entity['title']);
+//         if ( $new !== $old )
+//         {
+//             echo "{$entity['nid']}\t{$entity['uuid']}\t{$entity['type']}\t \t \n";
+//             echo " \t \t \traw\t{$entity['title']}\n";
+//             echo " \t \t \told\t{$old}\n";
+//             echo " \t \t \tnew\t{$new}\n";
+//         }
+//     }
+// }
+
 // if ( $fractalExamples ) 
 // {
 //     generateFractalData($site);
 // }
 
 // print_r(json_encode($site->directoryRecordGroups['USA.gov']['PR']['State Government Agencies']['State'][0]['uuid'],JSON_PRETTY_PRINT));
-// print_r(json_encode($site->source->entities['170b7adc-1232-4f11-92f3-4b3e9d53ddd7'],JSON_PRETTY_PRINT));
+// print_r(json_encode($site->source->entities['21c2d005-7730-41c0-9798-ee5f132168ee'],JSON_PRETTY_PRINT));
 // print_r(json_encode($site->directoryRecordGroups['USA.gov']['all']['Federal Agencies']['Executive'],JSON_PRETTY_PRINT));
 
 echo "\n";

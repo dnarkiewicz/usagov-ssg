@@ -97,7 +97,7 @@ class DrupalAPIDataSource extends DataSource
       {
         try
         {
-          $processedCount++;
+          $processedCount++;    
           $entity = $this->cleanResult($result);
           if ( !$this->belongsToSite($siteName,$entity) )
           {
