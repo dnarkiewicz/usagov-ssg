@@ -9,3 +9,6 @@ templates_compiled/*
 templates/compiled/*
 templates/sync
 templates/twig/*
+tmp
+temp
+perm

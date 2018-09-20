@@ -22,23 +22,21 @@ class DrupalAPIDataSource extends DataSource
     $siteName = $this->ssg->siteName;
     $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
 
-    $batchSize = 100;
-
     $sanity      = 20000;
     $resultsData = [];
 
-    $currentPage = 0;
-    $totalPages  = null;
-    $totalCount  = null;
+    $currentPage    = 0;
+    $totalPages     = 0;
+    $totalCount     = 0;
     $processedCount = 0;
-    $acceptedCount = 0;
+    $acceptedCount  = 0;
 
+    $this->dataPullTime = time();
     while ( $sanity-- )
     {
       $loadStartTime = microtime(true);
       try
       {
-        echo "\nLOADING batch($currentPage/$totalPages) ";
 
         $client   = new \GuzzleHttp\Client(['base_uri' => $server, 'verify' => false]);
         $query = [
@@ -46,9 +44,12 @@ class DrupalAPIDataSource extends DataSource
           'page'=>$currentPage
         ];
         if ( !empty(intval($since)) ) {
+          $this->ssg->log("\nLOADING since(".date('Y/m/d H:i:s',$since).")\n");
           $query['since'] = intval($since);
         }
-        $response = $client->post( $url, [ 'query'=> $query ] );
+
+        $this->ssg->log("\nLOADING batch($currentPage/$totalPages) ");
+        $response = $client->post( $url, [ 'form_params'=> $query ] );
         $body = $response->getBody();
         if ( empty($body) )
         {
@@ -64,7 +65,6 @@ class DrupalAPIDataSource extends DataSource
       $loadEndTime = microtime(true);
       $loadTime = round($loadEndTime - $loadStartTime,4);
       $loadTime = ( $loadTime >= 1 ) ? @round($loadTime/pow(60,   ($i=floor(log($loadTime, 60)))),   2).' '.$tunit[$i] : "$loadTime sec";
-
       if ( $totalPages == null && $currentPage == 0
           && array_key_exists('metadata',$responseData) )
       {
@@ -80,16 +80,16 @@ class DrupalAPIDataSource extends DataSource
 
       if ( !array_key_exists('result',$responseData) )
       {
-        echo "\nDONE batch($currentPage/$totalPages) no results in response entities($acceptedCount/$processedCount/$totalCount)\n";
+        $this->ssg->log("\nDONE batch($currentPage/$totalPages) no results in response entities($acceptedCount/$processedCount/$totalCount)\n");
         break;
       }
       if ( count($responseData['result']) == 0 )
       {
-        echo "\nDONE batch($currentPage/$totalPages) count(". count($responseData['result']) .") entities($acceptedCount/$processedCount/$totalCount)\n";
+        $this->ssg->log("\nDONE batch($currentPage/$totalPages) count(". count($responseData['result']) .") entities($acceptedCount/$processedCount/$totalCount)\n");
         break;
       }
 
-      echo " ... load($loadTime) results(". count($responseData['result']) .")";
+      $this->ssg->log(" ... load($loadTime) results(". count($responseData['result']) .")");
 
       
       $processStartTime = microtime(true);
@@ -98,6 +98,15 @@ class DrupalAPIDataSource extends DataSource
         try
         {
           $processedCount++;    
+
+          if ( array_key_exists('deleted',$result) && intval($result['deleted'])==1 )
+          {
+            if ( isset( $this->entities[$result['uuid']] ) )
+            {
+              unset($this->entities[$result['uuid']]);
+            }
+          }
+
           $entity = $this->cleanResult($result);
           if ( !$this->belongsToSite($siteName,$entity) )
           {
@@ -123,12 +132,12 @@ class DrupalAPIDataSource extends DataSource
       $processTime = round($processEndTime - $processStartTime,4);
       $processTime = ( $processTime >= 1 ) ? @round($processTime/pow(60,   ($i=floor(log($processTime, 60)))),   2).' '.$tunit[$i] : "$processTime sec";
 
-      echo " ... entities($acceptedCount/$processedCount/$totalCount) process($processTime)";
+      $this->ssg->log(" ... entities($acceptedCount/$processedCount/$totalCount) process($processTime)");
       
       $currentPage++;
       if ( $totalPages !== null && $currentPage >= $totalPages )
       {
-        echo "\nDONE batch($currentPage/$totalPages) last page  entities($acceptedCount/$processedCount/$totalCount)\n";
+        $this->ssg->log("\nDONE batch($currentPage/$totalPages) last page  entities($acceptedCount/$processedCount/$totalCount)\n");
         break;
       }
 
@@ -284,15 +293,15 @@ class DrupalAPIDataSource extends DataSource
 
   public function getRedirects()
   {
-    if ( $this->useLocalRedirects && file_exists(dirname(__FILE__).'/redirects.php') )
-    {
-      include dirname(__FILE__).'/redirects.php';
-      if ( !empty($redirects) ) 
-      {
-        $this->redirects = $redirects;
-        return true;
-      }
-    }
+    // if ( $this->useLocalRedirects && file_exists(dirname(__FILE__).'/redirects.php') )
+    // {
+    //   include dirname(__FILE__).'/redirects.php';
+    //   if ( !empty($redirects) ) 
+    //   {
+    //     $this->redirects = $redirects;
+    //     return true;
+    //   }
+    // }
     /// fetch from drupal api
     $server    = ( !empty($this->ssg->config['drupalAPI']['server']) ) ? 
                     $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
@@ -310,13 +319,13 @@ class DrupalAPIDataSource extends DataSource
     $body = $response->getBody();
     if ( empty($body) )
     {
-      echo "No {$this->ssg->siteName} Redirects";
+      $this->ssg->log("No {$this->ssg->siteName} Redirects");
       return false;
     }
     $responseData = json_decode($body->getContents(),true);
     if ( $response->getStatusCode()!==200 )
     {
-      echo "Error retrieving {$this->ssg->siteName} Redirects";
+      $this->ssg->log("Error retrieving {$this->ssg->siteName} Redirects");
       return false;
     }
 
@@ -324,9 +333,6 @@ class DrupalAPIDataSource extends DataSource
     {
       $this->redirects[$result['rid']] = $result;
     }
-
-     
-
     return true;
   }
 

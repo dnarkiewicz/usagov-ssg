@@ -65,52 +65,52 @@ class ElasticsearchDataSource extends DataSource
                   }
                   $_search .= '}}';
 
-                  //echo "$elasticsearchServer/$elasticsearchIndex/_search?scroll=1m body=search-for-stuff'\n";
+                  //$this->ssg->log("$elasticsearchServer/$elasticsearchIndex/_search?scroll=1m body=search-for-stuff'\n");
         					$client   = new \GuzzleHttp\Client(['base_uri' => $elasticsearchServer, 'verify' => false]);
         					$response = $client->post( $elasticsearchIndex.'/_search', ['query'=>['scroll'=>'1m'], 'body'=>$_search] );
         					$body     = $response->getBody();
         					if ( empty($body) )
         					{
-        					    echo "continue: no body ($sanity)\n";
+        					    $this->ssg->log("continue: no body ($sanity)\n");
         						  continue;
         					}
         					$resultsData = json_decode($body->getContents(),true);
         					if ( $response->getStatusCode()!==200 || empty($resultsData['_scroll_id']) )
         					{
         						  /// we should have gotten a base64 encoded string
-      					      echo "return: no scroll id ($sanity)\n";
+      					      $this->ssg->log("return: no scroll id ($sanity)\n");
         						  break;
         					}
                   $scrollId = $resultsData['_scroll_id'];
               } else {
-                  //echo "$elasticsearchServer/_search/scroll?scroll=1m body=$scrollId'\n";
+                  //$this->ssg->log("$elasticsearchServer/_search/scroll?scroll=1m body=$scrollId'\n");
         					$client   = new \GuzzleHttp\Client(['base_uri' => $elasticsearchServer, 'verify' => false]);
         					$response = $client->post( '/_search/scroll', ['query'=>['scroll'=>'1m','scroll_id'=>$scrollId], 'body'=>$scrollId] );
         					$body     = $response->getBody();
         					if ( empty($body) )
         					{
-        						  echo "continue: no body ($sanity)\n";
+        						  $this->ssg->log("continue: no body ($sanity)\n");
         						  continue;
         					}
         					$resultsData = json_decode($body->getContents(),true);
         					if ( $response->getStatusCode()!==200 || empty($resultsData['_scroll_id']) || $scrollId!==$resultsData['_scroll_id'] )
         					{
         						  /// something messed up - we should always get same one back
-        					    echo "return: no scroll id ($sanity)\n";
+        					    $this->ssg->log("return: no scroll id ($sanity)\n");
         						  break;
         					}
               }
 
       				if ( !isset($resultsData['hits']) || !isset($resultsData['hits']['hits']) )
       				{
-      					  //echo "continue: no hits ($sanity)\n";
+      					  //$this->ssg->log("continue: no hits ($sanity)\n");
       					  continue;
       				}
 
       				if ( empty($resultsData['hits']['hits']) )
       				{
       					  /// no more results in this scroll
-      					  //echo "return: no hits ($sanity)\n";
+      					  //$this->ssg->log("return: no hits ($sanity)\n");
       					  break;
       				}
 
@@ -119,11 +119,11 @@ class ElasticsearchDataSource extends DataSource
     				  if ( $scrollId===null )
     			  	{
     					    /// if we died trying to get scroll_id, we can't recover
-        					echo "return: no scorll id ($sanity)\n";
+        					$this->ssg->log("return: no scorll id ($sanity)\n");
         					break;
     				  } else {
         					/// if we died trying to json_decode this item, we can skip and move on
-        					echo "continue: exception ".$e->getMessage()." ($sanity)\n";
+        					$this->ssg->log("continue: exception ".$e->getMessage()." ($sanity)\n");
         					continue;
     				  }
     			}

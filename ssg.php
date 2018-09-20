@@ -5,153 +5,151 @@ namespace ctac\ssg;
 require_once 'vendor/autoload.php';
 require_once 'lib/autoload.php';
 
-$executionStartTime = microtime(true);
+$_timers = [
+    'default'   => [ [
+        'time'=>microtime(true),
+        'diff'       => 0,
+        'diff-start' => 0,
+        'diff-abs'   => 0,
+        'caller'     => ['line'=>__LINE__]
+    ] ]
+];
+timer();
+
+$syncStartTime      = 0;
 
 $site = new StaticSiteGenerator('USA.gov');
 
 $syncToDestination = false;
 $fractalExamples   = false;
 
-foreach ( $argv as $arg )
-{
-    if ( isset($arg) && $arg=='--fresh-data' )
-    {
-        $site->getDatafromSource = true;
+foreach ($argv as $arg) {
+    if (isset($arg) && $arg=='--fresh-data') {
+        $site->source->freshData = true;
     }
-    if ( isset($arg) && $arg=='--fresh-templates' )
-    {
+    if (isset($arg) && $arg=='--fresh-templates') {
         $site->templates->freshTemplates = true;
     }
-    if ( isset($arg) && $arg=='--no-debug-pages' )
-    {
+    if (isset($arg) && $arg=='--no-debug-pages') {
         $site->renderer->renderPageOnFailure = false;
     }
-    if ( isset($arg) && $arg=='--push-s3' )
-    {
+    if (isset($arg) && $arg=='--deploy') {
         $syncToDestination = true;
-    }
-    if ( isset($arg) && $arg=='--local-redirects' )
-    {
-        $site->source->useLocalRedirects = true;
-    }
-    if ( isset($arg) && $arg=='--fractal-examples' )
-    {
-        $fractalExamples = true;
     }
 }
 
+timer('Load Data');
 $site->loadData();
+timer('Load Data');
+
+timer('Build');
 $site->buildSiteTreeFromEntities();
+timer('Build');
+
+timer('Load Templates');
 $site->syncTemplates();
+timer('Load Templates');
+
+timer('Render');
 $site->renderSite();
-if ( $site->validateSite() && $syncToDestination )
-{
+timer('Render');
+
+timer('Validate');
+if ($site->validateSite() && $syncToDestination) {
+    timer('Validate');
+
+    timer('Deploy');
     $site->destination->sync();
+    timer('Deploy');
 }
+
+timer();
 
 // print_r(json_encode($site->source->entities['2579eb59-9d7a-4c30-8ccf-1e2c6992e03d'],JSON_PRETTY_PRINT));
 
-/*
-foreach ( $site->source->entities as $uuid=>$e )
-{
-    $tid = !empty($e['tid']) ? $e['tid'] : '';
-    $nid = !empty($e['nid']) ? $e['nid'] : '';
-    checkExists($e," tid:$tid nid:$nid uuid:$uuid");
-}
-
-function checkExists( $o, $bc )
-{
-    global $site;
-    if ( is_array($o) )
-    {
-        if ( !empty($o['uuid']) )
-        {
-//            echo "\n\n$bc >> ";
-            if ( array_key_exists( $o['uuid'], $site->source->entities ) ) {
-                //echo "found";
-            } else if ( !preg_match('/(file_media|file_text|agency|content_tags|asset_topic_taxonomy)/',$bc) ) {
-                echo "\n\n$bc >> ";
-                echo " ({$o['uuid']}) NOT FOUND!!";
-                print_r(json_encode($o,JSON_PRETTY_PRINT));
-            }
-        }
-        foreach ( $o as $k=>$v )
-        {
-            checkExists($v,"$bc > $k");
-        }
-    }
-}
-/**/
-// print_r(json_encode($site->source->entities['35e35591-9e3e-4d62-80fe-e7256331531d'],JSON_PRETTY_PRINT));
-
-//   print_r(json_encode($site->source->entitiesById['tid']['2771'],JSON_PRETTY_PRINT));
-
-// print_r(json_encode($site->source->entities['386c1c0c-94c3-409a-bd28-cc93a4f79c74'],JSON_PRETTY_PRINT));
-
-// echo "NID\tUUID\tTYPE\t \tRAW+OLD+NEW\n";
-// foreach ( $site->source->entities as $entity )
-// {
-//     if ( empty($entity['nid']) ) { $entity['nid']=''; }
-    
-//     if ( !empty($entity['title']) )
-//     {
-//         $new = $site->sanitizeForUrl($entity['title']);
-//         $old = $site->sanitizeForUrlOld($entity['title']);
-//         if ( $new !== $old )
-//         {
-//             echo "{$entity['nid']}\t{$entity['uuid']}\t{$entity['type']}\t \t \n";
-//             echo " \t \t \traw\t{$entity['title']}\n";
-//             echo " \t \t \told\t{$old}\n";
-//             echo " \t \t \tnew\t{$new}\n";
-//         }
-//     }
-// }
-
-// if ( $fractalExamples ) 
-// {
-//     generateFractalData($site);
-// }
-
-// print_r(json_encode($site->directoryRecordGroups['USA.gov']['PR']['State Government Agencies']['State'][0]['uuid'],JSON_PRETTY_PRINT));
-// print_r(json_encode($site->source->entities['21c2d005-7730-41c0-9798-ee5f132168ee'],JSON_PRETTY_PRINT));
-// print_r(json_encode($site->directoryRecordGroups['USA.gov']['all']['Federal Agencies']['Executive'],JSON_PRETTY_PRINT));
-
-echo "\n";
-
-$executionEndTime = microtime(true);
-$time=round($executionEndTime - $executionStartTime, 4);
 $size=memory_get_peak_usage(true);
 $unit=['b','kb','mb','gb','tb','pb'];
 $tunit=['sec','min','hour'];
-echo "\n===============";
-echo "\nSite           : ". $site->siteName;
-echo "\nFound Entities : ". count($site->source->entities);
-echo "\nFound Pages    : ". count($site->pages);
-echo "\nFound Root     : ". $site->sitePage['name'];
-echo "\nMax Memory     : ". ( ( $size > 1 ) ? @round($size/pow(1024, ($i=floor(log($size, 1024)))), 2).' '.@$unit[$i]  : $size.' '.$unit[0]  );
-echo "\nExecution Time : ". ( ( $time > 1 ) ? @round($time/pow(60, ($i=floor(log($time, 60)))), 2).' '.@$tunit[$i] : $time.' '.$tunit[0] );
-echo "\n\n";
 
+$time = getTimer();
 
-// function generateFractalData($site)
-// {
-//     if ( !is_dir('./exampledata') ) { mkdir('./exampledata'); }
+$output = [
+    "Site"          => $site->siteName,
+    "FoundEntities" => count($site->source->entities),
+    "FoundPages"    => count($site->pages),
+    "FoundRoot"     => $site->sitePage['name'],
+    "MaxMemory"     => ( ( $size > 1 ) ? @round($size/pow(1024, ($i=floor(log($size, 1024)))), 2).' '.@$unit[$i]  : $size.' '.$unit[0]  ),
+    "ExecutionTime" => ( ( $time > 1 ) ? @round($time/pow(60, ($i=floor(log($time, 60)))), 2).' '.@$tunit[$i] : $time.' '.$tunit[0] )
+];
 
-//     $ex = json_encode(["entities"=>$site->source->entities], JSON_PRETTY_PRINT);
-//     file_put_contents('./exampledata/entities.js', $ex);
+$site->log("\n===============");
+$site->log("\nSite           : ". $output["Site"]);
+$site->log("\nFound Entities : ". $output["FoundEntities"]);
+$site->log("\nFound Pages    : ". $output["FoundPages"]);
+$site->log("\nFound Root     : ". $output["FoundRoot"]);
+$site->log("\nMax Memory     : ". $output["MaxMemory"]);
+$site->log("\nExecution Time : ". $output["ExecutionTime"]);
+$site->log("\n");
+foreach (array_keys($_timers) as $name) {
+    if ($name=='default') {
+        continue;
+    }
+    $time = getTimer($name);
+    $site->log("\n". str_pad($name, 14, ' ', STR_PAD_RIGHT) ." : ".
+        ( ( $time > 1 ) ?
+            str_pad(@round($time/pow(60, ($i=floor(log($time, 60)))), 2), 6, ' ', STR_PAD_RIGHT)
+                .' '.@$tunit[$i]
+            : str_pad(number_format($time, 2), 6, ' ', STR_PAD_RIGHT).' '.$tunit[0]
+        ));
+}
+$site->log("\n\n");
 
-//     $ex = json_encode(["pagesByUrl"=>$site->pagesByUrl], JSON_PRETTY_PRINT);
-//     file_put_contents('./exampledata/data_pagesByUrl.json', $ex);
+echo tprint();
 
-//     $ex = json_encode(["siteIndexAZ"=>$site->siteIndexAZ], JSON_PRETTY_PRINT);
-//     file_put_contents('./exampledata/siteIndexAZ.js', $ex);
-
-//     $ex = json_encode(["mainNav"=>$site->sitePage['menu']], JSON_PRETTY_PRINT);
-//     file_put_contents('./exampledata/data_mainNav.json', $ex);
-
-//     $ex = json_encode(["directoryRecordGroups"=>$site->directoryRecordGroups], JSON_PRETTY_PRINT);
-//     file_put_contents('./exampledata/data_directoryRecordGroups.json', $ex);
-
-//     $ex = json_encode(["stateDetails"=>$site->stateDetails], JSON_PRETTY_PRINT);
-//     file_put_contents('./exampledata/data_stateDetails.json', $ex);
-// }
+function timer($name = 'default')
+{
+    global $_timers;
+    $time     = microtime(true);
+    $bt       = debug_backtrace();
+    $caller   = array_shift($bt);
+    $diff_abs = $time - $_timers['default'][0]['time'];
+    if (!isset($_timers[$name])) {
+        $_timers[$name] = [ [
+            'time'       => $time,
+            'diff'       => 0,
+            'diff-start' => 0,
+            'diff-abs'   => $diff_abs,
+            'caller'     => $caller
+        ] ];
+    } else {
+        $_timers[$name][] = [
+            'time'       => $time,
+            'diff'       => $time - $_timers[$name][count($_timers[$name])-1]['time'],
+            'diff-start' => $time - $_timers[$name][0]['time'],
+            'diff-abs'   => $diff_abs,
+            'caller'     => $caller
+        ];
+    }
+    return $diff_abs;
+}
+function tprint()
+{
+    global $_timers;
+    $out = '';
+    foreach ($_timers as $name => $times) {
+        $out .= "==$name\n  last       start      global     line\n";
+        foreach ($times as $time) {
+            $out .= '  '.str_pad(number_format($time['diff'], 5, '.', ''), 10, ' ', STR_PAD_LEFT)
+                    .' '.str_pad(number_format($time['diff-start'], 5, '.', ''), 10, ' ', STR_PAD_LEFT)
+                    .' '.str_pad(number_format($time['diff-abs'], 5, '.', ''), 10, ' ', STR_PAD_LEFT)
+                    .' '.$time['caller']['line']."\n";
+        }
+        $out .= "\n";
+    }
+    return $out;
+}
+function getTimer($name = 'default')
+{
+    global $_timers;
+    return $_timers[$name][count($_timers[$name])-1]['diff-start'];
+}

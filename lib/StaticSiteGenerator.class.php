@@ -4,6 +4,10 @@ namespace ctac\ssg;
 
 class StaticSiteGenerator
 {
+    public $uuid;
+    public $logMessage;
+    public $runtimeEnvironment;
+
     public $time;
     public $siteName;
 
@@ -22,12 +26,14 @@ class StaticSiteGenerator
 
     public $renderer;
     public $config;
+    public $s3;
 
     public $loadDatafromSource;
 
     public function __construct( $siteName )
     {
-        $this->time = microtime();
+        $this->uuid = sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+
         $this->siteName  = $siteName;
 
         /// setup page references
@@ -44,118 +50,130 @@ class StaticSiteGenerator
         $this->pagesByUrl = [];
         $this->siteIndexAZ  = [];
         $this->stateAcronyms = [
-            'um'=>'minor outlying islands','mh'=>'republic of the marshall islands','pw'=>'republic of palau','fm'=>'federated states of micronesia',
-            'gu'=>'guam','as'=>'american samoa','al'=>"alabama",'ak'=>"alaska",'az'=>"arizona",'ar'=>"arkansas",'ca'=>"california",'co'=>"colorado",
-            'ct'=>"connecticut",'de'=>"delaware",'dc'=>"district of columbia",'fl'=>"florida",'ga'=>"georgia",'hi'=>"hawaii",'id'=>"idaho",
-            'il'=>"illinois",'in'=>"indiana",'ia'=>"iowa",'ks'=>"kansas",'ky'=>"kentucky",'la'=>"louisiana",'me'=>"maine",'md'=>"maryland",
-            'ma'=>"massachusetts",'mi'=>"michigan",'mn'=>"minnesota",'ms'=>"mississippi",'mo'=>"missouri",'mt'=>"montana",'ne'=>"nebraska",
-            'nv'=>"nevada",'nh'=>"new hampshire",'nj'=>"new jersey",'nm'=>"new mexico",'ny'=>"new york",'nc'=>"north carolina",'nd'=>"north dakota",
-            'oh'=>"ohio",'ok'=>"oklahoma",'or'=>"oregon",'pa'=>"pennsylvania",'ri'=>"rhode island",'sc'=>"south carolina",'sd'=>"south dakota",
-            'tn'=>"tennessee",'tx'=>"texas",'ut'=>"utah",'vt'=>"vermont",'va'=>"virginia",'wa'=>"washington",'wv'=>"west virginia",'wi'=>"wisconsin",
-            'wy'=>"wyoming", 'as' => 'american samoa', 'vi' => 'u.s. virgin islands', 'mp' => 'northern mariana islands', 'pr' => 'puerto rico', 'gu' => 'guam'
+            'um'=>'Minor Outlying Islands','mh'=>'Republic of the Marshall Islands','pw'=>'Republic of Palau','fm'=>'Federated States of Micronesia',
+            'gu'=>'Guam','as'=>'American Samoa','al'=>"Alabama",'ak'=>"Alaska",'az'=>"Arizona",'ar'=>"Arkansas",'ca'=>"California",'co'=>"Colorado",
+            'ct'=>"Connecticut",'de'=>"Delaware",'dc'=>"District of Columbia",'fl'=>"Florida",'ga'=>"Georgia",'hi'=>"Hawaii",'id'=>"Idaho",
+            'il'=>"Illinois",'in'=>"Indiana",'ia'=>"Iowa",'ks'=>"Kansas",'ky'=>"Kentucky",'la'=>"Louisiana",'me'=>"Maine",'md'=>"Maryland",
+            'ma'=>"Massachusetts",'mi'=>"Michigan",'mn'=>"Minnesota",'ms'=>"Mississippi",'mo'=>"Missouri",'mt'=>"Montana",'ne'=>"Nebraska",
+            'nv'=>"Nevada",'nh'=>"New Hampshire",'nj'=>"New Jersey",'nm'=>"New Mexico",'ny'=>"New York",'nc'=>"North Carolina",'nd'=>"North Dakota",
+            'oh'=>"Ohio",'ok'=>"Oklahoma",'or'=>"Oregon",'pa'=>"Pennsylvania",'ri'=>"Rhode Island",'sc'=>"South Carolina",'sd'=>"South Dakota",
+            'tn'=>"Tennessee",'tx'=>"Texas",'ut'=>"Utah",'vt'=>"Vermont",'va'=>"Virginia",'wa'=>"Washington",'wv'=>"West Virginia",'wi'=>"Wisconsin",
+            'wy'=>"Wyoming", 'as'=>"American Samoa", 'vi'=>"U S Virgin Islands", 'mp'=>"Northern Mariana Islands", 'pr'=>"Puerto Rico", 'gu'=>"Guam"
         ];
 
-        /// get helper objects
-        $this->config      = ConfigLoader::loadConfig( $this->siteName );
+        $this->runtimeEnvironment = 'standalone';
+        $this->determineRuntimeEnvironment();
+
+        $this->config = ConfigLoader::loadConfig($this->siteName);
+
+        error_log('RUNTIME: '.$this->runtimeEnvironment,false);
+        if ( $this->runtimeEnvironment == 'drupal' )
+        {
+            if ( function_exists('_s3fs_get_config') )
+            {
+                $config = _s3fs_get_config();
+                $config['bucket']  = $this->config['aws']['bucket'];
+                $config['version'] = 'latest';
+                print_r($config);
+                try {
+                    $this->s3 = _s3fs_get_amazons3_client($config);
+                } catch (S3fsException $e) {
+                    $this->log("S3Client error : ".$e->getMessage());
+                }
+            } else {
+                $this->log("SSG error : requires S3FS Module",false);
+                return;
+            }
+        } else if ( $this->runtimeEnvironment == 'standalone' ) {
+            if ( class_exists('\Aws\S3\S3Client') )
+            {
+                $this->s3 = \Aws\S3\S3Client::factory($this->config['aws']);
+                // $sdk = new \Aws\Sdk($this->config['aws']);
+                // $this->s3 = $sdk->createS3();
+                $this->s3->registerStreamWrapper();
+            } else {
+                $this->log("SSG error : requires AWS SDK Library",false);
+                return;
+            }
+        }
+
+        $this->prepareDirs();
+
+        $this->templates   = new TemplateSource( $this ); 
         $this->source      = new DrupalAPIDataSource( $this );
+        $this->destination = new S3SiteDestination( $this );
         $this->renderer    = new PageRenderer( $this );
-        $this->templates   = new TemplateSync( $this ); 
-        $this->destination = new SiteDestination( $this );
 
         $this->getDatafromSource = false;
-
     }
 
-    public function pushToDestination()
+    public function determineRuntimeEnvironment()
     {
-        $this->destination->push();
+        if ( function_exists('variable_get') )
+        {
+            $this->runtimeEnvironment = 'drupal';
+        } else if ( class_exists('\Aws\Sdk') ) {
+            $this->runtimeEnvironment = 'standalone';
+        } else {
+            $this->runtimeEnvironment = 'standalone';
+        }
+    }
+
+    public function log($msg,$debugOnly=true)
+    {
+        $this->logMessage .= $msg;
+
+        if ( $this->runtimeEnvironment == 'drupal' )
+        {
+            $result = db_query("
+                UPDATE {ssg_builds} 
+                SET 
+                    log=concat(ifnull(log,''), :log), 
+                    updated=UNIX_TIMESTAMP() 
+                WHERE 
+                    uuid=:uuid
+            ",[
+                ':uuid'=>$this->uuid,
+                ':log'=>$msg
+            ]);
+            $msg = "SiteBuild:{$this->uuid} {$msg}";
+        }
+
+        // if ( $debugOnly )
+        // {
+        //     return;
+        // }
+        error_log($msg);
+    }
+
+    public function prepareDirs()
+    {
+        $this->prepareDir($this->config['tempDir']);
+        $this->prepareDir($this->config['permDir']);
+        
+        //$this->cacheDir = realpath($this->config['permDir']).'/cache';
+        $this->cacheDir = $this->config['permDir'].'/cache';
+        $this->prepareDir($this->cacheDir);
+
+        // $this->siteDir = realpath($this->config['tempDir']).'/sites/'.trim(strtolower($this->siteName),'/ ');
+        $this->siteDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->siteName),'/ ');
+        $this->prepareDir($this->siteDir);
     }
 
     public function syncTemplates()
     {
         $this->templates->sync();
+        $this->renderer->loadTwigTemplates();
     }
 
-    public function storeDataInCache()
-    {
-        if ( !is_dir('./cache/') ) { mkdir('./cache/'); }
-        $cacheFile='./cache/'.$this->siteName.'.cache';
-        if ( !file_exists($cacheFile) )
-        {
-            touch($cacheFile);
-        }
-        if ( !is_writable($cacheFile) ) 
-        { 
-            chmod($cacheFile,0644);
-        }
-        $cache = serialize([ 
-            'entities'=>$this->source->entities, 
-            'entitiesById'=>$this->source->entitiesById,
-            'redirects'=>$this->source->redirects,
-        ]);
-        $bytes = file_put_contents($cacheFile, $cache);
-        return !empty( $bytes );
-    }
     public function loadData()
     {
-        $sourceFail = false;
-        if ( $this->getDatafromSource )
-        {
-            /// if we want data from source - we might only need to update
-            /// how do we know if we want totally new data or just updated
-            echo "Data: loading from source ... ";
-            if ( $this->loadDataFromSource() ) 
-            {
-                return true; 
-            } else {
-                $sourceFail = true;
-            }
-        }
-        echo "Data: loading from cache ... ";
-        if ( ! $this->loadDataFromCache()  ) 
-        { 
-            echo "not found\n";
-            if ( !$sourceFail )
-            {   
-                echo "Data: loading from source ... ";
-                if ( $this->loadDataFromSource() ) 
-                {
-                    return true; 
-                }
-            }
-        }
-        echo "done\n";
-
-        return false;
-    }
-    public function loadDataFromSource()
-    {
-        $this->source->pull();
-        return $this->storeDataInCache();
-    }
-    public function loadDataFromCache()
-    {
-        if ( !is_dir('./cache/') ) { return false; }
-        $cacheFile='./cache/'.$this->siteName.'.cache';
-        if ( !file_exists($cacheFile) || !is_readable($cacheFile) ) { return false; }
-        $cache = unserialize(file_get_contents($cacheFile));
-        if (
-            empty($cache)
-            || !array_key_exists('entities',     $cache)
-            || !array_key_exists('entitiesById', $cache)
-        ) { return false; }
-        $this->source->entities     = $cache['entities'];
-        $this->source->entitiesById = $cache['entitiesById'];
-        if ( array_key_exists('redirects', $cache) )
-        {
-            $this->source->redirects     = $cache['redirects'];
-        }
-        return true;
+        return $this->source->loadData();
     }
 
     public function buildSiteTreeFromEntities()
     {
-        echo "Site Tree: building from entities ... ";
+        $this->log("Site Tree building from entities ... \n");
         $treeStartTime = microtime(true);
 
         $this->pages        = [];
@@ -186,11 +204,11 @@ class StaticSiteGenerator
                 /**DBG** /
                 if ( $entity['type_of_page_to_generate'] == 'a-z-index' )
                 {
-                    echo 'AZ: '.$entity['friendly_url']." : ". $entity['type_of_page_to_generate']."\n";
+                    $this->log('AZ: '.$entity['friendly_url']." : ". $entity['type_of_page_to_generate']."\n");
                 }
                 if ( $entity['type_of_page_to_generate'] == '50-state-page' )
                 {
-                    echo '50: '.$entity['friendly_url']." : ". $entity['usa_gov_50_state_category']."\n";
+                    $this->log('50: '.$entity['friendly_url']." : ". $entity['usa_gov_50_state_category']."\n");
                 }
                 /*\DBG**/
                 if ( empty($entity['parent']) && $entity['name']===$this->siteName )
@@ -281,11 +299,27 @@ class StaticSiteGenerator
                     if ( !empty($entity['state_acronym'])
                       && !empty($entity['state_canonical_name']) )
                     {
-                        if ( @count($entity['state_acronym']) <= 2
+                        if ( @count($entity['state_acronym']) == 2 )
+                        {
+                            $state_canonical_name = $entity['state_canonical_name'];
+                            $state_canonical_name = str_replace('.',' ',$state_canonical_name);
+                            $state_canonical_name = preg_replace('/\s+/',' ',$state_canonical_name);
+                            $state_canonical_name = ucfirst($state_canonical_name);
+                            $state_canonical_name = preg_replace('/(\b)Of(\b)/',  '$1of$2',  $state_canonical_name);
+                            $state_canonical_name = preg_replace('/(\b)The(\b)/', '$1the$2', $state_canonical_name);
+                            $state_canonical_name = preg_replace('/(\b)De(\b)/',  '$1de$2',  $state_canonical_name);
+                            $state_canonical_name = preg_replace('/(\b)Del(\b)/', '$1del$2', $state_canonical_name);
+
+                            $this->stateAcronyms[strtolower($entity['state_acronym'])] = $state_canonical_name;
+                        }
+
+                        /*
+                        if ( @count($entity['state_acronym']) == 2
                           && empty($this->stateAcronyms[ strtolower($entity['state_acronym']) ]) )
                         {
                             $this->stateAcronyms[strtolower($entity['state_acronym'])] = strtolower($entity['state_canonical_name']);
                         }
+                        */
                     }
                     $fubs = !empty($entity['for_use_by']) ? $entity['for_use_by'] : [$this->siteName];
                     foreach ( $fubs as $fub )
@@ -302,7 +336,7 @@ class StaticSiteGenerator
                 {
 
                     $state      = !empty($entity['state'])    ? strtolower($entity['state']) : strtolower('None');
-                    $state_name = ( array_key_exists($state,$this->stateAcronyms) ) ? $this->stateAcronyms[$state] : 'None';
+                    //$state_name = ( array_key_exists($state,$this->stateAcronyms) ) ? $this->stateAcronyms[$state] : 'None';
                     $group_by   = !empty($entity['group_by']) ? $entity['group_by'] : 'None';
                     $type       = $entity['directory_type'];
                     $fubs       = !empty($entity['for_use_by']) ? $entity['for_use_by'] : [$this->siteName];
@@ -615,12 +649,7 @@ class StaticSiteGenerator
             $this->topicsPage = $this->source->entities[$this->topicsPage['uuid']];
         }
 
-        // $treeEndTime = microtime(true);
-        // $tunit=['sec','min','hour'];
-        // $treeTime = round($treeEndTime - $treeStartTime,4);
-        // $treeTime = ( $treeTime >= 1 ) ? @round($treeTime/pow(60,   ($i=floor(log($treeTime, 60)))),   2).' '.$tunit[$i] : "$treeTime sec";
-        // // echo "\n BuildTree time($treeTime)";
-        echo "done\n";
+        $this->log("Site Tree building from entities ... done\n");
     }
 
 
@@ -1061,7 +1090,7 @@ class StaticSiteGenerator
     {
         if ( empty($this->pagesByUrl) )
         {
-            echo "Validate Site: no site found to validate\n";
+            $this->log("Validate Site: no site found to validate\n");
             return null;
         }
         $requiredPages = 0;
@@ -1069,14 +1098,14 @@ class StaticSiteGenerator
         foreach ( $this->pagesByUrl as $url=>&$page )
         {
             $requiredPages++;
-            $pageDir = rtrim( './sites/'.trim(strtolower($this->siteName),'/').'/'.trim($url,'/'), '/' );
+            $pageDir = rtrim( $this->siteDir.'/'.trim($url,'/'), '/' );
             $pageFile = $pageDir.'/index.html';
 
             if ( $this->validatePage($pageFile) )
             {
                 $renderedPages++;
             } else {
-                echo "Invalid: {$url} // {$page['uuid']}\n";
+                $this->log("Invalid: {$url} // {$page['uuid']}\n");
             }
 
             /// some special pages generate further sub-pages
@@ -1092,7 +1121,7 @@ class StaticSiteGenerator
                     {
                         $renderedPages++;
                     } else {
-                        echo "Invalid: {$subUrl}\n";
+                        $this->log("Invalid: {$subUrl}\n");
                     }        
                 }
 
@@ -1112,7 +1141,7 @@ class StaticSiteGenerator
                         {
                             $renderedPages++;
                         } else {
-                            echo "Invalid: {$subUrl} // {$agency['title']} // {$agency['uuid']}\n";
+                            $this->log("Invalid: {$subUrl} // {$agency['title']} // {$agency['uuid']}\n");
                         }        
                     }
                 }
@@ -1129,13 +1158,13 @@ class StaticSiteGenerator
                             $subUrl = $page['usa_gov_50_state_prefix']
                                         .'/'.$this->sanitizeForUrl($stateName);
                         }
-                        $subPageDir = rtrim('./sites/'.trim(strtolower($this->siteName)).'/'.trim($subUrl,'/'), '/' );
+                        $subPageDir = rtrim( $this->siteDir.'/'.trim($subUrl,'/'), '/' );
                         $subPageFile = $subPageDir.'/index.html';
                         if ( $this->validatePage($subPageFile) )
                         {
                             $renderedPages++;
                         } else {
-                            echo "Invalid: {$subUrl}\n";
+                            $this->log("Invalid: {$subUrl}\n");
                         }        
                     }
                 }
@@ -1152,30 +1181,70 @@ class StaticSiteGenerator
                     {
                         $renderedPages++;
                     } else {
-                        echo "Invalid: {$subUrl}\n";
+                        $this->log("Invalid: {$subUrl}\n");
                     }        
                 }
             
             }
         }
-        echo "Site Validation: $renderedPages of $requiredPages pages rendered to /sites/{$this->siteName} \n";
+        $this->log("Site Validation: $renderedPages of $requiredPages pages rendered to /sites/{$this->siteName} \n");
         return ($requiredPages <= $renderedPages);
+    }
+
+    public function deploySite()
+    {
+        return $this->destination->sync();
     }
 
     public function renderSite( $renderPageOnFailure=false )
     {
         if ( empty($this->sitePage) )
         {
-            echo "Render: site ... not found\n";
+            $this->log("Render Site: no site found\n");
             return false;
-        }
-        $treeResult = $this->renderTree($this->sitePage);
-        $redirectResult = $this->renderRedirects();
-        //$redirectResult = true;
-        if ( empty($treeResult) ||  empty($redirectResult) ) {
-            echo "Render: site ... failed\n";
         } else {
-            echo "Render: site ... done\n";
+            $this->log("Render Site\n");
+        }
+        /// render content pages
+        $this->log("Render: pages\n");
+        $treeResult = $this->renderTree($this->sitePage);
+
+        /// render redirects
+        $this->log("Render: redirects\n");
+        $redirectResult = $this->renderRedirects();
+
+        /// copy over static assets - to multiple locations
+        $this->log("Render: asset files\n");
+        $assetDestBaseDirs = [
+            "{$this->siteDir}",
+            "{$this->siteDir}/sites/all/themes/usa"
+        ];
+        $assetDestDirs = [ 'js', 'css', 'fonts', 'images' ];
+        foreach ( $assetDestBaseDirs as $assetDestBaseDir )
+        {
+            foreach ( $assetDestDirs as $assetDestDir )
+            {
+                $sourceAssetDir = "{$this->templates->destAssetDir}/{$assetDestDir}";
+                $destAssetDir   = "{$assetDestBaseDir}/{$assetDestDir}";
+                $this->prepareDir($destAssetDir);
+                if ( !is_writable($destAssetDir) )
+                {
+                    $this->chmod_recurse($destAssetDir,0744);
+                }
+                $this->copy_recurse($sourceAssetDir,$destAssetDir);        
+            }
+        }
+
+        /// copy over static files - to one location
+        $this->log("Render: static files\n");
+        $sourceStaticDir = $this->templates->destStaticDir;
+        $destStaticDir   = "{$this->siteDir}/staticroot";
+        $this->copy_recurse($sourceStaticDir,$destStaticDir);        
+
+        if ( empty($treeResult) ||  empty($redirectResult) ) {
+            $this->log("Render Site: failed\n");
+        } else {
+            $this->log("Render Site: done\n");
         }
         return $treeResult && $redirectResult;
     }
@@ -1254,6 +1323,7 @@ class StaticSiteGenerator
             }
             foreach (scandir($src) as $file) {
                 if ($file != '.' && $file != '..') {
+                    // echo " :: $src/$file\n    $dst/$file\n";
                     $this->copy_recurse("$src/$file", "$dst/$file");
                 }
             }
@@ -1269,7 +1339,7 @@ class StaticSiteGenerator
                 chmod($dst,$perm); 
             }
         } else {
-            echo "WARNING: Cannot copy $src (unknown file type)\n";
+            $this->log("WARNING: Cannot copy $src (unknown file type)\n");
         }
     }
     public function chmod_recurse($src, $perm)
@@ -1288,8 +1358,38 @@ class StaticSiteGenerator
         } elseif (is_file($src)) {
             chmod($src,$perm);
         } else {
-            echo "WARNING: Cannot apply permissions to $src (unknown file type)\n";
+            $this->log("WARNING: Cannot apply permissions to $src (unknown file type)\n");
         }
+    }
+
+    public function prepareDir( &$path )
+    {
+        // error_log("preparing dir: $path\n");
+        if ( empty($path) )
+        {
+            return false;
+        }
+        if ( !is_dir($path) )
+        {
+            // error_log("mkdir($path, 0744, true)\n");
+            mkdir($path, 0744, true);
+        }
+        if ( !is_writable($path) )
+        {
+            chmod($path, 0744 );
+        }
+        // $real_path = realpath($path);
+        $real_path = $path;
+        if ( empty($real_path) )
+        {
+            return false;
+        }
+        if ( !is_dir($real_path) || !is_writable($real_path) )
+        {
+            return false;
+        }
+        $path = $real_path;
+        return true;
     }
 
 }
