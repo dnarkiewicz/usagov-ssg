@@ -73,7 +73,6 @@ class StaticSiteGenerator
                 $config = _s3fs_get_config();
                 $config['bucket']  = $this->config['aws']['bucket'];
                 $config['version'] = 'latest';
-                print_r($config);
                 try {
                     $this->s3 = _s3fs_get_amazons3_client($config);
                 } catch (S3fsException $e) {
