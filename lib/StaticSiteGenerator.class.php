@@ -66,7 +66,6 @@ class StaticSiteGenerator
 
         $this->config = ConfigLoader::loadConfig($this->siteName);
 
-        error_log('RUNTIME: '.$this->runtimeEnvironment,false);
         if ( $this->runtimeEnvironment == 'drupal' )
         {
             if ( function_exists('_s3fs_get_config') )
