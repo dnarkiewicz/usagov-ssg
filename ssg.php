@@ -63,7 +63,7 @@ if ($site->validateSite() && $syncToDestination) {
     timer('Deploy');
 }
 
-timer();
+// timer();
 
 // print_r(json_encode($site->source->entities['2579eb59-9d7a-4c30-8ccf-1e2c6992e03d'],JSON_PRETTY_PRINT));
 
