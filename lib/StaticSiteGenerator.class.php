@@ -139,10 +139,10 @@ class StaticSiteGenerator
             $msg = "SiteBuild:{$this->uuid} {$msg}";
         }
 
-        // if ( $debugOnly )
-        // {
-        //     return;
-        // }
+        if ( $debugOnly )
+        {
+            return;
+        }
         error_log($msg);
     }
 
