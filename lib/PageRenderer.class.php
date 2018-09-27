@@ -122,7 +122,7 @@ class PageRenderer
           if ( empty($url) )
           {
               /// not renderable
-              $this->ssg->log("UnRenderable: no url for {$page['name']}\n");
+              $this->ssg->log("UnRenderable: no url for {$page['name']} {$page['friendly_url']}\n");
               return null;
           }
           if ( empty($page['pageType']) )

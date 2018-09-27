@@ -24,24 +24,32 @@ class DataSource
 
 	public function pull( $since=0 )
 	{
-		$this->getEntities($since);
-		$this->getRedirects();
+        if ( !$this->getEntities($since) )
+        {
+            return false;
+        }
+        $this->getRedirects();
+        return true;
 	}
 
 	public function getEntities( $since=0 )
 	{
 		$this->entities     = [];
-		$this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
+        $this->entitiesById = [ 'tid'=>[], 'nid'=>[] ];
+        return true;
 	}
 
 	public function getRedirects()
 	{
-		$this->redirects    = [];
+        $this->redirects    = [];
+        return true;
 	}
 
 
     public function loadData()
     {
+        $success    = false;
+        $sourceFail = false;
         if ( $this->freshData )
         {
             /// if we want data from source - we might only need to update
@@ -50,6 +58,8 @@ class DataSource
             if ( $this->loadDataFromSource() ) 
             {
                 $this->ssg->log("done\n");
+            } else {
+                $sourceFail = true;
             }
         }
 
@@ -57,6 +67,7 @@ class DataSource
         if ( $this->loadDataFromCache()  ) 
         { 
             $this->ssg->log("done\n");
+            $success = true;
         } else {
             $this->ssg->log("not found\n");
             if ( !$sourceFail )
@@ -77,20 +88,31 @@ class DataSource
             if ( $this->updateDataFromSource() ) 
             {
                 $this->ssg->log("Data: updating ... done\n");
+                return true;
             } else {
                 $this->ssg->log("Data: updating ... fail\n");
+                return false;
             }
         }
-        return false;
+        
+        return true;
     }
     public function updateDataFromSource()
     {
-        $this->pull($this->dataPullTime);
+        $pulled = $this->pull($this->dataPullTime);
+        if ( !$pulled )
+        {
+            return false;
+        }
         return $this->storeDataInCache();
     }
     public function loadDataFromSource()
     {
-        $this->pull();
+        $pulled = $this->pull();
+        if ( !$pulled )
+        {
+            return false;
+        }
         return $this->storeDataInCache();
     }
     public function loadDataFromCache()

@@ -16,7 +16,7 @@ $_timers = [
 ];
 timer();
 
-$syncStartTime      = 0;
+$ssgStartTime      = 0;
 
 $site = new StaticSiteGenerator('USA.gov');
 
@@ -71,6 +71,7 @@ $size=memory_get_peak_usage(true);
 $unit=['b','kb','mb','gb','tb','pb'];
 $tunit=['sec','min','hour'];
 
+timer();
 $time = getTimer();
 
 $output = [
@@ -104,7 +105,10 @@ foreach (array_keys($_timers) as $name) {
 }
 $site->log("\n\n");
 
-echo tprint();
+
+echo $site->logMessage;
+
+//echo tprint();
 
 function timer($name = 'default')
 {

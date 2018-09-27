@@ -160,8 +160,18 @@ class StaticSiteGenerator
 
     public function syncTemplates()
     {
-        $this->templates->sync();
-        $this->renderer->loadTwigTemplates();
+        $synced = $this->templates->sync();
+        if ( !$synced ) {
+            $this->log("syncTemplates: syncing from source failed\n");
+            return false; 
+        }
+        $loaded = $this->renderer->loadTwigTemplates();
+        if ( !$loaded ) { 
+            $this->log("syncTemplates: loading templates failed\n");
+            return false; 
+        }
+
+        return true;
     }
 
     public function loadData()
@@ -1064,25 +1074,40 @@ class StaticSiteGenerator
     public function validatePage( $filename, $checkHtml = true )
     {
         $fileExists = file_exists($filename);
-        if ( !$fileExists ) { return false; }
+        if ( !$fileExists ) { 
+            $this->log("Validate Page: no file at $filename\n");
+            return false; 
+        }
         $fileFilled = ( filesize($filename) > 0 );
-
-        $fileValid  = ( $fileExists && $fileFilled );
-        $fileIsHtml = false;
-        
-        if ( $checkHtml ) 
+        if ( !$fileFilled )
         {
-            $fileHandle = fopen($filename, 'r');
-            if ( $fileHandle )
-            {
-                $fileHeader = fread($fileHandle, 100);
-                fclose($fileHandle);
-                $fileHeader = trim($fileHeader);
-                $fileIsHtml = ( $fileHeader{0} == '<');
-            }
+            $this->log("Validate Page: empty file at $filename\n");
+            return false;
         }
 
-        return ( $fileExists && $fileFilled && $fileIsHtml );
+        if ( !$checkHtml ) 
+        {
+            return true;
+        }
+
+        $fileHandle = fopen($filename, 'r');
+        if ( !$fileHandle )
+        {
+            $this->log("Validate Page: unreadable file at $filename\n");
+            return false;
+        }
+
+        $fileHeader = fread($fileHandle, 100);
+        fclose($fileHandle);
+        $fileHeader = trim($fileHeader);
+        $fileIsHtml = ( $fileHeader{0} == '<');
+        if ( !$fileIsHtml )
+        {
+            $this->log("Validate Page: non-html file at $filename: $fileHeader\n");
+            return false;
+        }
+
+        return true;
     }
     public function validateSite()
     {
@@ -1252,7 +1277,10 @@ class StaticSiteGenerator
         {
             return false;
         }
-        $this->renderer->renderPage($page,$renderPageOnFailure);
+        if ( !empty($page['generate_page']) && $page['generate_page']!='no' )
+        {
+            $this->renderer->renderPage($page,$renderPageOnFailure);
+        }
         foreach ( $page['children'] as $childPage )
         {
             if ( !empty($childPage['uuid']) )
