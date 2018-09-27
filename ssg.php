@@ -106,7 +106,7 @@ foreach (array_keys($_timers) as $name) {
 $site->log("\n\n");
 
 
-echo $site->logMessage;
+// echo $site->logMessage;
 
 //echo tprint();
 

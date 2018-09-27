@@ -69,12 +69,12 @@ class ConfigLoader
         }
 
         return [
-            'siteName' => 'USA.gov',
-            'subSiteName' => variable_get('subSiteName'),
+            'siteName'    => variable_get('ssg_siteName'),
+            'subSiteName' => variable_get('ssg_subSiteName'),
             'subSiteHome' => variable_get('subSiteHome'),
-            'siteUrl'  => variable_get('s3fs_bucket').'.s3-website-us-east-1.amazonaws.com',
-            'permDir' => variable_get('ssg_permDir'),
-            'tempDir' => variable_get('ssg_tempDir'),
+            'siteUrl'     => variable_get('ssg_siteUrl'),
+            'permDir'     => variable_get('ssg_permDir'),
+            'tempDir'     => variable_get('ssg_tempDir'),
             'featuresPageBatchSize' => variable_get('ssg_featuresPageBatchSize'),
             'drupalAPI' => [
               'server'       => variable_get('ssg_drupalAPI_server'),

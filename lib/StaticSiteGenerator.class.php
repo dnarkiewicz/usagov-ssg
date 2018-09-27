@@ -15,8 +15,10 @@ class StaticSiteGenerator
 
     public $pages;
     public $pageTree;
+    
     public $sitePage;
     public $homePage;
+
     public $pageTypes;
 
     public $siteIndexAZ;
@@ -140,13 +142,16 @@ class StaticSiteGenerator
                 ':log'=>$msg
             ]);
             $msg = "SiteBuild:{$this->uuid} {$msg}";
+            if ( $debugOnly )
+            {
+                return;
+            }
+            error_log($msg);
+        } else {
+            echo $msg;
         }
 
-        if ( $debugOnly )
-        {
-            return;
-        }
-        error_log($msg);
+        
     }
 
     public function prepareDirs()
@@ -1148,6 +1153,11 @@ class StaticSiteGenerator
         $renderedPages = 0;
         foreach ( $this->pagesByUrl as $url=>&$page )
         {
+            /// only validate pages that should be generated
+            if ( array_key_exists('generate_page',$page) && $page['generate_page']!='yes' )
+            {
+                continue;
+            }
             $requiredPages++;
             $pageDir = rtrim( $this->siteDir.'/'.trim($url,'/'), '/' );
             $pageFile = $pageDir.'/index.html';
@@ -1190,6 +1200,7 @@ class StaticSiteGenerator
                         $subPageFile = $subPageDir.'/index.html';
                         if ( $this->validatePage($subPageFile) )
                         {
+                            //$this->log("**Valid: {$subUrl} // {$agency['title']}\n");
                             $renderedPages++;
                         } else {
                             $this->log("Invalid: {$subUrl} // {$agency['title']} // {$agency['uuid']}\n");
