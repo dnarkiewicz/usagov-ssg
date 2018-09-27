@@ -10,6 +10,8 @@ class StaticSiteGenerator
 
     public $time;
     public $siteName;
+    public $subSite;
+    public $subSiteHome;
 
     public $pages;
     public $pageTree;
@@ -35,6 +37,8 @@ class StaticSiteGenerator
         $this->uuid = sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
 
         $this->siteName  = $siteName;
+        $this->subSite = [];
+        $this->subSiteHome = [];
 
         /// setup page references
         $this->pages     = [];
@@ -65,6 +69,7 @@ class StaticSiteGenerator
         $this->determineRuntimeEnvironment();
 
         $this->config = ConfigLoader::loadConfig($this->siteName);
+
 
         if ( $this->runtimeEnvironment == 'drupal' )
         {
@@ -156,6 +161,7 @@ class StaticSiteGenerator
         // $this->siteDir = realpath($this->config['tempDir']).'/sites/'.trim(strtolower($this->siteName),'/ ');
         $this->siteDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->siteName),'/ ');
         $this->prepareDir($this->siteDir);
+
     }
 
     public function syncTemplates()
@@ -190,7 +196,7 @@ class StaticSiteGenerator
         $this->homePage     = null;
         $this->topicsPage   = null;
         $this->pageTypes    = [];
-
+        $this->subSite = [];
         $this->directoryRecordGroups = [];
         $this->features = [];
         $this->featuresByTopic = [];
@@ -204,6 +210,15 @@ class StaticSiteGenerator
             if ( isset($entity['tid']) && isset($entity['vocabulary_machine_name'])
                  && $entity['vocabulary_machine_name']=='site_strucutre_taxonomy' )
             {
+
+                // to check if it is subsite
+                if(strtolower($entity['name']) == strtolower($this->config['subSiteHome'])){
+                    $this->subSiteHome =array('uuid'=>$entity['uuid'], 'tid'=>$entity['tid'], 'name'=>$entity['name']);
+                }
+                if(strtolower($entity['name']) == strtolower($this->config['subSiteName'])){
+                    $this->subSite =array('uuid'=>$entity['uuid'], 'tid'=>$entity['tid'], 'name'=>$entity['name']);
+                }
+
                 $this->pages[$uuid] =& $this->source->entities[$uuid];
                 if ( !array_key_exists($entity['pageType'],$this->pageTypes) )
                 {
@@ -522,6 +537,19 @@ class StaticSiteGenerator
             if ( isset($entity['tid']) && isset($entity['vocabulary_machine_name'])
                  && $entity['vocabulary_machine_name']=='site_strucutre_taxonomy' )
             {
+                // assign espanol under usa.gov
+                if ( empty($entity['parent']) && $entity['name']===$this->siteName )
+                {
+                   $this->source->entities[$uuid]['children'][]=array('uuid'=>$this->subSiteHome['uuid']);
+                }
+                // setting parent into gobierno
+                if ( !empty($entity['uuid']) && $entity['uuid']===$this->subSiteHome['uuid'] )
+                {
+                    //$this->source->entities[$uuid]['parent']=$this->subSiteHome['tid'];
+                    //$this->source->entities[$uuid]['parent_uuid']=$this->subSiteHome['uuid'];
+
+                }
+
                 $sharesTopic = $this->sharesTopicWith($this->features[$this->siteName],$uuid);
                 $sharesTopic = array_filter($sharesTopic, function($v) {
                     return isset($v['created']) && $v['created'] > time()-1209600;///two weeks ago  3600*24*7*2;

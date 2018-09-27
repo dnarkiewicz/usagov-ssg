@@ -70,6 +70,8 @@ class ConfigLoader
 
         return [
             'siteName' => 'USA.gov',
+            'subSiteName' => variable_get('subSiteName'),
+            'subSiteHome' => variable_get('subSiteHome'),
             'siteUrl'  => variable_get('s3fs_bucket').'.s3-website-us-east-1.amazonaws.com',
             'permDir' => variable_get('ssg_permDir'),
             'tempDir' => variable_get('ssg_tempDir'),

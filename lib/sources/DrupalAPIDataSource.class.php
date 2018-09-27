@@ -14,12 +14,15 @@ class DrupalAPIDataSource extends DataSource
                     ? $this->ssg->config['drupalAPI']['batchSize'] : 100;
 
     $server    = ( !empty($this->ssg->config['drupalAPI']['server']) )
-                    ? $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
+                    ? $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-test.gsa.ctacdev.com';
 
     $url       = ( !empty($this->ssg->config['drupalAPI']['entitiesUrl']) )
                     ? $this->ssg->config['drupalAPI']['entitiesUrl'] : '/usaapi/entities';
 
     $siteName = $this->ssg->siteName;
+    $subSiteName =  ( !empty($this->ssg->config['subSiteName']) )
+        ? $this->ssg->config['subSiteName'] : 'USAGov en Español';
+
     $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
 
     $sanity      = 20000;
@@ -108,7 +111,7 @@ class DrupalAPIDataSource extends DataSource
           }
 
           $entity = $this->cleanResult($result);
-          if ( !$this->belongsToSite($siteName,$entity) )
+          if ( !$this->belongsToSite($siteName, $subSiteName, $entity) )
           {
             continue;
           }
@@ -260,7 +263,7 @@ class DrupalAPIDataSource extends DataSource
     return $_source;
   }
 
-  public function belongsToSite( $siteName, $entity )
+  public function belongsToSite( $siteName, $subSiteName, $entity )
   {
     if ( !array_key_exists('for_use_by',$entity) )
     {
@@ -280,7 +283,7 @@ class DrupalAPIDataSource extends DataSource
       $belongsToSite = false;
       foreach ( $entity['for_use_by'] as $forUseBy )
       {
-        if ( strtolower(preg_replace("/[^\w\_\.\-]/","",$forUseBy)) == strtolower($siteName) )
+        if ( strtolower(preg_replace("/[^\w\_\.\-]/","",$forUseBy)) == strtolower($siteName) || strtolower($forUseBy) == strtolower($subSiteName))
         {
           $belongsToSite = true;
         }
