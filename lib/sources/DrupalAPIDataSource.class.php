@@ -115,11 +115,11 @@ class DrupalAPIDataSource extends DataSource
 
           // $this->entities[$result['uuid']] = $entity;
 
-          $this->entities['all'][$result['uuid']] = $entity;
-          foreach ( $entity['for_use_by'] as $fub )
-          {
-            $this->entities[$fub][$result['uuid']] = $entity;
-          }
+          // $this->entities['all'][$result['uuid']] = $entity;
+          // foreach ( $entity['for_use_by'] as $fub )
+          // {
+          //   $this->entities[$fub][$result['uuid']] = $entity;
+          // }
 
 
           $this->entities[$result['uuid']]['pageType'] = $this->ssg->getPageType($entity);
