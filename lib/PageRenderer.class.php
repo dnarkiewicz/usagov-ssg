@@ -472,9 +472,9 @@ class PageRenderer
 
       $params['entities'] = $this->ssg->source->entities;
 
-      // if ( child of gobiernoTopLevelTerm )
-      // $params['sitePage'] = $this->ssg->source->entites[uuid_of_govierno_top_level_term];
-      // $params['homePage'] = $this->ssg->source->entites[uuid_of_govierno_home_page_term];
+      // if ( page[for_use_by] == this->ssg->config['subSiteName'] )
+      // $params['sitePage'] = $this->ssg->subSitePage;
+      // $params['homePage'] = $this->ssg->subSiteHomePage;
       // else
       $params['sitePage'] = $this->ssg->sitePage;
       $params['homePage'] = $this->ssg->homePage;
