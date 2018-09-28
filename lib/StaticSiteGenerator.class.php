@@ -217,12 +217,12 @@ class StaticSiteGenerator
             {
 
                 // to check if it is subsite
-                if(strtolower($entity['name']) == strtolower($this->config['subSiteHome'])){
+                if(strtolower($entity['name']) == strtolower($this->config['subSiteName'])){
                     $this->subSiteHome =array('uuid'=>$entity['uuid'], 'tid'=>$entity['tid'], 'name'=>$entity['name']);
                 }
-                if(strtolower($entity['name']) == strtolower($this->config['subSiteName'])){
+              /*  if(strtolower($entity['name']) == strtolower($this->config['subSiteName'])){
                     $this->subSite =array('uuid'=>$entity['uuid'], 'tid'=>$entity['tid'], 'name'=>$entity['name']);
-                }
+                }*/
 
                 $this->pages[$uuid] =& $this->source->entities[$uuid];
                 if ( !array_key_exists($entity['pageType'],$this->pageTypes) )

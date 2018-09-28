@@ -463,21 +463,25 @@ class PageRenderer
 
     public function process( &$page, &$params )
     {
-      $params = array_merge($params,$page);
+        $params = array_merge($params, $page);
 
-      $params['config']   = $this->ssg->config;
+        $params['config'] = $this->ssg->config;
 
-      $params['siteName'] = $this->ssg->siteName;
-      $params['siteUrl']  = $this->ssg->config['siteUrl'];
+        $params['siteName'] = $this->ssg->siteName;
+        $params['siteUrl'] = $this->ssg->config['siteUrl'];
 
-      $params['entities'] = $this->ssg->source->entities;
+        $params['entities'] = $this->ssg->source->entities;
 
-      // if ( page[for_use_by] == this->ssg->config['subSiteName'] )
-      // $params['sitePage'] = $this->ssg->subSitePage;
-      // $params['homePage'] = $this->ssg->subSiteHomePage;
-      // else
-      $params['sitePage'] = $this->ssg->sitePage;
-      $params['homePage'] = $this->ssg->homePage;
+       /* if ( $page['for_use_by'] == strtolower($this->config['subSiteName'])){
+            $params['sitePage'] = $this->ssg->subSite;
+            $params['homePage'] = $this->ssg->subSiteHome;
+            // headhtml
+            // endhtml
+        }
+        else {*/
+            $params['sitePage'] = $this->ssg->sitePage;
+            $params['homePage'] = $this->ssg->homePage;
+        //}*/
   
       $params['directoryRecordGroups'] = $this->ssg->directoryRecordGroups;
       $params['siteIndexAZ'] = $this->ssg->siteIndexAZ;
