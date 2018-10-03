@@ -96,16 +96,19 @@ class PageRenderer
         }));
         $this->templateRenderer->addFilter(new \Twig_Filter('sortBy', function ($entities,$key)
         {
-            usort($entities,function($a,$b) use ($key) 
+            if ( is_array($entities) )
             {
-                if ( !array_key_exists($key,$a) 
-                  || !array_key_exists($key,$b) 
-                  || trim($a[$key]) == trim($b[$key]) )
+                usort($entities,function($a,$b) use ($key) 
                 {
-                    return 0;
-                }
-                return ( trim($a[$key]) < trim($b[$key]) ) ? -1 : 1;
-             });
+                    if ( !array_key_exists($key,$a) 
+                    || !array_key_exists($key,$b) 
+                    || trim($a[$key]) == trim($b[$key]) )
+                    {
+                        return 0;
+                    }
+                    return ( trim($a[$key]) < trim($b[$key]) ) ? -1 : 1;
+                });
+            }
             return $entities;
         }));
         $this->templateRenderer->addFilter(new \Twig_Filter('is_array', function ($value)
@@ -127,15 +130,16 @@ class PageRenderer
           }
           if ( empty($page['pageType']) )
           {
-            $this->ssg->log("UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n");
+              $this->ssg->log("UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n");
               return null;
           }
-          //$this->ssg->log("Page: $url   name:\"{$page['name']}\" type:{$page['pageType']} \n");
+            $this->ssg->log("Page: $url   name:\"{$page['name']}\" type:{$page['pageType']} \n");
           $path = trim($url,'/ ');
 
           $fileDir = $this->ssg->siteDir.'/'.$path;
           $file = $fileDir.'/index.html';
           /// TEMPLATE
+
           $twig = $this->getTwigPageRenderer($page);
           if ( empty($twig) )
           {
@@ -153,12 +157,17 @@ class PageRenderer
             $this->ssg->log(preg_replace('/(\<br \/\>|\n)/','',$msg)."\n");
             return null;
           }
-
           /// METADATA FOR RENDERING
-          $pageData = $this->preProcessPage($page);
+          $pageParams = [];
+          $this->processPageParams( $page, $pageParams );
 
-          /// HTML
-          $html = $twig->render($pageData);
+          if ( empty($pageParams) )
+          {
+            $this->ssg->log("UnRenderable: no params for $url ({$page['pageType']}) \"{$page['name']}\"\n");
+            return null;
+          }
+
+          $html = $twig->render($pageParams);
           $html = trim($html);
           if ( !empty($html) )
           {
@@ -169,7 +178,7 @@ class PageRenderer
               }
               chmod( $fileDir, 0755 );
               file_put_contents( $file, $html );
-          } else {
+            } else {
             if ( !file_exists($fileDir) )
             {
                 mkdir( $fileDir, 0755, true );
@@ -186,10 +195,31 @@ class PageRenderer
           /// some special pages generate further sub-pages
           if ( $page['pageType'] == 'AZPage' )
           {
-            foreach ( $this->ssg->siteIndexAZ as $letter => $list )
+            /// collect items from each for_use_by value
+            $azItems = [];
+            foreach ( $page['for_use_by'] as $fub )
             {
-                $pageData['currentAZLetter'] = $letter;
-                $html = $twig->render($pageData);
+                if ( empty($this->ssg->siteIndexAZ[$fub]) ) { continue; }
+                foreach ( array_keys($this->ssg->siteIndexAZ[$fub]) as $letter )
+                {
+                    if ( !isset($azItems[$letter]) ) 
+                    {
+                        $azItems[$letter] = [];
+                    }
+                    $azItems[$letter] = array_merge($azItems[$letter],$this->ssg->siteIndexAZ[$fub][$letter]);
+                }
+            }
+            /// render one sub-page per letter
+            foreach ( $azItems as $letter => $list )
+            {
+                $subPageParams = $pageParams;
+
+                $subPageParams['currentAZLetter'] = $letter;
+                $subPageParams['AZItems'] = $azItems[$letter];
+                $subPageParams['AZPath'] = $path;
+
+                $html = $twig->render($subPageParams);
+                $this->ssg->log("Page: /{$path}/".strtolower($letter)." type:".$page['pageType'] ."\n");
                 if ( !empty($html) )
                 {
                     /// directory for path
@@ -201,7 +231,7 @@ class PageRenderer
                     }
                     chmod( $fileDir, 0755 );
                     file_put_contents( $file, $html );
-                    //$this->ssg->log("Page: {$path}/".strtolower($letter)." type:".$page['pageType'] ."\n");
+                    array_unshift( $paths, $path.'/'.strtolower($letter) );
 
                 } else {
                     $msg = "Render Failed<br />\nPath: /".$path.'/'.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
@@ -212,38 +242,48 @@ class PageRenderer
                     $this->ssg->log(preg_replace('/(\<br \/\>|\n)/','',$msg)."\n");
                 }
             }
-
+            
+            /// render one sub-page per item
             if ( $page['az_index_data_source'] == 'directory-records-federal' )
             { 
+                // echo "Render Attempt<br />\nPath: /".$path."/SUBITEMS<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
+                // print_r($page['for_use_by']);
                 // genreate one subpage per record
-                foreach ( $this->ssg->directoryRecordGroups[$this->ssg->siteName]['all']['Federal Agencies']['all'] as $agencyInfo )
+                foreach ( $page['for_use_by'] as $fub ) 
                 {
-                    $agency = $this->ssg->source->entities[$agencyInfo['uuid']];
+                    // if ( !array_key_exists($fub,$this->ssg->directoryRecordGroups) ) { 
+                    //     echo "skipping $fub\n";
+                    //     print_r(array_keys($this->ssg->directoryRecordGroups));
+                    //     continue; 
+                    // }
+                    foreach ( $this->ssg->directoryRecordGroups[$fub]['all']['Federal Agencies']['all'] as $agencyInfo )
+                    {
+                        $agency = $this->ssg->source->entities[$agencyInfo['uuid']];
 
-                    $directoryRecordPage = array_merge($page,[]);
-                    $directoryRecordPage['uuid'] = $agencyInfo['uuid'];
-                    $directoryRecordPage['name'] = $agency['title'];
-                    $directoryRecordPage['pageType'] = 'federal-directory-record';
-                    $directoryRecordPage['type_of_page_to_generate'] = 'federal-directory-record';
-                    
-                    $urlSafeTitle = $this->ssg->sanitizeForUrl($agency['title']);
-                    $directoryRecordPage['friendly_url'] = $url.'/'.$urlSafeTitle;
-                    $directoryRecordPage['asset_order_content'] = [
-                        [
-                            'target_id' => $agency['nid'],
-                            'uuid' => $agency['uuid'],
-                            'type' => 'node',
-                            'bundle' => $agency['type'],
-                        ]
-                    ];
-                    $subPaths = $this->renderPage($directoryRecordPage);
-                    $paths = array_merge( $paths, $subPaths ); 
+                        $directoryRecordPage = array_merge($page,[]);
+                        $directoryRecordPage['uuid'] = $agencyInfo['uuid'];
+                        $directoryRecordPage['name'] = $agency['title'];
+                        $directoryRecordPage['pageType'] = 'federal-directory-record';
+                        $directoryRecordPage['type_of_page_to_generate'] = 'federal-directory-record';
+                        
+                        $urlSafeTitle = $this->ssg->sanitizeForUrl($agency['title']);
+                        $directoryRecordPage['friendly_url'] = $url.'/'.$urlSafeTitle;
+                        $directoryRecordPage['asset_order_content'] = [
+                            [
+                                'target_id' => $agency['nid'],
+                                'uuid' => $agency['uuid'],
+                                'type' => 'node',
+                                'bundle' => $agency['type'],
+                            ]
+                        ];
+                        $subPaths = $this->renderPage($directoryRecordPage);
+                        $paths = array_merge( $paths, $subPaths ); 
 
+                    }
                 }
             }
 
           } else if ( $page['pageType'] == '50StatePage' ) {
-
             $matches = [];
             if ( preg_match('/^autogenerate\-(.*)/',$page['usa_gov_50_state_category'],$matches) )
             {
@@ -255,25 +295,29 @@ class PageRenderer
                     $detailsPage['pageType'] = 'StateDetails'.$detailsType;
                     $detailsPage['type_of_page_to_generate'] = 'state-details-'.strtolower($detailsType);
                     $baseUrl = $url;
-                    // for each feature
-                    foreach ( $this->ssg->stateAcronyms as $acronym=>$name ) 
+                    // for each state
+                    foreach ( $page['for_use_by'] as $fub ) 
                     {
-                        if ( !empty($detailsPage['usa_gov_50_state_prefix']) )
-                        {
-                            $baseUrl = $detailsPage['usa_gov_50_state_prefix'];
+                        if ( empty($this->ssg->stateAcronyms[$fub]) ) { 
+                            continue; 
                         }
-                        $urlSafeName = $this->ssg->sanitizeForUrl($name);
-                        $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
-                        $detailsPage['state'] = $acronym;
+                        foreach ( $this->ssg->stateAcronyms[$fub] as $acronym=>$name ) 
+                        {
+                            if ( !empty($detailsPage['usa_gov_50_state_prefix']) )
+                            {
+                                $baseUrl = $detailsPage['usa_gov_50_state_prefix'];
+                            }
+                            $urlSafeName = $this->ssg->sanitizeForUrl($name);
+                            $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
+                            $detailsPage['state'] = $acronym;
 
-                        /// lookup state Directory Record using name?
-                        try {
-                            if ( array_key_exists("USA.gov",$this->ssg->directoryRecordGroups) 
-                              && array_key_exists($acronym,$this->ssg->directoryRecordGroups["USA.gov"])
-                              && array_key_exists(0,$this->ssg->directoryRecordGroups["USA.gov"][$acronym]["State Government Agencies"]["all"]) ) 
+                            /// lookup state Directory Record using name?
+                            if ( array_key_exists($fub,$this->ssg->directoryRecordGroups) 
+                            && array_key_exists($acronym,$this->ssg->directoryRecordGroups[$fub])
+                            && array_key_exists(0,$this->ssg->directoryRecordGroups[$fub][$acronym]["State Government Agencies"]["all"]) ) 
                             {
                                 $stateDirectoryRecord = $this->ssg->source->entities[
-                                    $this->ssg->directoryRecordGroups["USA.gov"][$acronym]["State Government Agencies"]["all"][0]["uuid"]
+                                    $this->ssg->directoryRecordGroups[$fub][$acronym]["State Government Agencies"]["all"][0]["uuid"]
                                 ];
                                 $detailsPage['asset_order_content'] = [
                                     [
@@ -284,36 +328,58 @@ class PageRenderer
                                     ]
                                 ];
                             }
-                        } catch(Exception $e) {}
-                        $this->renderPage($detailsPage);
+                            $subPaths = $this->renderPage($detailsPage);
+                            $paths = array_merge( $paths, $subPaths );
+                        }
                     }
                 }
             }
-
           } else if ( $page['pageType'] == 'Features' && empty($page['currentPage']) ) {
-            /// feature page with an empty currentPage is seen by the system as the master page
+            /// feature page with an empty currentPage is seen by the system as the 
+            /// master page or landing page for features
+
             /// all other paginated subpages generated will have an integer currentPage
             /// and should not generate further subpages 
 
-            if ( !empty($this->ssg->features[$this->ssg->siteName]) )
+            /// render all the features together from all page fubs
+            $features = [];
+            foreach ( $page['for_use_by'] as $fub )
             {
+                if ( !empty($this->ssg->features[$fub]) )
+                {
+                    foreach ( array_keys($this->ssg->features[$fub]) as $featureKey )
+                    {
+                        $features[] =& $this->ssg->features[$fub][$featureKey];
+                    }
+                }
+            }
+            
+            if ( !empty($features) )
+            {
+                array_multisort(
+                    array_column($features,'created'), SORT_ASC,
+                    array_column($features,'changed'), SORT_ASC,
+                $features);    
+
                 $batchSize = !empty($this->ssg->config['featuresPageBatchSize']) ? $this->ssg->config['featuresPageBatchSize'] : 5;
-                $maxPage   = ceil(count($this->ssg->features[$this->ssg->siteName])/$batchSize);
+                $maxPage   = ceil(count($features)/$batchSize);
                 for ( $currentPage = 1; $currentPage <= $maxPage; $currentPage++ )
                 {
                     $featuresPaginated = array_merge($page,[]);
+                    $featuresPaginated['features']     = $features;
                     $featuresPaginated['currentPage']  = $currentPage;
                     $featuresPaginated['friendly_url'] = $url.'/'.$currentPage;
-                    $this->renderPage($featuresPaginated);
+                    $subPaths = $this->renderPage($featuresPaginated);
+                    $paths = array_merge( $paths, $subPaths );
                 }
             }
 
+            /// also render one page for each of the features based off the main url
             $featurePage = array_merge($page,[]);
             $featurePage['pageType'] = 'Feature'; // singular
             $featurePage['type_of_page_to_generate'] = 'feature';
 
-            // for each state
-            foreach ( $this->ssg->features[$this->ssg->siteName] as $feature ) 
+            foreach ( $features as $feature ) 
             {
                 $urlSafeTitle = $this->ssg->sanitizeForUrl($feature['title']);
                 $featurePage['friendly_url'] = $url.'/'.$urlSafeTitle;
@@ -325,11 +391,10 @@ class PageRenderer
                         'bundle' => $feature['type'],
                     ]
                 ];
-                $this->renderPage($featurePage);
+                $subPaths = $this->renderPage($featurePage);
+                $paths = array_merge( $paths, $subPaths );
             }
-
           }
-
           array_unshift( $paths, $path );
           return $paths;
   	}
@@ -403,24 +468,20 @@ class PageRenderer
         return null;
     }
 
-    public function preProcessPage( &$page )
-    {
-        $pageParams = [];
-        $this->process( $page, $pageParams );
-        return $pageParams;
-    }
-
     public function loadTwigTemplates()
     {
-        if ( empty($this->ssg->siteName) ) { return false; }
-
-        if ( empty($this->templates[$this->ssg->siteName]) )
-        {
-            $this->templates[$this->ssg->siteName] = [];
+        if ( empty($this->ssg->config['siteName']) ) { 
+            $this->ssg->log("Templates: siteName not found\n");
+            return false; 
         }
-        if ( empty($this->templates[$this->ssg->siteName]['twig']) )
+
+        if ( empty($this->templates[$this->ssg->config['siteName']]) )
         {
-            $this->templates[$this->ssg->siteName]['twig'] = [];
+            $this->templates[$this->ssg->config['siteName']] = [];
+        }
+        if ( empty($this->templates[$this->ssg->config['siteName']]['twig']) )
+        {
+            $this->templates[$this->ssg->config['siteName']]['twig'] = [];
         }
 
         $iterator = new \RecursiveIteratorIterator(
@@ -437,9 +498,10 @@ class PageRenderer
                 continue;
             }
             try {
-                $this->templates[$this->ssg->siteName]['twig'][$name] = $this->templateRenderer->load($name.'.twig');
+                $this->templates[$this->ssg->config['siteName']]['twig'][$name] = $this->templateRenderer->load($name.'.twig');
             } catch (Exception $e) { 
-                $this->templates[$this->ssg->siteName]['twig'][$name] = null;
+                $this->ssg->log("Templates: $name.twig failed to load\n");
+                $this->templates[$this->ssg->config['siteName']]['twig'][$name] = null;
             }
         }
 
@@ -448,47 +510,41 @@ class PageRenderer
 
     public function getTwigPageRenderer( $page )
     {
-        if ( empty($this->ssg->siteName) ) { return null; }
+        if ( empty($this->ssg->config['siteName']) ) { return null; }
 
-        if ( !empty($this->templates[$this->ssg->siteName]['twig'][$page['pageType']]) )
+        if ( !empty($this->templates[$this->ssg->config['siteName']]['twig'][$page['pageType']]) )
         {
-            return $this->templates[$this->ssg->siteName]['twig'][$page['pageType']];
+            return $this->templates[$this->ssg->config['siteName']]['twig'][$page['pageType']];
         } else {
-            
-            print_r([ $page['pageType'] => array_keys($this->templates[$this->ssg->siteName]['twig']) ]);die;
-            
             return null;
         }
     }
 
-    public function process( &$page, &$params )
+    public function processPageParams( &$page, &$params )
     {
-        $params = array_merge($params, $page);
+      $params['config']   = $this->ssg->config;
 
-        $params['config'] = $this->ssg->config;
+      // changes dependant on page
+      $rev = array_reverse($page['for_use_by']);
+      $fub = array_pop($rev);
 
-        $params['siteName'] = $this->ssg->siteName;
-        $params['siteUrl'] = $this->ssg->config['siteUrl'];
+      if ( empty($fub) || !array_key_exists($fub,$this->ssg->sitePage) ) 
+      {
+        return [];
+      }
 
-        $params['entities'] = $this->ssg->source->entities;
+      $params['siteName'] = $fub;
+      $params['sitePage'] = $this->ssg->sitePage[$fub];
+      
+      $params['siteUrl'] = $this->ssg->config['siteUrl'];
 
-       /* if ( $page['for_use_by'] == strtolower($this->config['subSiteName'])){
-            $params['sitePage'] = $this->ssg->subSite;
-            $params['homePage'] = $this->ssg->subSiteHome;
-            // headhtml
-            // endhtml
-        }
-        else {*/
-            $params['sitePage'] = $this->ssg->sitePage;
-            $params['homePage'] = $this->ssg->homePage;
-        //}*/
-  
+      $params['entities'] = $this->ssg->source->entities;
+
       $params['directoryRecordGroups'] = $this->ssg->directoryRecordGroups;
       $params['siteIndexAZ'] = $this->ssg->siteIndexAZ;
       $params['currentAZLetter'] = null;
   
       $params['features']        = $this->ssg->features;
-      $params['featuresByTopic'] = $this->ssg->featuresByTopic;
 
       if ( $page['pageType']=='Features' 
         && empty($params['currentPage']) )
@@ -502,6 +558,8 @@ class PageRenderer
       $params['stateAcronyms']   = $this->ssg->stateAcronyms;
 
       $params['dataLayer'] = $this->getPageDataLayer($page);
+
+      $params = array_merge($params,$page);
     }
 
     public function getPageDataLayer(&$page)

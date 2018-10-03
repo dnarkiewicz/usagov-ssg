@@ -1,9 +1,11 @@
 <?php
 
 $config = [
-  'siteName' => 'USA.gov',
-  'siteUrl'  => 'www.usa.gov',
-  'baseDir'  => realpath(dirname(__FILE__).'/..'),
+  'siteName'    => 'USA.gov',
+  'subSiteName' => 'USAGov en Español',
+  'siteUrl'     => 'www.usa.gov',
+  'permDir' => realpath(dirname(__FILE__).'/..').'/perm',
+  'tempDir' => realpath(dirname(__FILE__).'/..').'/temp',
   'featuresPageBatchSize' => 5,
   'drupalAPI' => [
     'server'       => 'https://usa-cmp-stg.gsa.ctacdev.com',
@@ -26,12 +28,3 @@ $config = [
     'bucket' => ''
   ],
 ];
-
-/*
-  'elasticsearch' => [
-    'server'       => 'https://elasticsearch:9443',
-    'index'        => 'cmp-data-entities',
-    'batchSize'    => 100,
-    'getAllAssets' => [ 'directory_content_type', 'state_details' ],
-  ],
-*/

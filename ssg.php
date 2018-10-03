@@ -46,6 +46,10 @@ timer('Build');
 $site->buildSiteTreeFromEntities();
 timer('Build');
 
+// print_r(array_keys($site->directoryRecordGroups));
+
+
+
 timer('Load Templates');
 $site->syncTemplates();
 timer('Load Templates');
@@ -54,14 +58,14 @@ timer('Render');
 $site->renderSite();
 timer('Render');
 
-timer('Validate');
-if ($site->validateSite() && $syncToDestination) {
-    timer('Validate');
+// timer('Validate');
+// if ($site->validateSite() && $syncToDestination) {
+//     timer('Validate');
 
-    timer('Deploy');
-    $site->destination->sync();
-    timer('Deploy');
-}
+//     timer('Deploy');
+//     $site->destination->sync();
+//     timer('Deploy');
+// }
 
 // timer();
 
@@ -75,10 +79,9 @@ timer();
 $time = getTimer();
 
 $output = [
-    "Site"          => $site->siteName,
+    "Site"          => $site->config['siteName'],
     "FoundEntities" => count($site->source->entities),
     "FoundPages"    => count($site->pages),
-    "FoundRoot"     => $site->sitePage['name'],
     "MaxMemory"     => ( ( $size > 1 ) ? @round($size/pow(1024, ($i=floor(log($size, 1024)))), 2).' '.@$unit[$i]  : $size.' '.$unit[0]  ),
     "ExecutionTime" => ( ( $time > 1 ) ? @round($time/pow(60, ($i=floor(log($time, 60)))), 2).' '.@$tunit[$i] : $time.' '.$tunit[0] )
 ];
@@ -87,7 +90,6 @@ $site->log("\n===============");
 $site->log("\nSite           : ". $output["Site"]);
 $site->log("\nFound Entities : ". $output["FoundEntities"]);
 $site->log("\nFound Pages    : ". $output["FoundPages"]);
-$site->log("\nFound Root     : ". $output["FoundRoot"]);
 $site->log("\nMax Memory     : ". $output["MaxMemory"]);
 $site->log("\nExecution Time : ". $output["ExecutionTime"]);
 $site->log("\n");
@@ -108,7 +110,7 @@ $site->log("\n\n");
 
 // echo $site->logMessage;
 
-//echo tprint();
+// echo tprint();
 
 function timer($name = 'default')
 {

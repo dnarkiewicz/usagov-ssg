@@ -19,11 +19,8 @@ class DrupalAPIDataSource extends DataSource
     $url       = ( !empty($this->ssg->config['drupalAPI']['entitiesUrl']) )
                     ? $this->ssg->config['drupalAPI']['entitiesUrl'] : '/usaapi/entities';
 
-    $siteName = $this->ssg->siteName;
-    $subSiteName =  ( !empty($this->ssg->config['subSiteName']) )
-        ? $this->ssg->config['subSiteName'] : 'USAGov en Español';
-
-    $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
+    // $siteName = $this->ssg->config['siteName'];
+    // $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
 
     $sanity      = 20000;
     $resultsData = [];
@@ -111,21 +108,18 @@ class DrupalAPIDataSource extends DataSource
           }
 
           $entity = $this->cleanResult($result);
-          if ( !$this->belongsToSite($siteName, $subSiteName, $entity) )
+          if ( !$this->belongsToSite($entity) )
           {
+            /// remove from entities list
+            if ( !empty($result['uuid']) && isset($this->entities[$result['uuid']]) )
+            {
+              unset($this->entities[$result['uuid']]);
+            }
             continue;
           }
 
           $this->entities[$result['uuid']] = $entity;
           $this->entities[$result['uuid']]['pageType'] = $this->ssg->getPageType($entity);
-          if ( !empty($result['tid']) )
-          {
-              $this->entitiesById['tid'][$result['tid']] =& $this->entities[$result['uuid']];
-          }
-          if ( !empty($result['nid']) )
-          {
-              $this->entitiesById['nid'][$result['nid']] =& $this->entities[$result['uuid']];
-          }
           $acceptedCount++;
         } catch (Exception $e) {
             continue;
@@ -263,12 +257,8 @@ class DrupalAPIDataSource extends DataSource
     return $_source;
   }
 
-  public function belongsToSite( $siteName, $subSiteName, $entity )
+  public function belongsToSite( $entity )
   {
-    if ( !array_key_exists('for_use_by',$entity) )
-    {
-      return true;
-    }
     if ( array_key_exists('status',$entity) && intval($entity['status'])!=1 )
     {
       return false;
@@ -277,43 +267,33 @@ class DrupalAPIDataSource extends DataSource
     {
       return false;
     }
+    
+    if ( !array_key_exists('for_use_by',$entity) )
+    {
+      return true;
+    }
+    
     if ( array_key_exists('vocabulary_machine_name',$entity)
           && !empty($entity['for_use_by']) )
     {
-      $belongsToSite = false;
-      foreach ( $entity['for_use_by'] as $forUseBy )
-      {
-        if ( strtolower(preg_replace("/[^\w\_\.\-]/","",$forUseBy)) == strtolower($siteName) || strtolower($forUseBy) == strtolower($subSiteName))
-        {
-          $belongsToSite = true;
-        }
-      }
-      return $belongsToSite;
+      return !empty(array_intersect(
+        $entity['for_use_by'],
+        $this->ssg->config['allowedForUseBy']
+      ));
     }
-
     return true;
   }
 
   public function getRedirects()
   {
-    // if ( $this->useLocalRedirects && file_exists(dirname(__FILE__).'/redirects.php') )
-    // {
-    //   include dirname(__FILE__).'/redirects.php';
-    //   if ( !empty($redirects) ) 
-    //   {
-    //     $this->redirects = $redirects;
-    //     return true;
-    //   }
-    // }
-    /// fetch from drupal api
     $server    = ( !empty($this->ssg->config['drupalAPI']['server']) ) ? 
                     $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
 
     $url       = ( !empty($this->ssg->config['drupalAPI']['redirectsUrl']) ) ? 
                     $this->ssg->config['drupalAPI']['redirectsUrl'] : '/usaapi/redirects';
 
-    $siteName = $this->ssg->siteName;
-    $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
+    // $siteName = $this->ssg->config['siteName'];
+    // $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
 
     $this->redirects = [];
 
@@ -322,13 +302,13 @@ class DrupalAPIDataSource extends DataSource
     $body = $response->getBody();
     if ( empty($body) )
     {
-      $this->ssg->log("No {$this->ssg->siteName} Redirects");
+      $this->ssg->log("No Redirects");
       return false;
     }
     $responseData = json_decode($body->getContents(),true);
     if ( $response->getStatusCode()!==200 )
     {
-      $this->ssg->log("Error retrieving {$this->ssg->siteName} Redirects");
+      $this->ssg->log("Error retrieving Redirects");
       return false;
     }
 
