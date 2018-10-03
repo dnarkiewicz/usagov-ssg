@@ -1,8 +1,8 @@
 <?php
 
 $config = [
-  'siteName'    => 'USA.gov',
-  'subSiteName' => 'USAGov en Español',
+  'siteName'        =>  'USA.gov',
+  'allowedForUseBy' => ['USA.gov','GobiernoUSA.gov'],
   'siteUrl'     => 'www.usa.gov',
   'permDir' => realpath(dirname(__FILE__).'/..').'/perm',
   'tempDir' => realpath(dirname(__FILE__).'/..').'/temp',
