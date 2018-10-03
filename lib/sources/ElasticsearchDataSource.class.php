@@ -134,14 +134,14 @@ class ElasticsearchDataSource extends DataSource
                   $entity = $this->cleanResult($result['_source']);
                   $this->entities[$result['_id']] = $entity;
                   $this->entities[$result['_id']]['pageType'] = $this->ssg->getPageType($entity);
-                  if ( !empty($result['_source']['tid']) )
-                  {
-                      $this->entitiesById['tid'][$result['_source']['tid']] =& $this->entities[$result['_id']];
-                  }
-                  if ( !empty($result['_source']['nid']) )
-                  {
-                      $this->entitiesById['nid'][$result['_source']['nid']] =& $this->entities[$result['_id']];
-                  }
+                  // if ( !empty($result['_source']['tid']) )
+                  // {
+                  //     $this->entitiesById['tid'][$result['_source']['tid']] =& $this->entities[$result['_id']];
+                  // }
+                  // if ( !empty($result['_source']['nid']) )
+                  // {
+                  //     $this->entitiesById['nid'][$result['_source']['nid']] =& $this->entities[$result['_id']];
+                  // }
               } catch (Exception $e) {
                   continue;
               }

@@ -69,11 +69,12 @@ class TemplateSource
         { 
             $this->cloneRepo();
             $this->pullSourceRepo();
+            $this->mergeSourceIntoDestination();
         } else if ( $this->freshTemplates ) {
-
             $this->pullSourceRepo();
-        // } else {
-        //     $this->checkoutBranch();
+            $this->mergeSourceIntoDestination();
+            // } else {
+            //     $this->checkoutBranch();
         }
 
         /// even if source is bad, we might have a local copy  of templates to use
@@ -87,7 +88,7 @@ class TemplateSource
         /// theoretically, a version of the templates from git
         /// could be checked into the ssg repo in case there was 
         /// no git access
-        $this->mergeSourceIntoDestination();
+        // $this->mergeSourceIntoDestination();
 
         return $this->verifyDestination();
     }
@@ -149,7 +150,8 @@ class TemplateSource
         $update_cmd = "cd {$this->sourceDir}"
                      ." && git checkout {$this->ssg->config['templateSync']['repo_branch']}" // 2>&1 >/dev/null
                      ." && git pull";
-        $rslt = `{$update_cmd} 2>&1 >/dev/null`;
+        // $this->ssg->log($update_cmd);
+        $rslt = `{$update_cmd} 2>&1`; // >/dev/null
         if ( strpos($rslt, 'error') === 0 ) {
             $this->ssg->log("Error - Could not pull \"{$this->ssg->config['templateSync']['repo_branch']}\" from source-repo.\n");
             return false;
@@ -254,16 +256,17 @@ class TemplateSource
             /// not worth dying for
             // return false;
         }
+        $this->ssg->log("Verifying ".count($this->ssg->pageTypes)." Templates\n");
         foreach ( $this->ssg->pageTypes as $type )
         {
             $template_file = "{$this->destTemplateDir}/{$type}.twig";
-            $this->ssg->log("Verifying Template: {$type}.twig\n");
             if ( !file_exists($template_file) )
             {
                 $this->ssg->log("Template Sync: verify local: can't find template for $type: $template_file");
                 return false;
             }
         }
+        $this->ssg->log("Template Sync: all templates verified\n");
         return true;
     }
 
