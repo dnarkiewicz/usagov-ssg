@@ -19,9 +19,6 @@ class DrupalAPIDataSource extends DataSource
     $url       = ( !empty($this->ssg->config['drupalAPI']['entitiesUrl']) )
                     ? $this->ssg->config['drupalAPI']['entitiesUrl'] : '/usaapi/entities';
 
-    // $siteName = $this->ssg->config['siteName'];
-    // $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
-
     $sanity      = 20000;
     $resultsData = [];
 
@@ -259,20 +256,24 @@ class DrupalAPIDataSource extends DataSource
 
   public function belongsToSite( $entity )
   {
+    /// unpublished items never belong
     if ( array_key_exists('status',$entity) && intval($entity['status'])!=1 )
     {
       return false;
     }
+    /// deleted items never belong
     if ( array_key_exists('deleted',$entity) && intval($entity['deleted'])==1 )
     {
       return false;
     }
     
+    /// all items with no for-use-by are considered universal
     if ( !array_key_exists('for_use_by',$entity) )
     {
       return true;
     }
-    
+
+    /// if this is a site-structure term with a for-use-by, restrict to allowed only
     if ( array_key_exists('vocabulary_machine_name',$entity)
           && !empty($entity['for_use_by']) )
     {
@@ -281,24 +282,29 @@ class DrupalAPIDataSource extends DataSource
         $this->ssg->config['allowedForUseBy']
       ));
     }
+    /// default to allow
     return true;
   }
 
   public function getRedirects()
   {
-    $server    = ( !empty($this->ssg->config['drupalAPI']['server']) ) ? 
-                    $this->ssg->config['drupalAPI']['server'] : 'https://usa-cmp-stg.gsa.ctacdev.com';
+    if ( empty($this->ssg->config['drupalAPI']['server']) || empty($this->ssg->config['drupalAPI']['redirectsUrl']) )
+    {
+      return false;
+    }
 
-    $url       = ( !empty($this->ssg->config['drupalAPI']['redirectsUrl']) ) ? 
-                    $this->ssg->config['drupalAPI']['redirectsUrl'] : '/usaapi/redirects';
-
-    // $siteName = $this->ssg->config['siteName'];
-    // $siteName = preg_replace("/[^\w\_\.\-]/","",$siteName);
+    $server = $this->ssg->config['drupalAPI']['server'];
+    $url    = $this->ssg->config['drupalAPI']['redirectsUrl'];
 
     $this->redirects = [];
 
     $client   = new \GuzzleHttp\Client(['base_uri' => $server, 'verify' => false]);
     $response = $client->post( $url );
+    if ( $response->getStatusCode()!==200 )
+    {
+      $this->ssg->log("Error retrieving Redirects");
+      return false;
+    }
     $body = $response->getBody();
     if ( empty($body) )
     {
@@ -306,11 +312,6 @@ class DrupalAPIDataSource extends DataSource
       return false;
     }
     $responseData = json_decode($body->getContents(),true);
-    if ( $response->getStatusCode()!==200 )
-    {
-      $this->ssg->log("Error retrieving Redirects");
-      return false;
-    }
 
     foreach( $responseData['result'] as $result )
     {

@@ -8,7 +8,7 @@ $config = [
   'tempDir' => realpath(dirname(__FILE__).'/..').'/temp',
   'featuresPageBatchSize' => 5,
   'drupalAPI' => [
-    'server'       => 'https://usa-cmp-stg.gsa.ctacdev.com',
+    'server'       => 'https://usa-cmp-test.gsa.ctacdev.com',
     'redirectsUrl' => '/usaapi/redirects',
     'entitiesUrl'  => '/usaapi/entities',
     'batchSize'    => 100
@@ -21,10 +21,10 @@ $config = [
     'repo_template_dir' => ''
   ],
   'aws' => [
-    'aws_access_key_id' => '',
+    'aws_access_key_id'     => '',
     'aws_secret_access_key' => '',
     'region'  => 'us-east-1',
     'version' => 'latest',
-    'bucket' => ''
-  ],
+    'bucket'  => ''
+  ]
 ];

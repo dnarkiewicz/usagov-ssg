@@ -46,12 +46,8 @@ timer('Build');
 $site->buildSiteTreeFromEntities();
 timer('Build');
 
-// print_r(array_keys($site->directoryRecordGroups));
-
-
-
 timer('Load Templates');
-$site->syncTemplates();
+$site->loadTemplates();
 timer('Load Templates');
 
 timer('Render');
@@ -60,12 +56,13 @@ timer('Render');
 
 // timer('Validate');
 // if ($site->validateSite() && $syncToDestination) {
-//     timer('Validate');
-
-//     timer('Deploy');
-//     $site->destination->sync();
-//     timer('Deploy');
-// }
+    // timer('Validate');
+if ( $syncToDestination )
+{
+    timer('Deploy');
+    $site->destination->sync();
+    timer('Deploy');
+}
 
 // timer();
 

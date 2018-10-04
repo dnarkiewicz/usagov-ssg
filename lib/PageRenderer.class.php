@@ -36,9 +36,11 @@ class PageRenderer
             'auto_reload' => 1
         ));
 
+        $this->templates = [];
+        
         $this->addFilters();
 
-        $this->loadTwigTemplates();
+        // $this->loadTwigTemplates();
 
         $this->renderPageOnFailure = true;
     }
@@ -133,7 +135,8 @@ class PageRenderer
               $this->ssg->log("UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n");
               return null;
           }
-            $this->ssg->log("Page: $url   name:\"{$page['name']}\" type:{$page['pageType']} \n");
+          $_url = str_pad( $url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )) ); 
+          $this->ssg->log("Page: {$_url} type: {$page['pageType']} \n");
           $path = trim($url,'/ ');
 
           $fileDir = $this->ssg->siteDir.'/'.$path;
@@ -219,7 +222,9 @@ class PageRenderer
                 $subPageParams['AZPath'] = $path;
 
                 $html = $twig->render($subPageParams);
-                $this->ssg->log("Page: /{$path}/".strtolower($letter)." type:".$page['pageType'] ."\n");
+                $url  = "/{$path}/".strtolower($letter);
+                $_url = str_pad( $url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )) ); 
+                $this->ssg->log("Page: {$_url} type: {$page['pageType']}\n");
                 if ( !empty($html) )
                 {
                     /// directory for path
@@ -404,10 +409,8 @@ class PageRenderer
         $path = trim($redirect['source_path'],'/ ');
         $base = basename($path);
         $extn = pathinfo($path, PATHINFO_EXTENSION);
-        // if ( empty($extn) && !empty($path) && substr($path,-1)!=='/' ) { $path .= '/'; }
 
         $fileDir = dirname($this->ssg->siteDir.'/'.$path);
-        //if ( $base !== 'index.html' )
         if ( empty($extn) )
         { 
             $file    = $fileDir.'/'.$path.'/index.html';
@@ -470,20 +473,6 @@ class PageRenderer
 
     public function loadTwigTemplates()
     {
-        if ( empty($this->ssg->config['siteName']) ) { 
-            $this->ssg->log("Templates: siteName not found\n");
-            return false; 
-        }
-
-        if ( empty($this->templates[$this->ssg->config['siteName']]) )
-        {
-            $this->templates[$this->ssg->config['siteName']] = [];
-        }
-        if ( empty($this->templates[$this->ssg->config['siteName']]['twig']) )
-        {
-            $this->templates[$this->ssg->config['siteName']]['twig'] = [];
-        }
-
         $iterator = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator(
                         $this->templateDir
@@ -492,16 +481,17 @@ class PageRenderer
         {
             if ($file->isDir()) { continue; }
             $path = $file->getPathname();
+            // echo "LOADING TEMPLATE : $path\n";
             $name = basename($path,'.twig');
             if ( 'yml' == pathinfo($path, PATHINFO_EXTENSION) )
             { 
                 continue;
             }
             try {
-                $this->templates[$this->ssg->config['siteName']]['twig'][$name] = $this->templateRenderer->load($name.'.twig');
+                $this->templates[$name] = $this->templateRenderer->load($name.'.twig');
             } catch (Exception $e) { 
                 $this->ssg->log("Templates: $name.twig failed to load\n");
-                $this->templates[$this->ssg->config['siteName']]['twig'][$name] = null;
+                $this->templates[$name] = null;
             }
         }
 
@@ -510,11 +500,9 @@ class PageRenderer
 
     public function getTwigPageRenderer( $page )
     {
-        if ( empty($this->ssg->config['siteName']) ) { return null; }
-
-        if ( !empty($this->templates[$this->ssg->config['siteName']]['twig'][$page['pageType']]) )
+        if ( !empty($this->templates[$page['pageType']]) )
         {
-            return $this->templates[$this->ssg->config['siteName']]['twig'][$page['pageType']];
+            return $this->templates[$page['pageType']];
         } else {
             return null;
         }
@@ -522,7 +510,7 @@ class PageRenderer
 
     public function processPageParams( &$page, &$params )
     {
-      $params['config']   = $this->ssg->config;
+      $params['config'] = $this->ssg->config;
 
       // changes dependant on page
       $rev = array_reverse($page['for_use_by']);

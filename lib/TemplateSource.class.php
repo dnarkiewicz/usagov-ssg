@@ -69,10 +69,10 @@ class TemplateSource
         { 
             $this->cloneRepo();
             $this->pullSourceRepo();
-            $this->mergeSourceIntoDestination();
+            // $this->mergeSourceIntoDestination();
         } else if ( $this->freshTemplates ) {
             $this->pullSourceRepo();
-            $this->mergeSourceIntoDestination();
+            // $this->mergeSourceIntoDestination();
             // } else {
             //     $this->checkoutBranch();
         }
@@ -88,7 +88,7 @@ class TemplateSource
         /// theoretically, a version of the templates from git
         /// could be checked into the ssg repo in case there was 
         /// no git access
-        // $this->mergeSourceIntoDestination();
+        $this->mergeSourceIntoDestination();
 
         return $this->verifyDestination();
     }
@@ -223,7 +223,7 @@ class TemplateSource
     public function verifySource()
     {
         if ( !is_dir($this->sourceAssetDir) ) {
-            $this->ssg->log("Template Sync: can't find template asset dir: {$this->sourceAssetDir}\n");
+            $this->ssg->log("Templates: can't find template asset dir: {$this->sourceAssetDir}\n");
             return false;
         }
 
@@ -247,26 +247,25 @@ class TemplateSource
     public function verifyDestination()
     {
         if ( !is_dir($this->destAssetDir) ) {
-            $this->ssg->log("Template Sync: can't find template asset dir: {$this->destAssetDir}");
+            $this->ssg->log("Templates: can't find template asset dir: {$this->destAssetDir}");
             return false;
         }
 
         if ( !is_dir($this->destStaticDir) ) {
-            $this->ssg->log("Template Sync: can't find template static dir: {$this->destStaticDir}");
-            /// not worth dying for
-            // return false;
+            $this->ssg->log("Templates: can't find template static dir: {$this->destStaticDir}");
         }
-        $this->ssg->log("Verifying ".count($this->ssg->pageTypes)." Templates\n");
+
+        // $this->ssg->log("Templates: Verifying ".count($this->ssg->pageTypes)." Templates\n");
         foreach ( $this->ssg->pageTypes as $type )
         {
             $template_file = "{$this->destTemplateDir}/{$type}.twig";
             if ( !file_exists($template_file) )
             {
-                $this->ssg->log("Template Sync: verify local: can't find template for $type: $template_file");
+                $this->ssg->log("Templates: verify local: can't find template for $type: $template_file");
                 return false;
             }
         }
-        $this->ssg->log("Template Sync: all templates verified\n");
+        $this->ssg->log("Templates: all templates verified\n");
         return true;
     }
 

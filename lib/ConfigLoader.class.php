@@ -70,9 +70,8 @@ class ConfigLoader
 
         return [
             'siteName'    => variable_get('ssg_siteName'),
-            'subSiteName' => variable_get('ssg_subSiteName'),
-            'subSiteHome' => variable_get('subSiteHome'),
             'siteUrl'     => variable_get('ssg_siteUrl'),
+            'allowedForUseBy' => variable_get('ssg_allowedForUseBy'),
             'permDir'     => variable_get('ssg_permDir'),
             'tempDir'     => variable_get('ssg_tempDir'),
             'featuresPageBatchSize' => variable_get('ssg_featuresPageBatchSize'),
