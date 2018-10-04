@@ -69,10 +69,8 @@ class TemplateSource
         { 
             $this->cloneRepo();
             $this->pullSourceRepo();
-            // $this->mergeSourceIntoDestination();
         } else if ( $this->freshTemplates ) {
             $this->pullSourceRepo();
-            // $this->mergeSourceIntoDestination();
             // } else {
             //     $this->checkoutBranch();
         }
@@ -150,7 +148,7 @@ class TemplateSource
         $update_cmd = "cd {$this->sourceDir}"
                      ." && git checkout {$this->ssg->config['templateSync']['repo_branch']}" // 2>&1 >/dev/null
                      ." && git pull";
-        // $this->ssg->log($update_cmd);
+        // $this->ssg->log($update_cmd."\n");
         $rslt = `{$update_cmd} 2>&1`; // >/dev/null
         if ( strpos($rslt, 'error') === 0 ) {
             $this->ssg->log("Error - Could not pull \"{$this->ssg->config['templateSync']['repo_branch']}\" from source-repo.\n");
@@ -237,7 +235,7 @@ class TemplateSource
             $template_file = "{$this->sourceTemplateDir}/{$type}.twig";
             if ( !file_exists($template_file) )
             {
-                // $this->ssg->log("Template Sync: verify local: can't find template for $type: $template_file");
+                $this->ssg->log("Template: verify local: can't find template for $type: $template_file");
                 return false;
             }
         }
