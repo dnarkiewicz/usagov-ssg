@@ -66,7 +66,7 @@ if ( $syncToDestination )
 
 // timer();
 
-// print_r(json_encode($site->source->entities['2579eb59-9d7a-4c30-8ccf-1e2c6992e03d'],JSON_PRETTY_PRINT));
+// print_r(json_encode($site->pagesByUrl['/'],JSON_PRETTY_PRINT));
 
 $size=memory_get_peak_usage(true);
 $unit=['b','kb','mb','gb','tb','pb'];

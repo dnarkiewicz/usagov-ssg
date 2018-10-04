@@ -222,7 +222,7 @@ class PageRenderer
                 $subPageParams['AZPath'] = $path;
 
                 $html = $twig->render($subPageParams);
-                $url  = "/{$path}/".strtolower($letter);
+                $url  = '/'.$path.'/'.strtolower($letter);
                 $_url = str_pad( $url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )) ); 
                 $this->ssg->log("Page: {$_url} type: {$page['pageType']}\n");
                 if ( !empty($html) )
@@ -272,7 +272,7 @@ class PageRenderer
                         $directoryRecordPage['type_of_page_to_generate'] = 'federal-directory-record';
                         
                         $urlSafeTitle = $this->ssg->sanitizeForUrl($agency['title']);
-                        $directoryRecordPage['friendly_url'] = $url.'/'.$urlSafeTitle;
+                        $directoryRecordPage['friendly_url'] = '/'.$path.'/'.$urlSafeTitle;
                         $directoryRecordPage['asset_order_content'] = [
                             [
                                 'target_id' => $agency['nid'],
