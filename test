@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cd sites/usa.gov
-php -S localhost:8000
+cd temp/sites/usa.gov && php -S localhost:8000
