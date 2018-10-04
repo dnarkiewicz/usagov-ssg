@@ -221,9 +221,9 @@ class PageRenderer
                 $subPageParams['AZItems'] = $azItems[$letter];
                 $subPageParams['AZPath'] = $path;
 
-                $html = $twig->render($subPageParams);
-                $url  = '/'.$path.'/'.strtolower($letter);
-                $_url = str_pad( $url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )) ); 
+                $html  = $twig->render($subPageParams);
+                $_url = '/'.$path.'/'.strtolower($letter);
+                $_url = str_pad( $_url, (strlen($_url)+( 25 - ( strlen($_url) % 25 ) )) ); 
                 $this->ssg->log("Page: {$_url} type: {$page['pageType']}\n");
                 if ( !empty($html) )
                 {
