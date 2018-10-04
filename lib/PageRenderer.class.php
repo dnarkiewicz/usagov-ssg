@@ -198,28 +198,12 @@ class PageRenderer
           /// some special pages generate further sub-pages
           if ( $page['pageType'] == 'AZPage' )
           {
-            /// collect items from each for_use_by value
-            $azItems = [];
-            foreach ( $page['for_use_by'] as $fub )
-            {
-                if ( empty($this->ssg->siteIndexAZ[$fub]) ) { continue; }
-                foreach ( array_keys($this->ssg->siteIndexAZ[$fub]) as $letter )
-                {
-                    if ( !isset($azItems[$letter]) ) 
-                    {
-                        $azItems[$letter] = [];
-                    }
-                    $azItems[$letter] = array_merge($azItems[$letter],$this->ssg->siteIndexAZ[$fub][$letter]);
-                }
-            }
             /// render one sub-page per letter
-            foreach ( $azItems as $letter => $list )
+            foreach ( $pageParams['AZItems'] as $letter => $azItems )
             {
-                $subPageParams = $pageParams;
+                $subPageParams = array_merge($pageParams,[]);
 
                 $subPageParams['currentAZLetter'] = $letter;
-                $subPageParams['AZItems'] = $azItems[$letter];
-                $subPageParams['AZPath'] = $path;
 
                 $html  = $twig->render($subPageParams);
                 $_url = '/'.$path.'/'.strtolower($letter);
@@ -252,15 +236,9 @@ class PageRenderer
             if ( $page['az_index_data_source'] == 'directory-records-federal' )
             { 
                 // echo "Render Attempt<br />\nPath: /".$path."/SUBITEMS<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
-                // print_r($page['for_use_by']);
                 // genreate one subpage per record
                 foreach ( $page['for_use_by'] as $fub ) 
                 {
-                    // if ( !array_key_exists($fub,$this->ssg->directoryRecordGroups) ) { 
-                    //     echo "skipping $fub\n";
-                    //     print_r(array_keys($this->ssg->directoryRecordGroups));
-                    //     continue; 
-                    // }
                     foreach ( $this->ssg->directoryRecordGroups[$fub]['all']['Federal Agencies']['all'] as $agencyInfo )
                     {
                         $agency = $this->ssg->source->entities[$agencyInfo['uuid']];
@@ -347,31 +325,14 @@ class PageRenderer
             /// and should not generate further subpages 
 
             /// render all the features together from all page fubs
-            $features = [];
-            foreach ( $page['for_use_by'] as $fub )
-            {
-                if ( !empty($this->ssg->features[$fub]) )
-                {
-                    foreach ( array_keys($this->ssg->features[$fub]) as $featureKey )
-                    {
-                        $features[] =& $this->ssg->features[$fub][$featureKey];
-                    }
-                }
-            }
-            
-            if ( !empty($features) )
-            {
-                array_multisort(
-                    array_column($features,'created'), SORT_ASC,
-                    array_column($features,'changed'), SORT_ASC,
-                $features);    
 
+            if ( !empty($pageParams['features']) )
+            {
                 $batchSize = !empty($this->ssg->config['featuresPageBatchSize']) ? $this->ssg->config['featuresPageBatchSize'] : 5;
-                $maxPage   = ceil(count($features)/$batchSize);
+                $maxPage   = ceil(count($pageParams['features'])/$batchSize);
                 for ( $currentPage = 1; $currentPage <= $maxPage; $currentPage++ )
                 {
                     $featuresPaginated = array_merge($page,[]);
-                    $featuresPaginated['features']     = $features;
                     $featuresPaginated['currentPage']  = $currentPage;
                     $featuresPaginated['friendly_url'] = $url.'/'.$currentPage;
                     $subPaths = $this->renderPage($featuresPaginated);
@@ -384,7 +345,7 @@ class PageRenderer
             $featurePage['pageType'] = 'Feature'; // singular
             $featurePage['type_of_page_to_generate'] = 'feature';
 
-            foreach ( $features as $feature ) 
+            foreach ( $pageParams['features'] as $feature ) 
             {
                 $urlSafeTitle = $this->ssg->sanitizeForUrl($feature['title']);
                 $featurePage['friendly_url'] = $url.'/'.$urlSafeTitle;
@@ -529,10 +490,47 @@ class PageRenderer
       $params['entities'] = $this->ssg->source->entities;
 
       $params['directoryRecordGroups'] = $this->ssg->directoryRecordGroups;
-      $params['siteIndexAZ'] = $this->ssg->siteIndexAZ;
+
+      /// collect items from each for_use_by value
+      $azItems = [];
+      foreach ( $page['for_use_by'] as $fub )
+      {
+        if ( empty($this->ssg->siteIndexAZ[$fub]) ) { continue; }
+        foreach ( array_keys($this->ssg->siteIndexAZ[$fub]) as $letter )
+        {
+          $letter = strtoupper($letter);
+          if ( !isset($azItems[$letter]) ) 
+          {
+            $azItems[$letter] = [];
+          }
+          $azItems[$letter] = array_merge($azItems[$letter],$this->ssg->siteIndexAZ[$fub][$letter]);
+        }
+      }
+      foreach ( array_keys($azItems) as $letter )
+      {
+        array_multisort(
+            array_column($azItems[$letter],'title'), SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
+          $azItems[$letter]);    
+      }
+      $params['AZItems'] = $azItems;
       $params['currentAZLetter'] = null;
   
-      $params['features']        = $this->ssg->features;
+      $features = [];
+      foreach ( $page['for_use_by'] as $fub )
+      {
+          if ( !empty($this->ssg->features[$fub]) )
+          {
+              foreach ( array_keys($this->ssg->features[$fub]) as $featureKey )
+              {
+                  $features[] =& $this->ssg->features[$fub][$featureKey];
+              }
+          }
+      }
+      array_multisort(
+        array_column($features,'created'), SORT_ASC,
+        array_column($features,'changed'), SORT_ASC,
+      $features);    
+      $params['features'] = $features;
 
       if ( $page['pageType']=='Features' 
         && empty($params['currentPage']) )
