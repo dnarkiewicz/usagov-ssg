@@ -196,10 +196,12 @@ class PageRenderer
           }
 
           /// some special pages generate further sub-pages
+          $rev = array_reverse($page['for_use_by']);
+          $fub = array_pop($rev);    
           if ( $page['pageType'] == 'AZPage' )
           {
             /// render one sub-page per letter
-            foreach ( $pageParams['AZItems'] as $letter => $azItems )
+            foreach ( $this->ssg->siteIndexAZ[$fub] as $letter => $azItems )
             {
                 $subPageParams = array_merge($pageParams,[]);
 
@@ -237,8 +239,7 @@ class PageRenderer
             { 
                 // echo "Render Attempt<br />\nPath: /".$path."/SUBITEMS<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
                 // genreate one subpage per record
-                foreach ( $page['for_use_by'] as $fub ) 
-                {
+                // {
                     foreach ( $this->ssg->directoryRecordGroups[$fub]['all']['Federal Agencies']['all'] as $agencyInfo )
                     {
                         $agency = $this->ssg->source->entities[$agencyInfo['uuid']];
@@ -263,7 +264,7 @@ class PageRenderer
                         $paths = array_merge( $paths, $subPaths ); 
 
                     }
-                }
+                // }
             }
 
           } else if ( $page['pageType'] == '50StatePage' ) {
@@ -279,41 +280,35 @@ class PageRenderer
                     $detailsPage['type_of_page_to_generate'] = 'state-details-'.strtolower($detailsType);
                     $baseUrl = $url;
                     // for each state
-                    foreach ( $page['for_use_by'] as $fub ) 
+                    foreach ( $this->ssg->stateAcronyms[$fub] as $acronym=>$name ) 
                     {
-                        if ( empty($this->ssg->stateAcronyms[$fub]) ) { 
-                            continue; 
-                        }
-                        foreach ( $this->ssg->stateAcronyms[$fub] as $acronym=>$name ) 
+                        if ( !empty($detailsPage['usa_gov_50_state_prefix']) )
                         {
-                            if ( !empty($detailsPage['usa_gov_50_state_prefix']) )
-                            {
-                                $baseUrl = $detailsPage['usa_gov_50_state_prefix'];
-                            }
-                            $urlSafeName = $this->ssg->sanitizeForUrl($name);
-                            $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
-                            $detailsPage['state'] = $acronym;
-
-                            /// lookup state Directory Record using name?
-                            if ( array_key_exists($fub,$this->ssg->directoryRecordGroups) 
-                            && array_key_exists($acronym,$this->ssg->directoryRecordGroups[$fub])
-                            && array_key_exists(0,$this->ssg->directoryRecordGroups[$fub][$acronym]["State Government Agencies"]["all"]) ) 
-                            {
-                                $stateDirectoryRecord = $this->ssg->source->entities[
-                                    $this->ssg->directoryRecordGroups[$fub][$acronym]["State Government Agencies"]["all"][0]["uuid"]
-                                ];
-                                $detailsPage['asset_order_content'] = [
-                                    [
-                                        'target_id' => $stateDirectoryRecord['nid'],
-                                        'uuid' => $stateDirectoryRecord['uuid'],
-                                        'type' => 'node',
-                                        'bundle' => $stateDirectoryRecord['type'],
-                                    ]
-                                ];
-                            }
-                            $subPaths = $this->renderPage($detailsPage);
-                            $paths = array_merge( $paths, $subPaths );
+                            $baseUrl = $detailsPage['usa_gov_50_state_prefix'];
                         }
+                        $urlSafeName = $this->ssg->sanitizeForUrl($name);
+                        $detailsPage['friendly_url'] = $baseUrl.'/'.$urlSafeName;
+                        $detailsPage['state'] = $acronym;
+
+                        /// lookup state Directory Record using name?
+                        if ( array_key_exists($fub,$this->ssg->directoryRecordGroups) 
+                        && array_key_exists($acronym,$this->ssg->directoryRecordGroups[$fub])
+                        && array_key_exists(0,$this->ssg->directoryRecordGroups[$fub][$acronym]["State Government Agencies"]["all"]) ) 
+                        {
+                            $stateDirectoryRecord = $this->ssg->source->entities[
+                                $this->ssg->directoryRecordGroups[$fub][$acronym]["State Government Agencies"]["all"][0]["uuid"]
+                            ];
+                            $detailsPage['asset_order_content'] = [
+                                [
+                                    'target_id' => $stateDirectoryRecord['nid'],
+                                    'uuid' => $stateDirectoryRecord['uuid'],
+                                    'type' => 'node',
+                                    'bundle' => $stateDirectoryRecord['type'],
+                                ]
+                            ];
+                        }
+                        $subPaths = $this->renderPage($detailsPage);
+                        $paths = array_merge( $paths, $subPaths );
                     }
                 }
             }
@@ -325,19 +320,17 @@ class PageRenderer
             /// and should not generate further subpages 
 
             /// render all the features together from all page fubs
-
-            if ( !empty($pageParams['features']) )
+                
+            $batchSize = !empty($this->ssg->config['featuresPageBatchSize']) ? $this->ssg->config['featuresPageBatchSize'] : 5;
+            // $maxPage   = ceil(count($pageParams['features'])/$batchSize);
+            $maxPage   = ceil(count($this->ssg->features[$fub])/$batchSize);
+            for ( $currentPage = 1; $currentPage <= $maxPage; $currentPage++ )
             {
-                $batchSize = !empty($this->ssg->config['featuresPageBatchSize']) ? $this->ssg->config['featuresPageBatchSize'] : 5;
-                $maxPage   = ceil(count($pageParams['features'])/$batchSize);
-                for ( $currentPage = 1; $currentPage <= $maxPage; $currentPage++ )
-                {
-                    $featuresPaginated = array_merge($page,[]);
-                    $featuresPaginated['currentPage']  = $currentPage;
-                    $featuresPaginated['friendly_url'] = $url.'/'.$currentPage;
-                    $subPaths = $this->renderPage($featuresPaginated);
-                    $paths = array_merge( $paths, $subPaths );
-                }
+                $featuresPaginated = array_merge($page,[]);
+                $featuresPaginated['currentPage']  = $currentPage;
+                $featuresPaginated['friendly_url'] = $url.'/'.$currentPage;
+                $subPaths = $this->renderPage($featuresPaginated);
+                $paths = array_merge( $paths, $subPaths );
             }
 
             /// also render one page for each of the features based off the main url
@@ -345,7 +338,8 @@ class PageRenderer
             $featurePage['pageType'] = 'Feature'; // singular
             $featurePage['type_of_page_to_generate'] = 'feature';
 
-            foreach ( $pageParams['features'] as $feature ) 
+            // foreach ( $pageParams['features'] as $feature ) 
+            foreach ( $this->ssg->features[$fub] as $feature ) 
             {
                 $urlSafeTitle = $this->ssg->sanitizeForUrl($feature['title']);
                 $featurePage['friendly_url'] = $url.'/'.$urlSafeTitle;
@@ -484,53 +478,14 @@ class PageRenderer
 
       $params['siteName'] = $fub;
       $params['sitePage'] = $this->ssg->sitePage[$fub];
-      
       $params['siteUrl'] = $this->ssg->config['siteUrl'];
 
       $params['entities'] = $this->ssg->source->entities;
-
       $params['directoryRecordGroups'] = $this->ssg->directoryRecordGroups;
+      $params['siteIndexAZ'] = $this->ssg->siteIndexAZ;
+      $params['features'] = $this->ssg->features;
 
-      /// collect items from each for_use_by value
-      $azItems = [];
-      foreach ( $page['for_use_by'] as $fub )
-      {
-        if ( empty($this->ssg->siteIndexAZ[$fub]) ) { continue; }
-        foreach ( array_keys($this->ssg->siteIndexAZ[$fub]) as $letter )
-        {
-          $letter = strtoupper($letter);
-          if ( !isset($azItems[$letter]) ) 
-          {
-            $azItems[$letter] = [];
-          }
-          $azItems[$letter] = array_merge($azItems[$letter],$this->ssg->siteIndexAZ[$fub][$letter]);
-        }
-      }
-      foreach ( array_keys($azItems) as $letter )
-      {
-        array_multisort(
-            array_column($azItems[$letter],'title'), SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
-          $azItems[$letter]);    
-      }
-      $params['AZItems'] = $azItems;
       $params['currentAZLetter'] = null;
-  
-      $features = [];
-      foreach ( $page['for_use_by'] as $fub )
-      {
-          if ( !empty($this->ssg->features[$fub]) )
-          {
-              foreach ( array_keys($this->ssg->features[$fub]) as $featureKey )
-              {
-                  $features[] =& $this->ssg->features[$fub][$featureKey];
-              }
-          }
-      }
-      array_multisort(
-        array_column($features,'created'), SORT_ASC,
-        array_column($features,'changed'), SORT_ASC,
-      $features);    
-      $params['features'] = $features;
 
       if ( $page['pageType']=='Features' 
         && empty($params['currentPage']) )
