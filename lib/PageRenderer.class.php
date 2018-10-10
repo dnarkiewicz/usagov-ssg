@@ -477,7 +477,7 @@ class PageRenderer
       }
 
       $params['siteName'] = $fub;
-      $params['sitePage'] = $this->ssg->sitePage[$fub];
+      $params['sitePage'] = $this->ssg->sitePage;
       $params['siteUrl'] = $this->ssg->config['siteUrl'];
 
       $params['entities'] = $this->ssg->source->entities;
