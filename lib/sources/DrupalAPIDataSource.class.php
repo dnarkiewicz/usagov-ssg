@@ -34,7 +34,6 @@ class DrupalAPIDataSource extends DataSource
       $loadStartTime = microtime(true);
       try
       {
-
         $client   = new \GuzzleHttp\Client(['base_uri' => $server, 'verify' => false]);
         $query = [
           'page_size'=>$batchSize,

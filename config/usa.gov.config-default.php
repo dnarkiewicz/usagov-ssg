@@ -11,7 +11,7 @@ $config = [
     'server'       => 'https://usa-cmp-test.gsa.ctacdev.com',
     'redirectsUrl' => '/usaapi/redirects',
     'entitiesUrl'  => '/usaapi/entities',
-    'batchSize'    => 100
+    'batchSize'    => 50
   ],
   'templateSync' => [
     'repo_url'    => '',

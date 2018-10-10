@@ -68,10 +68,20 @@ class ConfigLoader
             putenv('AWS_SECRET_ACCESS_KEY='.$secretKey);
         }
 
+        $allowedForUseBy = variable_get('ssg_allowedForUseBy');
+        if ( is_string($allowedForUseBy) )
+        {
+            $allowedForUseBy = preg_split("/\s+,+\s+/",$allowedForUseBy);
+        }
+        if ( !is_array($allowedForUseBy) )
+        {
+            $allowedForUseBy = [variable_get('ssg_siteName')];
+        }
+
         return [
             'siteName'    => variable_get('ssg_siteName'),
             'siteUrl'     => variable_get('ssg_siteUrl'),
-            'allowedForUseBy' => variable_get('ssg_allowedForUseBy'),
+            'allowedForUseBy' => $allowedForUseBy,
             'permDir'     => variable_get('ssg_permDir'),
             'tempDir'     => variable_get('ssg_tempDir'),
             'featuresPageBatchSize' => variable_get('ssg_featuresPageBatchSize'),
