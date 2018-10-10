@@ -181,7 +181,7 @@ class StaticSiteGenerator
         // $this->homePage     = null;
         // $this->topicsPage   = null;
         $this->pageTypes       = [];
-        $this->subSite         = [];
+        // $this->subSite         = [];
         $this->directoryRecordGroups = [];
         $this->features        = [];
         $this->featuresByTopic = [];
@@ -1226,22 +1226,22 @@ class StaticSiteGenerator
     {
         if ( empty($this->sitePage) )
         {
-            $this->log("Render Site: no site found\n");
+            $this->log("Rendering Site: no sites found\n");
             return false;
         }
         /// render content pages
         foreach ( $this->sitePage as $siteName => $sitePage ) 
         {
-            $this->log("Render: $siteName pages\n");
+            $this->log("Rendering: $siteName pages\n");
             $this->renderTree($sitePage);
         }
 
         /// render redirects
-        $this->log("Render: redirects\n");
+        $this->log("Rendering: redirects\n");
         $redirectResult = $this->renderRedirects();
 
         /// copy over static assets - to multiple locations
-        $this->log("Render: asset files\n");
+        $this->log("Rendering: asset files\n");
         $assetDestBaseDirs = [
             "{$this->siteDir}",
             "{$this->siteDir}/sites/all/themes/usa"
@@ -1263,7 +1263,7 @@ class StaticSiteGenerator
         }
 
         /// copy over static files - to one location
-        $this->log("Render: static files\n");
+        $this->log("Rendering: static files\n");
         $sourceStaticDir = $this->templates->destStaticDir;
         $destStaticDir   = "{$this->siteDir}/staticroot";
         $this->copy_recurse($sourceStaticDir,$destStaticDir);        
@@ -1271,7 +1271,7 @@ class StaticSiteGenerator
         // if ( empty($treeResult) ||  empty($redirectResult) ) {
         //     $this->log("Render Site: failed\n");
         // } else {
-            $this->log("Render Site: done\n");
+            $this->log("Rendering Site: done\n");
         // }
         // return $redirectResult;
         return true;

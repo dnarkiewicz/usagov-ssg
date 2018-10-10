@@ -53,7 +53,7 @@ class ConfigLoader
             return [];
         }
         /// prod env should already have these
-        /// but docker may not, so we try and set them here
+        /// but local env may not, so we try and set them here
         /// with proper config this should not be necessary
         $envAccessKey = getenv('AWS_ACCESS_KEY_ID');
         $accessKey    = getenv('CMP_AWS_ACCESS_KEY');
@@ -71,14 +71,14 @@ class ConfigLoader
         $allowedForUseBy = variable_get('ssg_allowedForUseBy');
         if ( is_string($allowedForUseBy) )
         {
-            $allowedForUseBy = preg_split("/\s+,+\s+/",$allowedForUseBy);
+            $allowedForUseBy = preg_split("/\s*,\s*/",$allowedForUseBy);
         }
         if ( !is_array($allowedForUseBy) )
         {
             $allowedForUseBy = [variable_get('ssg_siteName')];
         }
 
-        return [
+        $config = [
             'siteName'    => variable_get('ssg_siteName'),
             'siteUrl'     => variable_get('ssg_siteUrl'),
             'allowedForUseBy' => $allowedForUseBy,
@@ -108,7 +108,8 @@ class ConfigLoader
                     'key'    => getenv('CMP_AWS_ACCESS_KEY'),
                     'secret' => getenv('CMP_AWS_SECRET_KEY'),
                 ]
-              ]
+            ]
         ];
+        return $config;
     }
 }
