@@ -135,8 +135,12 @@ class PageRenderer
               $this->ssg->log("UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n");
               return null;
           }
-          $_url = str_pad( $url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )) ); 
-          $this->ssg->log("Page: {$_url} type: {$page['pageType']} \n");
+          if ( $this->runtimeEnvironment == 'commandline' )
+          {
+            $_url = str_pad( $url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )) ); 
+            $_type = str_pad( $page['pageType'], (strlen($page['pageType'])+( 25 - ( strlen($page['pageType']) % 25 ) )) ); 
+            $this->ssg->log("Path: {$_type}  {$_url}\n",false);
+          }
           $path = trim($url,'/ ');
 
           $fileDir = $this->ssg->siteDir.'/'.$path;
@@ -208,9 +212,13 @@ class PageRenderer
                 $subPageParams['currentAZLetter'] = $letter;
 
                 $html  = $twig->render($subPageParams);
-                $_url = '/'.$path.'/'.strtolower($letter);
-                $_url = str_pad( $_url, (strlen($_url)+( 25 - ( strlen($_url) % 25 ) )) ); 
-                $this->ssg->log("Page: {$_url} type: {$page['pageType']}\n");
+                if ( $this->runtimeEnvironment == 'commandline' )
+                {
+                    $_url = '/'.$path.'/'.strtolower($letter);
+                    $_url = str_pad( $_url, (strlen($_url)+( 25 - ( strlen($_url) % 25 ) )) ); 
+                    $_type = str_pad( $page['pageType'], (strlen($page['pageType'])+( 25 - ( strlen($page['pageType']) % 25 ) )) ); 
+                    $this->ssg->log("Path: {$_type}  {$_url}\n",false);
+                }
                 if ( !empty($html) )
                 {
                     /// directory for path

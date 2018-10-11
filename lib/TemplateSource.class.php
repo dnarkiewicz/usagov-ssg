@@ -65,14 +65,10 @@ class TemplateSource
         //     return true;
         // }
 
-        if ( !$this->sourceRepoExists() )
+        if ( !$this->sourceRepoExists() || $this->freshTemplates )
         { 
             $this->cloneRepo();
             $this->pullSourceRepo();
-        } else if ( $this->freshTemplates ) {
-            $this->pullSourceRepo();
-            // } else {
-            //     $this->checkoutBranch();
         }
 
         /// even if source is bad, we might have a local copy  of templates to use
