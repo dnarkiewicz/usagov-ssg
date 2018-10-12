@@ -128,7 +128,7 @@ class TemplateSource
 
         $chown_cmd = "chown -R www-data:www-data {$this->sourceDir}";
         // $this->ssg->log($chmod_cmd."\n",false);
-        $rslt = `{$chmod_cmd} 2>&1`;
+        $rslt = `{$chown_cmd} 2>&1`;
 
         return true;
     }
