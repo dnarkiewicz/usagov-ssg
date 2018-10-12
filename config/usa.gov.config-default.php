@@ -18,7 +18,11 @@ $config = [
     'repo_user'   => '',
     'repo_pass'   => '',
     'repo_branch' => '',
-    'repo_template_dir' => ''
+    'repo_template_dir' => '',
+    'repo_asset_base'   => 'assets',
+    'repo_asset_dirs'   => [ 'js', 'css', 'fonts', 'images' ],
+    'repo_static_base'  => 'staticroot',
+    'repo_asset_dirs'   => [ '*' ],
   ],
   'aws' => [
     'aws_access_key_id'     => '',
