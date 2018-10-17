@@ -42,27 +42,27 @@ timer('Load Data');
 $site->loadData();
 timer('Load Data');
 
-timer('Build');
-$site->buildSiteTreeFromEntities();
-timer('Build');
+// timer('Build');
+// $site->buildSiteTreeFromEntities();
+// timer('Build');
 
-timer('Load Templates');
-$site->loadTemplates();
-timer('Load Templates');
+// timer('Load Templates');
+// $site->loadTemplates();
+// timer('Load Templates');
 
-timer('Render');
-$site->renderSite();
-timer('Render');
+// timer('Render');
+// $site->renderSite();
+// timer('Render');
 
-// timer('Validate');
-// if ($site->validateSite() && $syncToDestination) {
-    // timer('Validate');
-if ( $syncToDestination )
-{
-    timer('Deploy');
-    $site->destination->sync();
-    timer('Deploy');
-}
+// // timer('Validate');
+// // if ($site->validateSite() && $syncToDestination) {
+//     // timer('Validate');
+// if ( $syncToDestination )
+// {
+//     timer('Deploy');
+//     $site->destination->sync();
+//     timer('Deploy');
+// }
 
 // timer();
 

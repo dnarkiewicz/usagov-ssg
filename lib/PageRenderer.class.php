@@ -217,7 +217,7 @@ class PageRenderer
                     $_url = '/'.$path.'/'.strtolower($letter);
                     $_url = str_pad( $_url, (strlen($_url)+( 25 - ( strlen($_url) % 25 ) )) ); 
                     $_type = str_pad( $page['pageType'], (strlen($page['pageType'])+( 25 - ( strlen($page['pageType']) % 25 ) )) ); 
-                    $this->ssg->log("Path: {$_type}  {$_url}\n",false);
+                    $this->ssg->log("Page: {$_type}  {$_url}\n",false);
                 }
                 if ( !empty($html) )
                 {
@@ -231,7 +231,6 @@ class PageRenderer
                     chmod( $fileDir, 0755 );
                     file_put_contents( $file, $html );
                     array_unshift( $paths, $path.'/'.strtolower($letter) );
-
                 } else {
                     $msg = "Render Failed<br />\nPath: /".$path.'/'.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
                     if ( $this->renderPageOnFailure )
