@@ -479,7 +479,7 @@ class StaticSiteGenerator
                     $this->source->entities[$this->source->entities[$uuid]['parent_uuid']]['children'][] = [
                         'uuid' => $uuid,
                         'tid'  => $this->source->entities[$uuid]['tid'],
-                    ];    
+                    ];
                 }
             }
             /// verify all my content items are legit
@@ -494,10 +494,10 @@ class StaticSiteGenerator
                               !array_key_exists($content['uuid'],$this->source->entities) )
                             || $this->source->entities[$content['uuid']]['deleted']==1 )
                         {
-                            unset($this->source->entities[$uuid][$region_field][$c]); 
+                            unset($this->source->entities[$uuid][$region_field][$c]);
                         }
                     }
-                }                    
+                }
             }
         }
 
@@ -642,7 +642,7 @@ class StaticSiteGenerator
         $this->buildMenus();
 
         /// undo all references get copies instead of references
-        /// so we can save to cache as json_encoded thing
+        /// so we can save to cache
         foreach ( array_keys($this->pages) as $uuid )
         {
             $this->pages[$uuid] = $this->source->entities[$uuid];
@@ -1167,7 +1167,7 @@ class StaticSiteGenerator
             {
                 $renderedPages++;
             } else {
-                $this->log("Invalid: {$url} // {$page['uuid']}\n");
+                $this->log("Invalid: {$url} : {$page['uuid']}\n");
             }
 
             /// some special pages generate further sub-pages

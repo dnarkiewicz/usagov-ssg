@@ -7,8 +7,6 @@ class DrupalAPIDataSource extends DataSource
 
   public function getEntities( $since=0 )
   {
-    $since = 1539806468;
-
     $tunit=['sec','min','hour'];
 
     /// fetch from drupal api
@@ -119,18 +117,17 @@ class DrupalAPIDataSource extends DataSource
           $this->entities[$result['uuid']] = $entity;
           $this->entities[$result['uuid']]['pageType'] = $this->ssg->getPageType($entity);
           if ( !empty(intval($since)) ) {
-            // print_r($entity);
             $title = '';
-            if ( !empty($entity['title']) ) { 
+            if ( !empty($entity['title']) ) {
               $title = $entity['title'];
             } else if ( !empty($entity['name']) ) {
               $title = $entity['name'];
             }
             $type = '';
-            if ( !empty($this->entities[$result['uuid']]['pageType']) ) 
+            if ( !empty($this->entities[$result['uuid']]['pageType']) )
             {
               $type = $this->entities[$result['uuid']]['pageType'];
-            } else if ( !empty($entity['type']) ) { 
+            } else if ( !empty($entity['type']) ) {
               $type = $entity['type'];
             }
             $this->ssg->log("\nimporting {$type} title:{$title}");
@@ -147,7 +144,6 @@ class DrupalAPIDataSource extends DataSource
       
       $n = ( !empty(intval($since)) ) ? "\n" : '';
       $this->ssg->log("$n ... entities($acceptedCount/$processedCount/$totalCount) process($processTime)");
-      
 
       $currentPage++;
       if ( $totalPages !== null && $currentPage >= $totalPages )

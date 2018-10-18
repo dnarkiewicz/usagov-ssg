@@ -452,7 +452,7 @@ class PageRenderer
             try {
                 $this->templates[$name] = $this->templateRenderer->load($name.'.twig');
             } catch (Exception $e) { 
-                $this->ssg->log("Templates: $name.twig failed to load\n");
+                $this->ssg->log("Templates: {$name}.twig failed to load :".$e->getMessage()."\n",false);
                 $this->templates[$name] = null;
             }
         }
