@@ -50,14 +50,10 @@ class StaticSiteGenerator
         $this->siteIndexAZ  = [];
         $this->stateAcronyms = [];
 
-        $this->runtimeEnvironment = 'standalone';
-        $this->determineRuntimeEnvironment();
-
-
         $configLoader = new ConfigLoader();
         $this->config = $configLoader->loadConfig($configName);
 
-        if ( $this->runtimeEnvironment == 'drupal' )
+        if ( $this->runtimeEnvironment() == 'drupal' )
         {
             if ( function_exists('_s3fs_get_config') )
             {
@@ -73,7 +69,7 @@ class StaticSiteGenerator
                 $this->log("SSG error : requires S3FS Module",false);
                 return;
             }
-        } else if ( $this->runtimeEnvironment == 'standalone' ) {
+        } else if ( $this->runtimeEnvironment() == 'standalone' ) {
             if ( class_exists('\Aws\S3\S3Client') )
             {
                 $this->s3 = \Aws\S3\S3Client::factory($this->config['aws']);

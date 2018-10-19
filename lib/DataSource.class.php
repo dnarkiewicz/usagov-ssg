@@ -19,7 +19,7 @@ class DataSource
 		$this->entities     = [];
 		$this->redirects    = [];
 		$this->freshData    = false;
-		$this->updateData   = true;
+        $this->updateData   = true;
 	}
 
 	public function pull( $since=0 )
