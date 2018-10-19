@@ -1013,71 +1013,70 @@ class StaticSiteGenerator
         $redirectResult = $this->renderRedirects();
 
         /// copy over static assets - to multiple locations
-        $this->log("Rendering: asset files\n");
+        // $this->log("Rendering: asset files\n");
         $assetDestBaseDirs = [
             "{$this->siteDir}",
             "{$this->siteDir}/sites/all/themes/usa"
         ];
-        $assetDestDirs = $this->config['templateSync']['repo_asset_dirs'];
-        if ( empty($assetDestDirs) )
+        $assetDirs = $this->config['templateSync']['repo_asset_dirs'];
+        if ( empty($assetDirs) )
         {
-            $assetDestDirs[] = '*';
+            $assetDirs[] = '*';
         }
-        foreach ( $assetDestBaseDirs as $destBaseDir )
+        foreach ( $assetDirs as $sourceDir )
         {
-            foreach ( $assetDestDirs as $destDir )
+            $this->log("Rendering: assets from /{$this->config['templateSync']['repo_asset_base']}/{$sourceDir}\n",false);
+            foreach ( $assetDestBaseDirs as $destBaseDir )
             {
-                if ( $destDir == '*' )
+                if ( $sourceDir == '*' )
                 {
                     $fromDir = "{$this->templates->sourceAssetDir}";
-                    $intoDir   = "{$destBaseDir}";
+                    $intoDir = "{$destBaseDir}";
                 } else {
-                    $fromDir = "{$this->templates->sourceAssetDir}/{$destDir}";
-                    $intoDir   = "{$destBaseDir}/{$destDir}";
+                    $fromDir = "{$this->templates->sourceAssetDir}/{$sourceDir}";
+                    $intoDir = "{$destBaseDir}/{$sourceDir}";
                 }
-                $this->log("\n\nCP ASSETS $fromDir >> $intoDir\n",false);
-                // if ( is_dir($fromDir) )
-                // {
-                //     $this->prepareDir($intoDir);
-                //     $this->copyDir($fromDir,$intoDir);
-                //     $this->chmodDir($intoDir,0744);
-                //     $this->chownDir($intoDir);
-                // }
+                if ( is_dir($fromDir) )
+                {
+                    $this->prepareDir($intoDir);
+                    $this->copyDir($fromDir,$intoDir);
+                    $this->chmodDir($intoDir,0744);
+                    $this->chownDir($intoDir);
+                }
             }
         }
 
         /// copy over static files - to one location
-        $this->log("Rendering: static files\n");
+        // $this->log("Rendering: static files\n");
         $staticDestBaseDirs = [
             "{$this->siteDir}"
         ];
-        $staticDestDirs     = $this->config['templateSync']['repo_static_dirs'];
-        if ( empty($staticDestDirs) )
+        $staticDirs = $this->config['templateSync']['repo_static_dirs'];
+        if ( empty($staticDirs) )
         {
-            $staticDestDirs[] = '*';
+            $staticDirs[] = '*';
         }
-        foreach ( $staticDestBaseDirs as $destBaseDir )
+        foreach ( $staticDirs as $sourceDir )
         {
-            foreach ( $staticDestDirs as $destDir )
+            $this->log("Rendering: static files from /{$this->config['templateSync']['repo_static_base']}/{$sourceDir}\n",false);
+            foreach ( $staticDestBaseDirs as $destBaseDir )
             {
-                if ( $destDir == '*' )
+                if ( $sourceDir == '*' )
                 {
                     $fromDir = "{$this->templates->sourceStaticDir}";
                     $intoDir   = "{$destBaseDir}";
                 } else {
-                    $fromDir = "{$this->templates->sourceStaticDir}/{$destDir}";
-                    $intoDir   = "{$destBaseDir}/{$destDir}";
+                    $fromDir = "{$this->templates->sourceStaticDir}/{$sourceDir}";
+                    $intoDir   = "{$destBaseDir}/{$sourceDir}";
                 }
 
-        $this->log("\n\nCP STATIC $fromDir >> $intoDir\n",false);
-        echo `ls $fromDir`;
-                // if ( is_dir($fromDir) )
-                // {
-                //     $this->prepareDir($intoDir);
-                //     $this->copyDir($fromDir,$intoDir);
-                //     $this->chmodDir($intoDir,0744);
-                //     $this->chownDir($intoDir);
-                // }
+                if ( is_dir($fromDir) )
+                {
+                    $this->prepareDir($intoDir);
+                    $this->copyDir($fromDir,$intoDir);
+                    $this->chmodDir($intoDir,0744);
+                    $this->chownDir($intoDir);
+                }
             }
         }
 

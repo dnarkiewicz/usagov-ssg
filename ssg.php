@@ -1,5 +1,5 @@
 <?php
-
+ 
 namespace ctac\ssg;
 
 require_once 'vendor/autoload.php';
