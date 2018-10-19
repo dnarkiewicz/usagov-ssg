@@ -4,6 +4,7 @@ namespace ctac\ssg;
 
 class DrupalAPIDataSource extends DataSource
 {
+  use LoggingTrait;
 
   public function getEntities( $since=0 )
   {
@@ -40,7 +41,7 @@ class DrupalAPIDataSource extends DataSource
           'page'=>$currentPage
         ];
         if ( !empty(intval($since)) ) {
-          $this->log("\nLOADING since(".date('Y/m/d H:i:s',$since).")\n");
+          $this->log("\nLOADING since(".date('Y/m/d H:i:s',$since).")");
           $query['since'] = intval($since);
         }
 
