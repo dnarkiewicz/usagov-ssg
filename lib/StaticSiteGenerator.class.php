@@ -1025,7 +1025,7 @@ class StaticSiteGenerator
         }
         foreach ( $assetDirs as $sourceDir )
         {
-            $this->log("Rendering: assets from /{$this->config['templateSync']['repo_asset_base']}/{$sourceDir}\n",false);
+            $this->log("Rendering: assets from /{$this->config['templateSync']['repo_asset_base']}/{$sourceDir}\n");
             foreach ( $assetDestBaseDirs as $destBaseDir )
             {
                 if ( $sourceDir == '*' )
@@ -1058,7 +1058,7 @@ class StaticSiteGenerator
         }
         foreach ( $staticDirs as $sourceDir )
         {
-            $this->log("Rendering: static files from /{$this->config['templateSync']['repo_static_base']}/{$sourceDir}\n",false);
+            $this->log("Rendering: static files from /{$this->config['templateSync']['repo_static_base']}/{$sourceDir}\n");
             foreach ( $staticDestBaseDirs as $destBaseDir )
             {
                 if ( $sourceDir == '*' )
