@@ -25,19 +25,19 @@ class TemplateSource
         $this->ssg = &$ssg;
 
         $repoBaseDir = strtolower(basename($this->ssg->config['templateSync']['repo_url'],'.git'));
-        $this->sourceDir         = $this->ssg->config['tempDir'].'/'.$repoBaseDir;
+        $this->sourceDir         = $this->ssg->config['tempDir'].($repoBaseDir[0]=='/'? '':'/').$repoBaseDir;
 
         $repoTemplateDir = $this->ssg->config['templateSync']['repo_template_dir'];
         $repoTemplateDir = preg_replace('(^[\.\/]|[\.\/]$)','',$repoTemplateDir);
-        $this->sourceTemplateDir = $this->sourceDir.'/'.$repoTemplateDir;
+        $this->sourceTemplateDir = $this->sourceDir.($repoTemplateDir[0] =='/'? '':'/').$repoTemplateDir;
 
         $repoAssetBaseDir = $this->ssg->config['templateSync']['repo_asset_base'];
         $repoAssetBaseDir = preg_replace('(^[\.\/]|[\.\/]$)','',$repoAssetBaseDir);
-        $this->sourceAssetDir    = $this->sourceDir.'/'.$repoAssetBaseDir;
+        $this->sourceAssetDir    = $this->sourceDir.($repoAssetBaseDir[0]=='/'? '':'/').$repoAssetBaseDir;
 
         $repoStaticBaseDir = $this->ssg->config['templateSync']['repo_static_base'];
         $repoStaticBaseDir = preg_replace('(^[\.\/]|[\.\/]$)','',$repoStaticBaseDir);
-        $this->sourceStaticDir   = $this->sourceDir.'/'.$repoStaticBaseDir;
+        $this->sourceStaticDir   = $this->sourceDir.($repoStaticBaseDir[0]=='/'? '':'/').$repoStaticBaseDir;
 
         // $this->destDir           = $this->ssg->config['permDir'];
         // $this->destTemplateDir   = $this->destDir.'/templates/twig/'.$repoTemplateDir;
@@ -163,7 +163,7 @@ class TemplateSource
                      ." && git checkout {$this->ssg->config['templateSync']['repo_branch']}" // 2>&1 >/dev/null
                      ." && git fetch"
                      ." && git pull";
-        // $this->log($update_cmd."\n");
+        $this->log($update_cmd."\n");
         $rslt = `{$update_cmd} 2>&1`; // >/dev/null
         if ( strpos($rslt, 'error') === 0 ) {
             $this->log("Error - Could not pull \"{$this->ssg->config['templateSync']['repo_branch']}\" from source-repo.\n");
