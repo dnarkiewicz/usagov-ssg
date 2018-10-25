@@ -23,12 +23,16 @@ $site = new StaticSiteGenerator('USA.gov');
 $syncToDestination = false;
 $fractalExamples   = false;
 
+$site->renderer->renderPageOnFailure = true;
 foreach ($argv as $arg) {
     if (isset($arg) && $arg=='--fresh-data') {
         $site->source->freshData = true;
     }
     if (isset($arg) && $arg=='--fresh-templates') {
         $site->templates->freshTemplates = true;
+    }
+    if (isset($arg) && $arg=='--update-templates') {
+        $site->templates->updateTemplates = true;
     }
     if (isset($arg) && $arg=='--no-debug-pages') {
         $site->renderer->renderPageOnFailure = false;
