@@ -156,7 +156,6 @@ class StaticSiteGenerator
             if ( isset($entity['tid']) && isset($entity['vocabulary_machine_name'])
                  && $entity['vocabulary_machine_name']=='site_strucutre_taxonomy' )
             {
-
                 $this->pages[$uuid] =& $this->source->entities[$uuid];
                 if ( !empty($entity['pageType']) 
                   && !array_key_exists($entity['pageType'],$this->pageTypes) )
@@ -731,7 +730,7 @@ class StaticSiteGenerator
         {
             if ( !empty($this->source->entities[$menuItem['uuid']]) )
             {
-               $menuItem['menu'] = $this->buildMainNavSubMenu($this->source->entities[$menuItem['uuid']]);
+                $menuItem['menu'] = $this->buildMainNavSubMenu($this->source->entities[$menuItem['uuid']]);
             }
         }
 
