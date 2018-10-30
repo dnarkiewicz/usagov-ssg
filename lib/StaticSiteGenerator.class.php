@@ -714,12 +714,15 @@ class StaticSiteGenerator
     }
     public function buildMainNavMenu($page) 
     {
+        // menu item's must also have a css field, but that is taken care of at the template level
         $menu = [];
         $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu','generate_page']);
-        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu','generate_page']);
+        $menu = $directChildren;
+        // $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu','generate_page']);
+        // $menu = array_merge($directChildren, $alsoInclude);
 
-        $menu = array_merge($directChildren, $alsoInclude);
         array_multisort(
+            array_column($menu,'weight'),SORT_ASC,
             array_column($menu,'name'),  SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($menu,'tid'),   SORT_ASC,
         $menu);
