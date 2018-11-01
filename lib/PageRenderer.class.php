@@ -107,11 +107,11 @@ class PageRenderer
 
     public function renderPage(&$page)
     {
-          $paths = [];
-          /// PATH
-          $url = $this->getPageUrl($page);
+        $paths = [];
+        /// PATH
+        $url = $this->getPageUrl($page);
         if (empty($url)) {
-          /// not renderable
+            /// not renderable
             $this->log("UnRenderable: no url for {$page['name']} {$page['friendly_url']}\n");
             return null;
         }
@@ -119,25 +119,28 @@ class PageRenderer
             $this->log("UnRenderable: no type for $url ({$page['pageType']}) \"{$page['name']}\"\n");
             return null;
         }
-          $path = trim($url, '/ ');
+        $path = trim($url, '/ ');
 
-          $fileDir = $this->ssg->siteDir.'/'.$path;
-          $file = $fileDir.'/index.html';
-          /// TEMPLATE
+        $fileDir = $this->ssg->siteDir.'/'.$path;
+        $file = $fileDir.'/index.html';
+        /// TEMPLATE
 
         if ($this->runtimeEnvironment() == 'standalone') {
             $_url = str_pad($url, (strlen($url)+( 25 - ( strlen($url) % 25 ) )));
             $_type = str_pad($page['pageType'], (strlen($page['pageType'])+( 25 - ( strlen($page['pageType']) % 25 ) )));
-            $this->log("Path: {$_type}  {$file}\n", false);
+            $this->log("Path: {$_type}  {$path}\n", false);
         }
 
-          $twig = $this->getTwigPageRenderer($page);
+        $twig = $this->getTwigPageRenderer($page);
         if (empty($twig)) {
-          /// directory for path
-            if (!file_exists($fileDir)) {
-                mkdir($fileDir, 0755, true);
+            /// directory for path
+            if ( !file_exists($fileDir) ) {
+                @mkdir($fileDir, 0755, true);
+            } else if ( !is_dir($fileDir) ) {
+                @unlink($fileDir);
+                @mkdir($fileDir, 0755, true);
             }
-            chmod($fileDir, 0755);
+            @chmod($fileDir, 0755);
             $msg = "No renderer found <br />\nPath:".$path." <br />\nType: ".$page['pageType']." <br />\nName: ".$page['name'];
             if ($this->renderPageOnFailure) {
                 file_put_contents($file, $msg);
@@ -145,32 +148,38 @@ class PageRenderer
             $this->log(preg_replace('/(\<br \/\>|\n)/', '', $msg)."\n");
             return null;
         }
-          /// METADATA FOR RENDERING
-          $pageParams = [];
-          $this->processPageParams($page, $pageParams);
+        /// METADATA FOR RENDERING
+        $pageParams = [];
+        $this->processPageParams($page, $pageParams);
 
         if (empty($pageParams)) {
             $this->log("UnRenderable: no params for $url ({$page['pageType']}) \"{$page['name']}\"\n");
             return null;
         }
 
-          $html = $twig->render($pageParams);
-          $html = trim($html);
+        $html = $twig->render($pageParams);
+        $html = trim($html);
         if (!empty($html)) {
-          /// directory for path
-            if (!file_exists($fileDir)) {
-                mkdir($fileDir, 0755, true);
+            /// directory for path
+            if ( !file_exists($fileDir) ) {
+                @mkdir($fileDir, 0755, true);
+            } else if ( !is_dir($fileDir) ) {
+                @unlink($fileDir);
+                @mkdir($fileDir, 0755, true);
             }
-            chmod($fileDir, 0755);
+            @chmod($fileDir, 0755);
             if (empty(file_put_contents($file, $html))) {
                 $msg = "Write Failed\nPath:".$file." \nType: ".$page['pageType']." \nName: ".$page['name']."\n";
                 $this->log($msg);
             }
         } else {
-            if (!file_exists($fileDir)) {
-                mkdir($fileDir, 0755, true);
+            if ( !file_exists($fileDir) ) {
+                @mkdir($fileDir, 0755, true);
+            } else if ( !is_dir($fileDir) ) {
+                @unlink($fileDir);
+                @mkdir($fileDir, 0755, true);
             }
-            chmod($fileDir, 0755);
+            @chmod($fileDir, 0755);
             $msg = "Render Failed<br />\nPath:".$path." <br />\nType: ".$page['pageType']." <br />\nName: ".$page['name'];
             if ($this->renderPageOnFailure) {
                 file_put_contents($file, $msg);
@@ -178,9 +187,9 @@ class PageRenderer
             $this->log(preg_replace('/(\<br \/\>|\n)/', '', $msg)."\n");
         }
 
-          /// some special pages generate further sub-pages
-          $rev = array_reverse($page['for_use_by']);
-          $fub = array_pop($rev);
+        /// some special pages generate further sub-pages
+        $rev = array_reverse($page['for_use_by']);
+        $fub = array_pop($rev);
         if ($page['pageType'] == 'AZPage') {
           /// render one sub-page per letter
             foreach ($this->ssg->siteIndexAZ[$fub] as $letter => $azItems) {
@@ -196,17 +205,27 @@ class PageRenderer
                     // $this->log("Path: {$_type}  {$_url}\n",false);
                 }
                 if (!empty($html)) {
-                /// directory for path
+                    /// directory for path
                     $fileDir = $this->ssg->siteDir.'/'.$path.'/'.strtolower($letter);
                     $file = $fileDir.'/'.'index.html';
-                    if (!file_exists($fileDir)) {
-                        mkdir($fileDir, 0755, true);
+                    if ( !file_exists($fileDir) ) {
+                        @mkdir($fileDir, 0755, true);
+                    } else if ( !is_dir($fileDir) ) {
+                        @unlink($fileDir);
+                        @mkdir($fileDir, 0755, true);
                     }
-                    chmod($fileDir, 0755);
+                    @chmod($fileDir, 0755);
                     file_put_contents($file, $html);
                     array_unshift($paths, $path.'/'.strtolower($letter));
                 } else {
                     $msg = "Render Failed<br />\nPath: /".$path.'/'.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
+                    if ( !file_exists($fileDir) ) {
+                        @mkdir($fileDir, 0755, true);
+                    } else if ( !is_dir($fileDir) ) {
+                        @unlink($fileDir);
+                        @mkdir($fileDir, 0755, true);
+                    }
+                    @chmod($fileDir, 0755);
                     if ($this->renderPageOnFailure) {
                         file_put_contents($file, $msg."<pre>".print_r($page, 1)."</pre>");
                     }
@@ -324,8 +343,8 @@ class PageRenderer
                 $paths = array_merge($paths, $subPaths);
             }
         }
-          array_unshift($paths, $path);
-          return $paths;
+        array_unshift($paths, $path);
+        return $paths;
     }
 
     public function renderRedirect($redirect)
@@ -365,14 +384,162 @@ class PageRenderer
             </html>";
         $html = trim($html);
         if (!empty($html)) {
-        /// directory for path
-            if (!file_exists($fileDir)) {
-                mkdir($fileDir, 0755, true);
+            /// directory for path
+            if ( !file_exists($fileDir) ) {
+                @mkdir($fileDir, 0755, true);
+            } else if ( !is_dir($fileDir) ) {
+                @unlink($fileDir);
+                @mkdir($fileDir, 0755, true);
             }
-            chmod($fileDir, 0755);
-            file_put_contents($file, $html);
+            @chmod($fileDir, 0755);
+            @file_put_contents($file, $html);
         }
         return true;
+    }
+
+    public function renderFeed($feed)
+    {
+        $path    = ltrim( $this->sanitizeForUrl( $feed['friendly_url']) ,'/');
+        $file    = $this->ssg->siteDir.'/'.$path;
+        $fileDir = dirname($file);
+        $url    = 'https://'.$this->ssg->config['siteUrl'].'/'.$path;
+
+        switch ( $feed['feed_type'] )
+        {
+            case 'RSS Feed':
+                $output = $feed['feed_rss_markup'];
+                $contentTypeHeader = 'application/rss+xml; charset=utf-8';
+                break;
+            case 'JSON Feed':
+                $output = $feed['json_feed_markup'];
+                $contentTypeHeader = 'application/json; charset=utf-8';
+                break;
+            default:
+                return false;
+        }
+
+        $matches = [];
+        preg_match_all( "/\[[^\]\s]+?\]/", $output, $matches );
+        if ( !empty($matches[0]) )
+        {
+            foreach ( $matches[0] as $match )
+            {
+                $match = trim($match);
+                switch ( $match )
+                {
+                    case '[request-path]':
+                        $output = str_replace($match, $path, $output);
+                        break;
+                    case '[items]':
+                        $output = str_replace($match, $this->renderFeedItems($feed), $output);
+                        break;
+                    case '[description]':
+                        $output = str_replace($match, $feed['body'], $output);
+                        break;
+                    case '[callback]':
+                        $output = str_replace('[callback]', 'callback', $output);
+                    default:
+                        $field = trim($match,'[] ');
+                        if ( array_key_exists($field,$feed) )
+                        {
+                            $output = str_replace($match, $feed[$field], $output);
+                        }
+                }
+            }
+        }
+
+        /// directory for path
+        if ( !file_exists($fileDir) ) {
+            @mkdir($fileDir, 0755, true);
+        } else if ( !is_dir($fileDir) ) {
+            @unlink($fileDir);
+            @mkdir($fileDir, 0755, true);
+        }
+        @chmod($fileDir, 0755);
+
+        if (empty(file_put_contents($file, $output))) {
+            $msg = "Write Failed Path:".$path." Type: ".$feed['feed_type']." Name: ".$feed['title']."\n";
+            $this->log($msg);
+        } else if ($this->runtimeEnvironment() == 'standalone') {
+            $_url = str_pad($path, (strlen($path)+( 25 - ( strlen($path) % 25 ) )));
+            $_type = str_pad($feed['feed_type'], (strlen($feed['feed_type'])+( 25 - ( strlen($feed['feed_type']) % 25 ) )));
+            $this->log("Path: {$_type}  {$_url}\n",false);
+        }
+        return [$path];
+    }
+    public function renderFeedItems($feed)
+    {
+        $output = '';
+        switch ( $feed['feed_type'] )
+        {
+            case 'RSS Feed':
+                $itemMarkup = "
+                <item>
+                    <title>[title]</title>
+                    <pubDate>[pubDate]</pubDate>
+                    <link>[link]</link>
+                    <description>[description]</description>
+                </item>";
+                $dateFormat = 'M d, Y H:i:s';
+                break;
+            case 'JSON Feed':
+                $itemMarkup = '
+                {
+                    "ARTICLE": "CONTENT FLAG SET TO NO",
+                    "LASTUPDATE": "[pubDate]",
+                    "TITLE": "[title]",
+                    "URL": "[link]"
+                }';
+                $dateFormat = 'm/d/Y';
+                break;
+            default:
+                return $output;
+        }
+
+        if ( !empty($feed['feed_items']) )
+        {
+            foreach ( $feed['feed_items'] as $item )
+            {
+                if ( !array_key_exists($item['uuid'],$this->ssg->source->entities) )
+                {
+                    continue;
+                }
+                $node =& $this->ssg->source->entities[$item['uuid']];
+
+                $dt = new \DateTime(
+                    $node['feed_item_pubdate']['value'],
+                    new \DateTimeZone($node['feed_item_pubdate']['timezone'])
+                );
+
+                $itemOutput = $itemMarkup;
+                $itemOutput = str_replace('[title]',       $node['title'],           $itemOutput);
+                $itemOutput = str_replace('[pubDate]',     $dt->format($dateFormat), $itemOutput);
+                $itemOutput = str_replace('[link]',        $node['feed_item_link'],  $itemOutput);
+                $itemOutput = str_replace('[description]', $node['body'],            $itemOutput);
+                $output .= $itemOutput;
+            }
+        }
+        if ( !empty($feed['feed_items_terms']) )
+        {
+            foreach ( $feed['feed_items_terms'] as $item )
+            {
+                // Get the date of the last time this term was updated/changed
+                $term =& $this->ssg->source->entities[$item['uuid']];
+                // $dt = new \DateTime($term['changed']);
+                $dt = date($dateformat,$term['changed']);
+
+                $path    = ltrim( $this->sanitizeForUrl( $term['friendly_url']) ,'/');
+                $url    = 'https://'.$this->ssg->config['siteUrl'].'/'.$path;
+
+                $itemOutput = $itemMarkup;
+                $itemOutput = str_replace('[title]',       $term['page_title'],  $itemOutput);
+                $itemOutput = str_replace('[pubDate]',     $dt,                  $itemOutput);
+                $itemOutput = str_replace('[link]',        $url,                 $itemOutput);
+                $itemOutput = str_replace('[description]', $term['description'], $itemOutput);
+                $output .= $itemOutput;
+            }
+        }
+        return $output;
     }
 
     public function getPageUrl($page)
