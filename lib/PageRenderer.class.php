@@ -14,7 +14,7 @@ class PageRenderer
 
     public $templates;
     public $templateDir;
-    public $templateDirCache;
+    // public $templateDirCache;
 
     public $templateLoader;
     public $templateRenderer;
@@ -26,21 +26,21 @@ class PageRenderer
         $this->ssg = &$ssg;
 
         $this->templateDir      = $this->ssg->templates->sourceTemplateDir;
-        $this->templateDirCache = $this->ssg->config['permDir'].'/templates/compiled';
+        // $this->templateDirCache = $this->ssg->config['permDir'].'/templates/compiled';
 
         $this->prepareDir($this->templateDir);
-        $this->prepareDir($this->templateDirCache);
+        // $this->prepareDir($this->templateDirCache);
 
         $this->templateLoader   = new \Twig_Loader_Filesystem($this->templateDir);
         $this->templateRenderer = new \Twig_Environment($this->templateLoader, array(
-            #'cache' => $this->templateDirCache,
+            // 'cache' => $this->templateDirCache,
             'cache' => false,
             'auto_reload' => 1
         ));
         $this->templateRenderer->enableAutoReload();
 
         $this->templates = [];
-        
+
         $this->addFilters();
 
         // $this->loadTwigTemplates();
@@ -134,9 +134,9 @@ class PageRenderer
         $twig = $this->getTwigPageRenderer($page);
         if (empty($twig)) {
             /// directory for path
-            if ( !file_exists($fileDir) ) {
+            if (!file_exists($fileDir)) {
                 @mkdir($fileDir, 0755, true);
-            } else if ( !is_dir($fileDir) ) {
+            } elseif (!is_dir($fileDir)) {
                 @unlink($fileDir);
                 @mkdir($fileDir, 0755, true);
             }
@@ -161,9 +161,9 @@ class PageRenderer
         $html = trim($html);
         if (!empty($html)) {
             /// directory for path
-            if ( !file_exists($fileDir) ) {
+            if (!file_exists($fileDir)) {
                 @mkdir($fileDir, 0755, true);
-            } else if ( !is_dir($fileDir) ) {
+            } elseif (!is_dir($fileDir)) {
                 @unlink($fileDir);
                 @mkdir($fileDir, 0755, true);
             }
@@ -173,9 +173,9 @@ class PageRenderer
                 $this->log($msg);
             }
         } else {
-            if ( !file_exists($fileDir) ) {
+            if (!file_exists($fileDir)) {
                 @mkdir($fileDir, 0755, true);
-            } else if ( !is_dir($fileDir) ) {
+            } elseif (!is_dir($fileDir)) {
                 @unlink($fileDir);
                 @mkdir($fileDir, 0755, true);
             }
@@ -208,9 +208,9 @@ class PageRenderer
                     /// directory for path
                     $fileDir = $this->ssg->siteDir.'/'.$path.'/'.strtolower($letter);
                     $file = $fileDir.'/'.'index.html';
-                    if ( !file_exists($fileDir) ) {
+                    if (!file_exists($fileDir)) {
                         @mkdir($fileDir, 0755, true);
-                    } else if ( !is_dir($fileDir) ) {
+                    } elseif (!is_dir($fileDir)) {
                         @unlink($fileDir);
                         @mkdir($fileDir, 0755, true);
                     }
@@ -219,9 +219,9 @@ class PageRenderer
                     array_unshift($paths, $path.'/'.strtolower($letter));
                 } else {
                     $msg = "Render Failed<br />\nPath: /".$path.'/'.strtolower($letter)."<br />\nType: ".$page['pageType']."<br />\nName: ".$page['name'];
-                    if ( !file_exists($fileDir) ) {
+                    if (!file_exists($fileDir)) {
                         @mkdir($fileDir, 0755, true);
-                    } else if ( !is_dir($fileDir) ) {
+                    } elseif (!is_dir($fileDir)) {
                         @unlink($fileDir);
                         @mkdir($fileDir, 0755, true);
                     }
@@ -385,9 +385,9 @@ class PageRenderer
         $html = trim($html);
         if (!empty($html)) {
             /// directory for path
-            if ( !file_exists($fileDir) ) {
+            if (!file_exists($fileDir)) {
                 @mkdir($fileDir, 0755, true);
-            } else if ( !is_dir($fileDir) ) {
+            } elseif (!is_dir($fileDir)) {
                 @unlink($fileDir);
                 @mkdir($fileDir, 0755, true);
             }
@@ -399,13 +399,12 @@ class PageRenderer
 
     public function renderFeed($feed)
     {
-        $path    = ltrim( $this->sanitizeForUrl( $feed['friendly_url']) ,'/');
+        $path    = ltrim($this->sanitizeForUrl($feed['friendly_url']), '/');
         $file    = $this->ssg->siteDir.'/'.$path;
         $fileDir = dirname($file);
         $url    = 'https://'.$this->ssg->config['siteUrl'].'/'.$path;
 
-        switch ( $feed['feed_type'] )
-        {
+        switch ($feed['feed_type']) {
             case 'RSS Feed':
                 $output = $feed['feed_rss_markup'];
                 $contentTypeHeader = 'application/rss+xml; charset=utf-8';
@@ -419,14 +418,11 @@ class PageRenderer
         }
 
         $matches = [];
-        preg_match_all( "/\[[^\]\s]+?\]/", $output, $matches );
-        if ( !empty($matches[0]) )
-        {
-            foreach ( $matches[0] as $match )
-            {
+        preg_match_all("/\[[^\]\s]+?\]/", $output, $matches);
+        if (!empty($matches[0])) {
+            foreach ($matches[0] as $match) {
                 $match = trim($match);
-                switch ( $match )
-                {
+                switch ($match) {
                     case '[request-path]':
                         $output = str_replace($match, $path, $output);
                         break;
@@ -439,9 +435,8 @@ class PageRenderer
                     case '[callback]':
                         $output = str_replace('[callback]', 'callback', $output);
                     default:
-                        $field = trim($match,'[] ');
-                        if ( array_key_exists($field,$feed) )
-                        {
+                        $field = trim($match, '[] ');
+                        if (array_key_exists($field, $feed)) {
                             $output = str_replace($match, $feed[$field], $output);
                         }
                 }
@@ -449,9 +444,9 @@ class PageRenderer
         }
 
         /// directory for path
-        if ( !file_exists($fileDir) ) {
+        if (!file_exists($fileDir)) {
             @mkdir($fileDir, 0755, true);
-        } else if ( !is_dir($fileDir) ) {
+        } elseif (!is_dir($fileDir)) {
             @unlink($fileDir);
             @mkdir($fileDir, 0755, true);
         }
@@ -460,18 +455,17 @@ class PageRenderer
         if (empty(file_put_contents($file, $output))) {
             $msg = "Write Failed Path:".$path." Type: ".$feed['feed_type']." Name: ".$feed['title']."\n";
             $this->log($msg);
-        } else if ($this->runtimeEnvironment() == 'standalone') {
+        } elseif ($this->runtimeEnvironment() == 'standalone') {
             $_url = str_pad($path, (strlen($path)+( 25 - ( strlen($path) % 25 ) )));
             $_type = str_pad($feed['feed_type'], (strlen($feed['feed_type'])+( 25 - ( strlen($feed['feed_type']) % 25 ) )));
-            $this->log("Path: {$_type}  {$_url}\n",false);
+            $this->log("Path: {$_type}  {$_url}\n", false);
         }
         return [$path];
     }
     public function renderFeedItems($feed)
     {
         $output = '';
-        switch ( $feed['feed_type'] )
-        {
+        switch ($feed['feed_type']) {
             case 'RSS Feed':
                 $itemMarkup = "
                 <item>
@@ -496,12 +490,9 @@ class PageRenderer
                 return $output;
         }
 
-        if ( !empty($feed['feed_items']) )
-        {
-            foreach ( $feed['feed_items'] as $item )
-            {
-                if ( !array_key_exists($item['uuid'],$this->ssg->source->entities) )
-                {
+        if (!empty($feed['feed_items'])) {
+            foreach ($feed['feed_items'] as $item) {
+                if (!array_key_exists($item['uuid'], $this->ssg->source->entities)) {
                     continue;
                 }
                 $node =& $this->ssg->source->entities[$item['uuid']];
@@ -511,30 +502,28 @@ class PageRenderer
                     new \DateTimeZone($node['feed_item_pubdate']['timezone'])
                 );
 
-                $itemOutput = $itemMarkup;
-                $itemOutput = str_replace('[title]',       $node['title'],           $itemOutput);
-                $itemOutput = str_replace('[pubDate]',     $dt->format($dateFormat), $itemOutput);
-                $itemOutput = str_replace('[link]',        $node['feed_item_link'],  $itemOutput);
-                $itemOutput = str_replace('[description]', $node['body'],            $itemOutput);
-                $output .= $itemOutput;
+                    $itemOutput = $itemMarkup;
+                    $itemOutput = str_replace('[title]', $node['title'], $itemOutput);
+                    $itemOutput = str_replace('[pubDate]', $dt->format($dateFormat), $itemOutput);
+                    $itemOutput = str_replace('[link]', $node['feed_item_link'], $itemOutput);
+                    $itemOutput = str_replace('[description]', $node['body'], $itemOutput);
+                    $output .= $itemOutput;
             }
         }
-        if ( !empty($feed['feed_items_terms']) )
-        {
-            foreach ( $feed['feed_items_terms'] as $item )
-            {
+        if (!empty($feed['feed_items_terms'])) {
+            foreach ($feed['feed_items_terms'] as $item) {
                 // Get the date of the last time this term was updated/changed
                 $term =& $this->ssg->source->entities[$item['uuid']];
                 // $dt = new \DateTime($term['changed']);
-                $dt = date($dateformat,$term['changed']);
+                $dt = date($dateformat, $term['changed']);
 
-                $path    = ltrim( $this->sanitizeForUrl( $term['friendly_url']) ,'/');
+                $path    = ltrim($this->sanitizeForUrl($term['friendly_url']), '/');
                 $url    = 'https://'.$this->ssg->config['siteUrl'].'/'.$path;
 
                 $itemOutput = $itemMarkup;
-                $itemOutput = str_replace('[title]',       $term['page_title'],  $itemOutput);
-                $itemOutput = str_replace('[pubDate]',     $dt,                  $itemOutput);
-                $itemOutput = str_replace('[link]',        $url,                 $itemOutput);
+                $itemOutput = str_replace('[title]', $term['page_title'], $itemOutput);
+                $itemOutput = str_replace('[pubDate]', $dt, $itemOutput);
+                $itemOutput = str_replace('[link]', $url, $itemOutput);
                 $itemOutput = str_replace('[description]', $term['description'], $itemOutput);
                 $output .= $itemOutput;
             }
