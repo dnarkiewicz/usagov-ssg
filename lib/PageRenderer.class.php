@@ -360,13 +360,13 @@ class PageRenderer
         } else {
             $file = $fileDir.'/'.$base;
         }
-
+/*
         if (!( substr($redirect['target'], 0, 7)=='http://'
             || substr($redirect['target'], 0, 8)=='https://'
             || $redirect['target']{0} !== '/' ) ) {
             $redirect['target'] .= '/';
         }
-
+*/
         //$this->log("Redirect: {$redirect['source_path']} => {$redirect['target']} \n");
 
         $html = "<DOCTYPE html>
@@ -399,7 +399,8 @@ class PageRenderer
 
     public function renderFeed($feed)
     {
-        $path    = ltrim($this->sanitizeForUrl($feed['friendly_url']), '/');
+        //$path    = ltrim($this->sanitizeForUrl($feed['friendly_url']), '/');
+        $path    = ltrim($feed['friendly_url']);
         $file    = $this->ssg->siteDir.'/'.$path;
         $fileDir = dirname($file);
         $url    = 'https://'.$this->ssg->config['siteUrl'].'/'.$path;
