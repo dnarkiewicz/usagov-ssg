@@ -16,6 +16,8 @@ exports.handler = function handler(event, context, callback) {
 	const { uri } = request;
 	const { suffix, appendToDirs, removeTrailingSlash } = config;
 
+	// request.uri = request.uri.toLowerCase();
+
 	// Append ".html" to origin request
 	if (suffix && uri.match(regexSuffixless)) {
 		request.uri = uri + suffix;
