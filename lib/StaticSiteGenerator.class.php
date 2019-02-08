@@ -470,8 +470,8 @@ class StaticSiteGenerator
                               !array_key_exists($content['uuid'],$this->source->entities) )
                             || $this->source->entities[$content['uuid']]['deleted']==1 )
                         {
-                            error_log("\nBAD CONTENT $c:".print_r($content,1)."\n");
-                            // unset($this->source->entities[$uuid][$region_field][$c]);
+                            //error_log("\nBAD CONTENT $c:".print_r($content,1)."\n");
+                            unset($this->source->entities[$uuid][$region_field][$c]);
                         }
                     }
                 }
