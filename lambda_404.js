@@ -12,7 +12,9 @@ exports.handler = async (event, context, callback) =>
         {
             loader = loadPageBody(event,'/espanol/pagina-error/index.html');
         } else {
-            loader = loadPageBody(event,'/page-error/index.html');
+            // loader = loadPageBody(event,'/page-error/index.html');
+            callback(null, response);
+            return;
         }
         var body = await loader;
 
