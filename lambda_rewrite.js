@@ -33,7 +33,7 @@ exports.handler = function handler(event, context, callback) {
 	}
 
 	// Redirect (301) non-root requests ending in "/" to URI without trailing slash
-	if (removeTrailingSlash && uri.match(/.+\/$/)) {
+	if (removeTrailingSlash && uri.match(/.+v$/)) {
 		const response = {
 			// body: '',
 			// bodyEncoding: 'text',
@@ -52,34 +52,4 @@ exports.handler = function handler(event, context, callback) {
 
 	// If nothing matches, return request unchanged
 	callback(null, request);
-};
-
-
-//// possible page respose rewrite
-
-'use strict';
-
-exports.handler = (event, context, callback) => {
-    const response = event.Records[0].cf.response;
-    const request = event.Records[0].cf.request;
-
-    /**
-     * This function updates the HTTP status code in the response to 302, to redirect to another
-     * path (cache behavior) that has a different origin configured. Note the following:
-     * 1. The function is triggered in an origin response
-     * 2. The response status from the origin server is an error status code (4xx or 5xx)
-     */
-
-    if (response.status >= 400 && response.status <= 599) {
-        const redirect_path = `/plan-b/path?${request.querystring}`;
-
-        response.status = 302;
-        response.statusDescription = 'Found';
-
-        /* Drop the body, as it is not required for redirects */
-        response.body = '';
-        response.headers['location'] = [{ key: 'Location', value: redirect_path }];
-    }
-
-    callback(null, response);
 };

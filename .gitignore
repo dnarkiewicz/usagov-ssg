@@ -1,15 +1,8 @@
 **/.DS_Store
 .DS_Store
-cache/*
 composer.lock
 vendor/*
-sites/*
-exampledata/*
 config/*.config.php
-templates_compiled/*
-templates/compiled/*
-templates/sync
-templates/twig/*
 tmp
 temp
 perm
