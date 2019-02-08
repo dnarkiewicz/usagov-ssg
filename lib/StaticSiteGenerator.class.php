@@ -182,7 +182,7 @@ class StaticSiteGenerator
                     $this->source->entities[$uuid]['usa_gov_50_state_category'] = preg_replace('/^field_/','',$entity['usa_gov_50_state_category']);
                 }
                 $i=0;
-                if ( !empty($entity['browser_title']) && !empty($entity['generate_page']) && strtolower($entity['generate_page'])=='yes' )
+                if ( !empty($entity['browser_title']) && !empty($entity['generate_page']))// && strtolower($entity['generate_page'])=='yes' )
                 {
                     $title = trim(preg_replace('/^\W+/','',$entity['browser_title']));
                     $letter = strtoupper($title{0});
@@ -733,7 +733,8 @@ class StaticSiteGenerator
     {
         // menu item's must also have a css field, but that is taken care of at the template level
         $menu = [];
-        $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu','generate_page']);
+        //$directChildren = $this->filteredDescendantPages($page,'children',['generate_menu','generate_page']);
+        $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu']);
         $menu = $directChildren;
         // $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu','generate_page']);
         // $menu = array_merge($directChildren, $alsoInclude);
@@ -758,14 +759,16 @@ class StaticSiteGenerator
     {
         $menu = [];
 
-        $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu','generate_page']);
+        //$directChildren = $this->filteredDescendantPages($page,'children',['generate_menu','generate_page']);
+        $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu']);
         array_multisort(
             array_column($directChildren,'weight'),SORT_ASC,
             array_column($directChildren,'name'),  SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($directChildren,'tid'),   SORT_ASC,
         $directChildren);
 
-        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu','generate_page']);
+        //$alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu','generate_page']);
+        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu']);
         array_multisort(
             array_column($alsoInclude,'name'),SORT_ASC,SORT_STRING|SORT_FLAG_CASE,
             array_column($alsoInclude,'tid'), SORT_ASC,
@@ -778,8 +781,8 @@ class StaticSiteGenerator
     {
         $menu = [];
 
-        $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu','generate_page']);
-        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu','generate_page']);
+        $directChildren = $this->filteredDescendantPages($page,'children',['generate_menu']); //['generate_menu','generate_page']
+        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page',['generate_menu']); //['generate_menu','generate_page']
 
         $menu = array_merge($directChildren, $alsoInclude);
 
@@ -794,8 +797,11 @@ class StaticSiteGenerator
     {
         $menu = [];
 
-        $directChildren = $this->filteredDescendantPages($page,'children','generate_page');
-        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page','generate_page');
+        //$directChildren = $this->filteredDescendantPages($page,'children','generate_page');
+        $directChildren = $this->filteredDescendantPages($page,'children');
+
+        //$alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page','generate_page');
+        $alsoInclude    = $this->filteredDescendantPages($page,'also_include_on_nav_page');
 
         $menu = array_merge($directChildren, $alsoInclude);
 
@@ -894,8 +900,8 @@ class StaticSiteGenerator
             /// only validate pages that should be generated
             if ( array_key_exists('generate_page',$page) && $page['generate_page']!='yes' )
             {
-                continue;
-            }
+            continue;
+        }
             $requiredPages++;
             $pageDir = rtrim( $this->siteDir.'/'.trim($url,'/'), '/' );
             $pageFile = $pageDir.'/index.html';
@@ -923,7 +929,7 @@ class StaticSiteGenerator
                     } else {
                         $this->log("Invalid: {$subUrl}\n");
                     }        
-                }
+            }
 
                 if ( isset($page['az_index_data_source']) 
                   && $page['az_index_data_source'] == 'directory-records-federal' )
@@ -1165,18 +1171,18 @@ class StaticSiteGenerator
              && is_string($page['type_of_page_to_generate']) )
         {
             $pageType = $page['type_of_page_to_generate'];
-        } else if (
+      /*  } else if (
              empty($page['field_generate_page'])
           || empty($page['field_generate_page']['und'])
           || empty($page['field_generate_page']['und'][0])
           || empty($page['field_generate_page']['und'][0]['value'])
-          ||       $page['field_generate_page']['und'][0]['value']!=='yes'
+      //    ||       $page['field_generate_page']['und'][0]['value']!=='yes'
           || empty($page['field_type_of_page_to_generate'])
           || empty($page['field_type_of_page_to_generate']['und'])
           || empty($page['field_type_of_page_to_generate']['und'][0])
           || empty($page['field_type_of_page_to_generate']['und'][0]['value']) )
         {
-            return null;
+            return null;*/
         } else {
             $pageType = $page['field_type_of_page_to_generate']['und'][0]['value'];
         }
