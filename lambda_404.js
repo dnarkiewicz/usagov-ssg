@@ -5,19 +5,34 @@ exports.handler = async (event, context, callback) =>
     var response = event.Records[0].cf.response;
     var request  = event.Records[0].cf.request;
 
+    /// add sts header
+    response.headers['strict-transport-security'] = [{
+        key: 'Strict-Transport-Security',   
+        value: 'max-age=31536000'
+    }];
+
+    /// process 404 
     if (response.status >= 400 && response.status <= 599 ) 
     {
         var loader = null;
+        /// spanish language 404
         if ( request.uri.includes('/espanol/') )
         {
             loader = loadPageBody(event,'/espanol/pagina-error/index.html');
+        
+        /// api 404
+        // } else if ( request.uri.includes('/api/') ) {
+        //    loader = loadPageBody(event,'/espanol/pagina-error/index.html');
+
+        /// english language 404 should be handled by s3 itself, so do nothing
         } else {
             // loader = loadPageBody(event,'/page-error/index.html');
             callback(null, response);
             return;
         }
-        var body = await loader;
 
+        /// replace body with alternate 404 page
+        var body = await loader;
         response.headers['cache-control'] = [{
             key:   'Cache-Control', 
             value: 'max-age=1'
@@ -31,14 +46,13 @@ exports.handler = async (event, context, callback) =>
             value: 'UTF-8'
         }];
         response.body = body;
-
-        callback(null, response);
-    } else {
-        callback(null, response);
     }
+
+    callback(null, response);
 };
 
-const loadPageBody = (event,path) => {
+const loadPageBody = (event,path) => 
+{
     return new Promise( (resolve,reject) =>
     {
         var config  = event.Records[0].cf.config;
