@@ -1,9 +1,10 @@
-const http = require('http');
+const https = require('https');
 
 exports.handler = async (event, context, callback) => 
 {
     var response = event.Records[0].cf.response;
     var request  = event.Records[0].cf.request;
+    console.log(event);
 
     /// add sts header
     response.headers['strict-transport-security'] = [{
@@ -24,9 +25,14 @@ exports.handler = async (event, context, callback) =>
         // } else if ( request.uri.includes('/api/') ) {
         //    loader = loadPageBody(event,'/espanol/pagina-error/index.html');
 
-        /// english language 404 should be handled by s3 itself, so do nothing
+        /// english language 404
         } else {
-            // loader = loadPageBody(event,'/page-error/index.html');
+            loader = loadPageBody(event,'/page-error/index.html');
+            // callback(null, response);
+            // return;
+        }
+        
+        if ( !loader ) {
             callback(null, response);
             return;
         }
@@ -57,7 +63,8 @@ const loadPageBody = (event,path) =>
     {
         var config  = event.Records[0].cf.config;
 
-        const req = http.get('http://'+config.distributionDomainName+path, (res) => 
+        process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+        const req = https.get('https://'+config.distributionDomainName+path, (res) => 
 		{
 			if (res.statusCode < 200 || res.statusCode >= 300) 
 			{
