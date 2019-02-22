@@ -3,44 +3,67 @@
  */
 
 const config = {
-	suffix: '.html',
+	suffix: '/index.html',
 	appendToDirs: 'index.html',
 	removeTrailingSlash: false,
 };
 
-const regexSuffixless = /\/[^/.]+$/; // e.g. "/some/page" but not "/", "/some/" or "/some.jpg"
-const regexTrailingSlash = /.+\/$/; // e.g. "/some/" or "/some/page/" but not root "/"
+// e.g. "/some/page" but not "/", "/some/" or "/some.jpg"
+const regexSuffixless = /\/[^/.]+$/;
+
+// e.g. "/some/" or "/some/page/" but not root "/"
+const regexTrailingSlash = /.+\/$/;
+
+// e.g. begins with a certain directory
+const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explorer|explorar|analytics)(\/|$)/i;
 
 exports.handler = function handler(event, context, callback) {
 	const { request } = event.Records[0].cf;
-	const { uri } = request;
 	const { suffix, appendToDirs, removeTrailingSlash } = config;
 
-	// request.uri = request.uri.toLowerCase();
+	if ( ! request.uri.match(regexCaseSensitive) )
+	{
+		var lowerCaseUri = request.uri.toLowerCase();
+		if ( request.uri != lowerCaseUri )
+		{
+			const response = {
+				headers: {
+					'location': [{
+						key: 'Location',
+						value: lowerCaseUri
+					}]
+				},
+				status: '302',
+				statusDescription: 'Moved Temporarily'
+			};
+			callback(null, response);
+			return;
+		}
+	}
 
 	// Append ".html" to origin request
-	if (suffix && uri.match(regexSuffixless)) {
-		request.uri = uri + suffix;
+	if (suffix && request.uri.match(regexSuffixless)) {
+		request.uri = request.uri + suffix;
 		callback(null, request);
 		return;
 	}
-	
-	// Append "index.html" to origin request
-	if (appendToDirs && uri.match(regexTrailingSlash)) {
-		request.uri = uri + appendToDirs;
+
+	// Append "index.html" to origin directory request
+	if (appendToDirs && request.uri.match(regexTrailingSlash)) {
+		request.uri = request.uri + appendToDirs;
 		callback(null, request);
 		return;
 	}
 
 	// Redirect (301) non-root requests ending in "/" to URI without trailing slash
-	if (removeTrailingSlash && uri.match(/.+v$/)) {
+	if (removeTrailingSlash && request.uri.match(/.+\/$/)) {
 		const response = {
 			// body: '',
 			// bodyEncoding: 'text',
 			headers: {
 				'location': [{
 					key: 'Location',
-					value: uri.slice(0, -1)
+					value: request.uri.slice(0, -1)
 				 }]
 			},
 			status: '301',
@@ -50,6 +73,5 @@ exports.handler = function handler(event, context, callback) {
 		return;
 	}
 
-	// If nothing matches, return request unchanged
 	callback(null, request);
 };

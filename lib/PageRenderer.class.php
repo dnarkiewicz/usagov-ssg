@@ -156,7 +156,6 @@ class PageRenderer
             $this->log("UnRenderable: no params for $url ({$page['pageType']}) \"{$page['name']}\"\n");
             return null;
         }
-
         $html = $twig->render($pageParams);
         $html = trim($html);
         if (!empty($html)) {
@@ -171,6 +170,9 @@ class PageRenderer
             if (empty(file_put_contents($file, $html))) {
                 $msg = "Write Failed\nPath:".$file." \nType: ".$page['pageType']." \nName: ".$page['name']."\n";
                 $this->log($msg);
+            } else {
+                // $msg = "Write SUCCESS\nPath:".$file." \nType: ".$page['pageType']." \nName: ".$page['name']."\n";
+                // $this->log($msg);
             }
         } else {
             if (!file_exists($fileDir)) {

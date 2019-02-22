@@ -167,7 +167,7 @@ class StaticSiteGenerator
                 {
                     $this->pageTypes[$entity['pageType']] = $entity['pageType'];
                 }                
-                if ( empty($entity['parent']) )
+                if ( empty($entity['parent']) && !empty($entity['for_use_by']) )
                 {
                     $rev = array_reverse($entity['for_use_by']);
                     $fub = array_pop($rev);
@@ -624,6 +624,7 @@ class StaticSiteGenerator
 
         /// undo all references get copies instead of references
         /// so we can save to cache
+
         foreach ( array_keys($this->pages) as $uuid )
         {
             $this->pages[$uuid] = $this->source->entities[$uuid];
@@ -1167,26 +1168,12 @@ class StaticSiteGenerator
 
     public function getPageType( $page )
     {
-        if ( array_key_exists('type_of_page_to_generate',$page)
-             && is_string($page['type_of_page_to_generate']) )
+        if ( !array_key_exists('type_of_page_to_generate',$page)
+            || !is_string($page['type_of_page_to_generate']) )
         {
-            $pageType = $page['type_of_page_to_generate'];
-      /*  } else if (
-             empty($page['field_generate_page'])
-          || empty($page['field_generate_page']['und'])
-          || empty($page['field_generate_page']['und'][0])
-          || empty($page['field_generate_page']['und'][0]['value'])
-      //    ||       $page['field_generate_page']['und'][0]['value']!=='yes'
-          || empty($page['field_type_of_page_to_generate'])
-          || empty($page['field_type_of_page_to_generate']['und'])
-          || empty($page['field_type_of_page_to_generate']['und'][0])
-          || empty($page['field_type_of_page_to_generate']['und'][0]['value']) )
-        {
-            return null;*/
-        } else {
-            $pageType = $page['field_type_of_page_to_generate']['und'][0]['value'];
+            return null;
         }
-        return $this->formatPageType($pageType);
+        return $this->formatPageType($page['type_of_page_to_generate']);
     }
 
     public function formatPageType( $type )

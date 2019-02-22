@@ -12,6 +12,14 @@ exports.handler = async (event, context, callback) =>
         value: 'max-age=31536000'
     }];
 
+    /// api 404
+    if ( response.status == 200 && request.uri.includes('/search-error/index.html') ) 
+    {
+        response.status = 404;
+        callback(null, response);
+        return;
+    }
+
     /// process 404 
     if (response.status >= 400 && response.status <= 599 ) 
     {
@@ -21,10 +29,6 @@ exports.handler = async (event, context, callback) =>
         {
             loader = loadPageBody(event,'/espanol/pagina-error/index.html');
         
-        /// api 404
-        // } else if ( request.uri.includes('/api/') ) {
-        //    loader = loadPageBody(event,'/espanol/pagina-error/index.html');
-
         /// english language 404
         } else {
             loader = loadPageBody(event,'/page-error/index.html');
