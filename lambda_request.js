@@ -6,6 +6,7 @@ const config = {
 	suffix: '/index.html',
 	appendToDirs: 'index.html',
 	removeTrailingSlash: false,
+	redirectCaseSensitive: false,
 };
 
 // e.g. "/some/page" but not "/", "/some/" or "/some.jpg"
@@ -19,44 +20,54 @@ const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explorer|explorar|ana
 
 exports.handler = function handler(event, context, callback) {
 	const { request } = event.Records[0].cf;
-	const { suffix, appendToDirs, removeTrailingSlash } = config;
 
+	/// Lowercase the uri to match backend (where most paths are lowercase)
 	if ( ! request.uri.match(regexCaseSensitive) )
 	{
 		var lowerCaseUri = request.uri.toLowerCase();
 		if ( request.uri != lowerCaseUri )
 		{
-			const response = {
-				headers: {
-					'location': [{
-						key: 'Location',
-						value: lowerCaseUri
-					}]
-				},
-				status: '302',
-				statusDescription: 'Moved Temporarily'
-			};
-			callback(null, response);
-			return;
+			if ( config.redirectCaseSensitive )
+			{
+				/// send a redirect to the lowercased uri
+				const response = {
+					headers: {
+						'location': [{
+							key: 'Location',
+							value: lowerCaseUri
+						}]
+					},
+					status: '302',
+					statusDescription: 'Moved Temporarily'
+				};
+				callback(null, response);
+				return;
+			} else {
+				/// continue on internally with the lowercased uri
+				request.uri = lowerCaseUri;
+			}
 		}
 	}
 
-	// Append ".html" to origin request
-	if (suffix && request.uri.match(regexSuffixless)) {
-		request.uri = request.uri + suffix;
+	// Append suffix to origin request
+	if (config.suffix && request.uri.match(regexSuffixless)) 
+	{
+		request.uri = request.uri + config.suffix;
 		callback(null, request);
 		return;
 	}
 
-	// Append "index.html" to origin directory request
-	if (appendToDirs && request.uri.match(regexTrailingSlash)) {
-		request.uri = request.uri + appendToDirs;
+	// Append directory suffix to origin directory request
+	if (config.appendToDirs && request.uri.match(regexTrailingSlash)) 
+	{
+		request.uri = request.uri + config.appendToDirs;
 		callback(null, request);
 		return;
 	}
 
 	// Redirect (301) non-root requests ending in "/" to URI without trailing slash
-	if (removeTrailingSlash && request.uri.match(/.+\/$/)) {
+	if (config.removeTrailingSlash && request.uri.match(/.+\/$/)) 
+	{
 		const response = {
 			// body: '',
 			// bodyEncoding: 'text',
