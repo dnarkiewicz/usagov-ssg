@@ -20,25 +20,32 @@ $ssgStartTime      = 0;
 
 $site = new StaticSiteGenerator('USA.gov');
 
-$syncToDestination = false;
-$fractalExamples   = false;
+$syncToDestination  = false;
+$cleanupTempSiteDir = false;
 
 $site->renderer->renderPageOnFailure = true;
 foreach ($argv as $arg) {
-    if (isset($arg) && $arg=='--fresh-data') {
-        $site->source->freshData = true;
-    }
-    if (isset($arg) && $arg=='--fresh-templates') {
-        $site->templates->freshTemplates = true;
-    }
-    if (isset($arg) && $arg=='--update-templates') {
-        $site->templates->updateTemplates = true;
-    }
-    if (isset($arg) && $arg=='--no-debug-pages') {
-        $site->renderer->renderPageOnFailure = false;
-    }
-    if (isset($arg) && $arg=='--deploy') {
-        $syncToDestination = true;
+    if (!isset($arg) ) { continue; }
+    switch ( $arg )
+    {
+        case '--fresh-data':
+            $site->source->freshData = true;
+            break;
+        case '--fresh-templates':
+            $site->templates->freshTemplates = true;
+            break;
+        case '--update-templates':
+            $site->templates->updateTemplates = true;
+            break;
+        case '--no-debug-pages':
+            $site->renderer->renderPageOnFailure = false;
+            break;
+        case '--deploy':
+            $syncToDestination = true;
+            break;
+        case '--cleanup':
+            $cleanupTempSiteDir = true;
+            break;
     }
 }
 
@@ -60,12 +67,23 @@ timer('Render');
 
 // timer('Validate');
 // if ($site->validateSite() && $syncToDestination) {
-    // timer('Validate');
+// timer('Validate');
 if ( $syncToDestination )
 {
     timer('Deploy');
-    $site->destination->sync();
+    $site->deploySite();
     timer('Deploy');
+}
+
+if ( $cleanupTempSiteDir )
+{
+    timer('Cleanup');
+    $site->cleanupSite();
+    timer('Cleanup');
+} else {
+    timer('Cleanup');
+    $site->cleanupOldSitesByNumber();
+    timer('Cleanup');
 }
 
 // timer();
