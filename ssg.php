@@ -16,7 +16,7 @@ $_timers = [
 ];
 timer();
 
-$ssgStartTime      = 0;
+$ssgStartTime = 0;
 
 $site = new StaticSiteGenerator('USA.gov');
 
