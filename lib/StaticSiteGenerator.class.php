@@ -132,7 +132,6 @@ class StaticSiteGenerator
             $this->siteDir = $this->siteBaseDir;
         } else {
             $this->siteDir = $this->siteBaseDir.'/'.$this->uuid;
-
         }
         
         if ( !$this->prepareDir($this->siteDir) )
@@ -1059,10 +1058,9 @@ class StaticSiteGenerator
 
     public function cleanupSite()
     {
-        $thisBuild = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ').'/'.$this->uuid;
-        if ( !empty($thisBuild) && $thisBuild !== '/' )
+        if ( !empty($this->siteDir) && $this->siteDir !== '/' )
         {
-            $this->rmDir($thisBuild);
+            $this->rmDir($this->siteDir);
         }
     }
 
@@ -1076,7 +1074,11 @@ class StaticSiteGenerator
 
     public function cleanupOldSitesByDate($howOld='-6 hours')
     {
-        $minDirAge   = strtotime($howOld);
+        if ( $this->siteBaseDir == $this->siteDir )
+        {
+            return;
+        }
+        $minDirAge = strtotime($howOld);
         if ( !empty($this->siteBaseDir) && $this->siteBaseDir !== '/' )
         {
             $dirList = new RecursiveDirectoryIterator($this->siteBaseDir);
@@ -1370,7 +1372,7 @@ class StaticSiteGenerator
         {
             $minFreeBytes = 144340000; /// ~141 M
         }
-        $availableBytes = disk_free_space( $baseSiteDir );
+        $availableBytes = disk_free_space( $this->siteBaseDir );
         /// go ahead and make sure we have twice what we need
         
         return ( $availableBytes > ($minFreeBytes*2) );
