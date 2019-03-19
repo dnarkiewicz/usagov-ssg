@@ -1100,6 +1100,10 @@ class StaticSiteGenerator
 
     public function cleanupOldSitesByNumber($numberToKeep=2,$bufferSeconds=600)
     {
+        if ( $this->siteBaseDir == $this->siteDir )
+        {
+            return;
+        }
         /// keep all dirs less than Y seconds old
         /// keep X dirs more than Y seconds old
         if ( !empty($this->siteBaseDir) && $this->siteBaseDir !== '/' )
