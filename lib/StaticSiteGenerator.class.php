@@ -12,6 +12,9 @@ class StaticSiteGenerator
     
     public $time;
 
+    public $siteDir;
+    public $siteBaseDir;
+
     public $pages;
     public $pageTree;
     
@@ -123,7 +126,15 @@ class StaticSiteGenerator
             return false;
         }
 
-        $this->siteDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ').'/'.$this->uuid;
+        $this->siteBaseDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ');
+        if ( $this->runtimeEnvironment() == 'standalone' ) 
+        {
+            $this->siteDir = $this->siteBaseDir;
+        } else {
+            $this->siteDir = $this->siteBaseDir.'/'.$this->uuid;
+
+        }
+        
         if ( !$this->prepareDir($this->siteDir) )
         {
             $this->log("SSG error : siteDir not available : {$this->siteDir}\n");
@@ -1057,20 +1068,18 @@ class StaticSiteGenerator
 
     public function cleanupAllSites()
     {
-        $baseSiteDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ');
-        if ( !empty($baseSiteDir) && $baseSiteDir !== '/' )
+        if ( !empty($this->siteBaseDir) && $this->siteBaseDir !== '/' )
         {
-            $this->rmDir($baseSiteDir);
+            $this->rmDir($this->siteBaseDir);
         }
     }
 
     public function cleanupOldSitesByDate($howOld='-6 hours')
     {
         $minDirAge   = strtotime($howOld);
-        $baseSiteDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ');
-        if ( !empty($baseSiteDir) && $baseSiteDir !== '/' )
+        if ( !empty($this->siteBaseDir) && $this->siteBaseDir !== '/' )
         {
-            $dirList = new RecursiveDirectoryIterator($baseSiteDir);
+            $dirList = new RecursiveDirectoryIterator($this->siteBaseDir);
             foreach ( $dirList as $dirItem )
             {
                 $dirName = $dirItem->getFileName();
@@ -1091,10 +1100,9 @@ class StaticSiteGenerator
     {
         /// keep all dirs less than Y seconds old
         /// keep X dirs more than Y seconds old
-        $baseSiteDir = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ');
-        if ( !empty($baseSiteDir) && $baseSiteDir !== '/' )
+        if ( !empty($this->siteBaseDir) && $this->siteBaseDir !== '/' )
         {
-            $dirList  = new \RecursiveDirectoryIterator($baseSiteDir,\FilesystemIterator::SKIP_DOTS);
+            $dirList  = new \RecursiveDirectoryIterator($this->siteBaseDir,\FilesystemIterator::SKIP_DOTS);
             $sortList = [];
             foreach ( $dirList as $dirItem )
             {
@@ -1345,9 +1353,8 @@ class StaticSiteGenerator
     public function validateDiskSpace()
     {
         $minFreeBytes = 0;
-        $baseSiteDir  = $this->config['tempDir'].'/sites/'.trim(strtolower($this->config['siteName']),'/ ');
         /// check any previous builds for their actual size
-        $dirList      = new \RecursiveDirectoryIterator($baseSiteDir, \FilesystemIterator::SKIP_DOTS);
+        $dirList      = new \RecursiveDirectoryIterator($this->siteBaseDir, \FilesystemIterator::SKIP_DOTS);
         foreach ( $dirList as $dirItem )
         {
             $size = `du -sk {$dirItem->getPathName()}`;
