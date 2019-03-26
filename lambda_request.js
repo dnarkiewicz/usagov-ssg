@@ -6,6 +6,7 @@ const config = {
 	suffix: '/index.html',
 	appendToDirs: 'index.html',
 	removeTrailingSlash: false,
+	forceTrailingSlash: false,
 	redirectCaseSensitive: false,
 };
 
@@ -16,7 +17,7 @@ const regexSuffixless = /\/[^/.]+$/;
 const regexTrailingSlash = /.+\/$/;
 
 // e.g. begins with a certain directory
-const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explorer|explorar|analytics)(\/|$)/i;
+const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explore|explorar|analytics)(\/|$)/i;
 
 exports.handler = function handler(event, context, callback) {
 	const { request } = event.Records[0].cf;
@@ -75,6 +76,27 @@ exports.handler = function handler(event, context, callback) {
 				'location': [{
 					key: 'Location',
 					value: request.uri.slice(0, -1)
+				 }]
+			},
+			status: '301',
+			statusDescription: 'Moved Permanently'
+		};
+		callback(null, response);
+		return;
+	}
+
+	// Redirect (301) non-root requests for directories to have a trailing slash
+	// a directory is any uri that is not a file
+	// a file is any path whose last part contains a '.something'
+	if (config.forceTrailingSlash && request.uri.match(/.+?\/([^\.]+\.[^\/]+)$/))
+	{
+		const response = {
+			// body: '',
+			// bodyEncoding: 'text',
+			headers: {
+				'location': [{
+					key: 'Location',
+					value: request.uri+'/'
 				 }]
 			},
 			status: '301',
