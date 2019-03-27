@@ -17,7 +17,7 @@ const regexSuffixless = /\/[^/.]+$/;
 const regexTrailingSlash = /.+\/$/;
 
 // e.g. begins with a certain directory
-const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explore|explorar|analytics)(\/|$)/i;
+const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explore|espanol\/explorar|website\-analytics)(\/|$)/i;
 
 exports.handler = function handler(event, context, callback) {
 	const { request } = event.Records[0].cf;
