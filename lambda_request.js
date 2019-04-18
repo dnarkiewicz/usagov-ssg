@@ -1,110 +1,51 @@
-/* Public domain project by Cloud Under (https://cloudunder.io).
- * Repository: https://github.com/CloudUnder/lambda-edge-nice-urls
- */
 
-const config = {
-	suffix: '/index.html',
-	appendToDirs: 'index.html',
-	removeTrailingSlash: false,
-	forceTrailingSlash: false,
-	redirectCaseSensitive: false,
-};
+const fileSuffix = '/index.html';
+const dirSuffix  = 'index.html';
 
 // e.g. "/some/page" but not "/", "/some/" or "/some.jpg"
-const regexSuffixless = /\/[^/.]+$/;
+const regexSuffixless = /\/[^\/.]+$/;
 
 // e.g. "/some/" or "/some/page/" but not root "/"
 const regexTrailingSlash = /.+\/$/;
 
 // e.g. begins with a certain directory
-const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explore|espanol\/explorar|website\-analytics)(\/|$)/i;
+const regexCaseSensitive = /^\/?(css|fonts|images|js|sites|explore|explorar|analytics)(\/|$)/i;
 
-exports.handler = function handler(event, context, callback) {
+/// this is the lambda entry point
+exports.handler = (event, context, callback) => 
+{
 	const { request } = event.Records[0].cf;
 
-	/// Lowercase the uri to match backend (where most paths are lowercase)
-	if ( ! request.uri.match(regexCaseSensitive) )
+	var uri = rewriteRequestUrl(request.uri);
+	if ( uri !== request.uri)
 	{
-		var lowerCaseUri = request.uri.toLowerCase();
-		if ( request.uri != lowerCaseUri )
-		{
-			if ( config.redirectCaseSensitive )
-			{
-				/// send a redirect to the lowercased uri
-				const response = {
-					headers: {
-						'location': [{
-							key: 'Location',
-							value: lowerCaseUri
-						}]
-					},
-					status: '302',
-					statusDescription: 'Moved Temporarily'
-				};
-				callback(null, response);
-				return;
-			} else {
-				/// continue on internally with the lowercased uri
-				request.uri = lowerCaseUri;
-			}
-		}
-	}
-
-	// Append suffix to origin request
-	if (config.suffix && request.uri.match(regexSuffixless)) 
-	{
-		request.uri = request.uri + config.suffix;
-		callback(null, request);
-		return;
-	}
-
-	// Append directory suffix to origin directory request
-	if (config.appendToDirs && request.uri.match(regexTrailingSlash)) 
-	{
-		request.uri = request.uri + config.appendToDirs;
-		callback(null, request);
-		return;
-	}
-
-	// Redirect (301) non-root requests ending in "/" to URI without trailing slash
-	if (config.removeTrailingSlash && request.uri.match(/.+\/$/)) 
-	{
-		const response = {
-			// body: '',
-			// bodyEncoding: 'text',
-			headers: {
-				'location': [{
-					key: 'Location',
-					value: request.uri.slice(0, -1)
-				 }]
-			},
-			status: '301',
-			statusDescription: 'Moved Permanently'
-		};
-		callback(null, response);
-		return;
-	}
-
-	// Redirect (301) non-root requests for directories to have a trailing slash
-	// a directory is any uri that is not a file
-	// a file is any path whose last part contains a '.something'
-	if (config.forceTrailingSlash && request.uri.match(/.+?\/([^\.]+\.[^\/]+)$/))
-	{
-		const response = {
-			// body: '',
-			// bodyEncoding: 'text',
-			headers: {
-				'location': [{
-					key: 'Location',
-					value: request.uri+'/'
-				 }]
-			},
-			status: '301',
-			statusDescription: 'Moved Permanently'
-		};
-		callback(null, response);
-		return;
+		request.uri = uri;
 	}
 
 	callback(null, request);
 };
+
+/// this logic that can be used outside of lambda in a standalone nodejs app
+const rewriteRequestUrl =  ( url ) =>
+{
+	/// set lowercasing logic
+	if ( ! url.match(regexCaseSensitive) )
+	{
+		url = url.toLowerCase();
+	}
+
+	// Append suffix to origin request
+	if (fileSuffix && url.match(regexSuffixless)) {
+		url += fileSuffix;
+
+	// Append directory suffix to origin directory request
+	} else if (dirSuffix && url.match(regexTrailingSlash)) {
+		url += dirSuffix;
+	}
+
+	return url;
+}
+
+
+/// this is the nodejs export of our business logic
+exports.rewriteRequestUrl = rewriteRequestUrl;
