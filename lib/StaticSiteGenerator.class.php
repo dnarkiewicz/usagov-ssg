@@ -227,7 +227,7 @@ class StaticSiteGenerator
                 if ( !empty($entity['browser_title']) && !empty($entity['generate_page']))// && strtolower($entity['generate_page'])=='yes' )
                 {
                     $title = trim(preg_replace('/^\W+/','',$entity['browser_title']));
-                    $letter = strtoupper($title{0});
+                    $letter = strtoupper($title[0]);
                     $this->siteIndexAZ['all'][$letter][] = [ 'uuid'=>$entity['uuid'], 'title'=>$entity['browser_title'] ];
                     foreach ( $fubs as $fub )
                     {
@@ -373,7 +373,7 @@ class StaticSiteGenerator
                         if ( ( trim(strtolower($type)) == 'federal agencies' )
                            || strtolower($type) == 'state government agencies' )
                         {
-                            $letter = strtoupper($entity['title']{0});
+                            $letter = strtoupper($entity['title'][0]);
 
                             if ( array_key_exists('show_on_az_index',$entity)
                                 && trim(strtolower($entity['show_on_az_index'])) == 'yes' )
@@ -402,7 +402,7 @@ class StaticSiteGenerator
                             {
                                 foreach ( $entity['synonym'] as $synonym )
                                 {
-                                    $letter = strtoupper($synonym['value']{0});
+                                    $letter = strtoupper($synonym['value'][0]);
 
                                     $this->directoryRecordGroups[$fub]['all'][$type]['all'][]  = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
                                     $this->directoryRecordGroups[$fub][$state][$type]['all'][] = [ 'uuid'=>$uuid, 'title'=>$synonym['value'] ];
@@ -439,7 +439,7 @@ class StaticSiteGenerator
                         /// GOV Branches
                         if ( trim(strtolower($type)) == 'federal agencies' && !empty($entity['government_branch']) )
                         {
-                            $letter = strtoupper($entity['title']{0});
+                            $letter = strtoupper($entity['title'][0]);
                             
                             $this->directoryRecordGroups[$fub]['all'][$type][$entity['government_branch']][]  = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
                             $this->directoryRecordGroups[$fub][$state][$type][$entity['government_branch']][] = [ 'uuid'=>$uuid, 'title'=>$entity['title'] ];
@@ -452,7 +452,7 @@ class StaticSiteGenerator
                             && !empty($entity['link_form_links']['url'])
                             && !empty($entity['link_form_links']['title']) )
                         {
-                            $letter = strtoupper($entity['title']{0});
+                            $letter = strtoupper($entity['title'][0]);
                             $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
                                 'uuid'=>$uuid, 
                                 'title'=>$entity['title'], 
@@ -463,7 +463,7 @@ class StaticSiteGenerator
                             {
                                 foreach ( $entity['synonym'] as $synonym )
                                 {
-                                    $letter = strtoupper($synonym['value']{0});
+                                    $letter = strtoupper($synonym['value'][0]);
                                     $this->directoryRecordGroups[$fub]['forms'][$type][$letter][] = [ 
                                         'uuid'=>$uuid, 
                                         'title'=>$synonym['value'], 
@@ -926,7 +926,7 @@ class StaticSiteGenerator
         $fileHeader = fread($fileHandle, 100);
         fclose($fileHandle);
         $fileHeader = trim($fileHeader);
-        $fileIsHtml = ( $fileHeader{0} == '<');
+        $fileIsHtml = ( $fileHeader[0] == '<');
         if ( !$fileIsHtml )
         {
             $this->log("Validate Page: non-html file at $filename: $fileHeader\n");
